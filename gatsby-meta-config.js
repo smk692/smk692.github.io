@@ -14,7 +14,7 @@ module.exports = {
     name: `손민기`,
     bio: {
       role: '백엔드 개발자',
-      description: ['개발에 미친놈', '절대 두번 일하지 않으려고 하는 게으름', '큰 그림을 그리는 아키텍처 '],
+      description: ['개발에 미친놈', '절대 두번 일하지 않으려고 하는 게으름으로 발전하는', '큰 그림을 그리는 아키텍처 '],
       thumbnail: 'sample.png', // Path to the image in the 'asset' folder
     },
     social: {

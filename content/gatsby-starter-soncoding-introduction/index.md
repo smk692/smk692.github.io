@@ -4,7 +4,7 @@ title: 쉽고 빠르게 나만의 개츠비(Gatsby) 블로그 만들기
 date: '2021-03-22 23:00:00'
 author: 줌코딩
 tags: blog gatsby theme 개츠비 테마
-categories: 블로그 featured
+categories: 블로그
 ---
 
 ## 👋 소개
@@ -57,9 +57,9 @@ $ npm start
 
 ```js
 title: 'smk692.github.io'
-description: '손코딩의 끄적끄적 블로그' // 줌코딩의 개발일기
-language: 'ko', // 'ko', 'en' (영어 버전도 지원하고 있습니다.)
-siteUrl: 'https://smk692.github.io/' // https://www.zoomkoding.com
+description: '손코딩의 끄적끄적 블로그'
+language: 'ko',
+siteUrl: 'https://smk692.github.io/'
 ogImage: '/og-image.png', // 공유할 때 보이는 미리보기 이미지로 '/static' 하위에 넣고 싶은 이미지를 추가하시면 됩니다.
 ```
 
