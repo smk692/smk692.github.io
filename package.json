@@ -1,12 +1,15 @@
 {
-  "name": "zoomkoding.com",
+  "name": "smk692.github.io",
   "private": false,
   "description": "A neat blog theme for developers",
   "version": "3.0.0",
-  "author": "zoomkoding <zoomkoding@gmail.com>",
+  "author": "Son <smk2692@gmail.com>",
   "dependencies": {
+    "@emotion/react": "^11.10.6",
+    "@emotion/styled": "^11.10.6",
     "@mui/icons-material": "^5.1.0",
     "@mui/material": "^5.1.0",
+    "@mui/styled-engine": "^5.12.0",
     "gatsby": "^4.9.3",
     "gatsby-plugin-advanced-sitemap": "^2.0.0",
     "gatsby-plugin-google-analytics": "^4.9.0",
@@ -26,9 +29,9 @@
     "gatsby-remark-table-of-contents": "^2.0.0",
     "gatsby-source-filesystem": "^4.9.1",
     "gatsby-theme-material-ui": "^5.1.0",
-    "gatsby-transformer-remark": "^5.9.1",
+    "gatsby-transformer-remark": "^5.25.1",
     "gatsby-transformer-sharp": "^4.9.0",
-    "prismjs": "^1.24.1",
+    "prismjs": "^1.29.0",
     "react": "^17.0.1",
     "react-dom": "^17.0.1",
     "react-rotating-text": "^1.4.1",
@@ -57,9 +60,9 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/zoomkoding/zoomkoding-gatsby-blog"
+    "url": "https://github.com/smk692/smk692.github.io"
   },
   "bugs": {
-    "url": "https://github.com/zoomkoding/zoomkoding-gatsby-blog/issues"
+    "url": "https://github.com/smk692/smk692.github.io/issues"
   }
 }

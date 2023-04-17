@@ -56,10 +56,10 @@ $ npm start
 ### 1. 블로그 기본 정보
 
 ```js
-title: '' // zoomkoding.com
-description: '' // 줌코딩의 개발일기
+title: 'smk692.github.io'
+description: '손코딩의 끄적끄적 블로그' // 줌코딩의 개발일기
 language: 'ko', // 'ko', 'en' (영어 버전도 지원하고 있습니다.)
-siteUrl: '' // https://www.zoomkoding.com
+siteUrl: 'https://smk692.github.io/' // https://www.zoomkoding.com
 ogImage: '/og-image.png', // 공유할 때 보이는 미리보기 이미지로 '/static' 하위에 넣고 싶은 이미지를 추가하시면 됩니다.
 ```
 
@@ -72,7 +72,7 @@ ogImage: '/og-image.png', // 공유할 때 보이는 미리보기 이미지로 '
 ```js
 comments: {
     utterances: {
-        repo: '' // zoomkoding/zoomkoding-gatsby-blog
+        repo: 'smk692/blog-comments'
     },
 }
 
@@ -88,16 +88,16 @@ comments: {
 
 ```js
 author: {
-    name: '정진혁',
+    name: '손민기',
     bio: {
-      role: '개발자',
-      description: ['사람에 가치를 두는', '능동적으로 일하는', '이로운 것을 만드는'],
+      role: '백엔드 개발자',
+      description: ['개발에 미친놈', '절대 두번 일하지 않으려고 하는 게으름', '큰 그림을 그리는 아키텍처 '],
       thumbnail: 'zoomkoding.gif',
     },
     social: {
-      github: 'https://github.com/zoomKoding',
-      linkedIn: 'https://www.linkedin.com/in/jinhyeok-jeong-800871192',
-      email: 'zoomkoding@gmail.com',
+      github: 'https://github.com/smk692',
+      linkedIn: 'https://www.linkedin.com/in/%EB%AF%BC%EA%B8%B0-%EC%86%90-12aa94227/',
+      email: 'smk2692@gmail.com',
     },
 },
 ```
@@ -114,12 +114,11 @@ about 페이지 또한 gatsby-meta-config.js를 통해 생성됩니다. about �
 
 ```js
 {
-    date: '2021.02 ~',
+    date: '2023.04 ~',
     activity: '개인 블로그 개발 및 운영',
     links: {
-        post: '/gatsby-starter-zoomkoding-introduction',
-        github: 'https://github.com/zoomkoding/zoomkoding-gatsby-blog',
-        demo: 'https://www.zoomkoding.com',
+        post: '/gatsby-starter-soncoding-introduction',
+        github: 'https://github.com/smk692/smk692.github.io',
     },
 },
 ```
@@ -136,9 +135,8 @@ about 페이지 또한 gatsby-meta-config.js를 통해 생성됩니다. about �
   techStack: ['gatsby', 'react'],
   thumbnailUrl: 'blog.png',
   links: {
-    post: '/gatsby-starter-zoomkoding-introduction',
-    github: 'https://github.com/zoomkoding/zoomkoding-gatsby-blog',
-    demo: 'https://www.zoomkoding.com',
+    post: '/gatsby-starter-soncoding-introduction',
+    github: 'https://github.com/smk692/smk692.github.io',
   }
 }
 ```

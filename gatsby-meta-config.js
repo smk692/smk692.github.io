@@ -1,8 +1,8 @@
 module.exports = {
-  title: `zoomkoding.com`,
-  description: `줌코딩의 개발일기`,
+  title: 'smk692.github.io',
+  description: '손코딩의 끄적끄적 블로그',
   language: `ko`, // `ko`, `en` => currently support versions for Korean and English
-  siteUrl: `https://www.zoomkoding.com`,
+  siteUrl: 'https://smk692.github.io/',
   ogImage: `/og-image.png`, // Path to your in the 'static' folder
   comments: {
     utterances: {
@@ -11,16 +11,16 @@ module.exports = {
   },
   ga: '0', // Google Analytics Tracking ID
   author: {
-    name: `정진혁`,
+    name: `손민기`,
     bio: {
-      role: `개발자`,
-      description: ['사람에 가치를 두는', '능동적으로 일하는', '이로운 것을 만드는'],
+      role: '백엔드 개발자',
+      description: ['개발에 미친놈', '절대 두번 일하지 않으려고 하는 게으름', '큰 그림을 그리는 아키텍처 '],
       thumbnail: 'sample.png', // Path to the image in the 'asset' folder
     },
     social: {
-      github: ``, // `https://github.com/zoomKoding`,
-      linkedIn: ``, // `https://www.linkedin.com/in/jinhyeok-jeong-800871192`,
-      email: ``, // `zoomkoding@gmail.com`,
+      github: 'https://github.com/smk692',
+      linkedIn: 'https://www.linkedin.com/in/%EB%AF%BC%EA%B8%B0-%EC%86%90-12aa94227/',
+      email: 'smk2692@gmail.com',
     },
   },
 
@@ -46,9 +46,8 @@ module.exports = {
         date: '2021.02 ~',
         activity: '개인 블로그 개발 및 운영',
         links: {
-          post: '/gatsby-starter-zoomkoding-introduction',
-          github: 'https://github.com/zoomkoding/zoomkoding-gatsby-blog',
-          demo: 'https://www.zoomkoding.com',
+          post: '/gatsby-starter-soncoding-introduction',
+          github: 'https://github.com/smk692/smk692.github.io',
         },
       },
     ],
@@ -78,9 +77,8 @@ module.exports = {
         techStack: ['gatsby', 'react'],
         thumbnailUrl: 'blog.png',
         links: {
-          post: '/gatsby-starter-zoomkoding-introduction',
-          github: 'https://github.com/zoomkoding/zoomkoding-gatsby-blog',
-          demo: 'https://www.zoomkoding.com',
+          post: '/gatsby-starter-soncoding-introduction',
+          github: 'https://github.com/smk692/smk692.github.io',
         },
       },
     ],
