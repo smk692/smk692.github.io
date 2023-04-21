@@ -41,7 +41,7 @@ jobs:
 
       - name: Generate Blog Post
         env:
-          SECRET_KEY: ${{ secrets.OPENAI_API_KEY }}  # 환경 변수 설정
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}  # 환경 변수 설정
         run: python generate_blog_post.py
 
       - name: Npm install
