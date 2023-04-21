@@ -20,6 +20,14 @@ jobs:
         with:
           node-version: v14.17.4
 
+      - name: Cache node modules
+        uses: actions/cache@v2
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-npm-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-npm-
+
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
