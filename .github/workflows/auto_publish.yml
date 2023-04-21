@@ -1,7 +1,8 @@
 name: Auto Publish Blog Posts
+
 on:
   schedule:
-    - cron: '*/5 * * * *' # 매일 자정마다 실행
+    - cron: '5 0 * * *'
 
 jobs:
   build:
@@ -9,6 +10,11 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.x
 
       - name: Install Required Python Packages
         run: |
@@ -20,6 +26,7 @@ jobs:
 
       - name: Commit Changes
         run: |
+          git config --local user.email "smk692@naver.com"
           git config --local user.name "smk692"
           git add .
           git commit -m "Add a new blog post"
