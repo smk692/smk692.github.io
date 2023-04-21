@@ -35,7 +35,7 @@ def create_blog_post(emoji, title, tags, author, categories, contents):
 
     print(f"블로그 포스트 파일이 생성되었습니다: {filename}")
 
-def connection_chatgpt(topic):
+def generate_contents(topic):
     openai.api_key = os.getenv("OPENAI_API_KEY")
 
     prompt = f'''
@@ -53,10 +53,10 @@ def connection_chatgpt(topic):
     12. please write in korean
     '''
 
-    return generate_contents(prompt)
+    return connection_chatgpt(prompt)
 
 
-def generate_contents(prompt):
+def connection_chatgpt(prompt):
     response = openai.Completion.create(
         model="text-davinci-003",
         prompt=prompt,
@@ -65,7 +65,6 @@ def generate_contents(prompt):
         top_p=1,
         frequency_penalty=0.0,
         presence_penalty=0.6,
-        stop=[]
     )
     contents = response.choices[0].text
 
@@ -93,7 +92,7 @@ if __name__ == "__main__":
 
     topic = "자바 가비지 컬렉터"
     categories = "ALL JAVA"
-    contants, tags = connection_chatgpt(topic)
+    contants, tags = generate_contents(topic)
 
     emoji = create_emoji()
     title = contants.split('\n')[0]
