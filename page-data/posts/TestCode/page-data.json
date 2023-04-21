@@ -1,0 +1,5 @@
+{
+    "componentChunkName": "component---src-templates-category-template-js",
+    "path": "/posts/TestCode",
+    "result": {"pageContext":{"currentCategory":"TestCode","categories":["All","DDD","TestCode","JAVA","아키텍처","featured","블로그"],"edges":[{"node":{"id":"f3805e98-e7b5-5730-b1a4-6e234751639e","excerpt":"# DDD 테스트 코드 작성 방법 DDD(Domain-Driven Design) 테스트 코드 작성은 비교적 새로운 기법이지만 소프트웨어 개발을 하는데 많은 도움이 됩니다. 개발자들은 일반적인 테스트 코드 작성과 달리 DDD 테스트 코드 작성 방법에 대해 더 신중하게 고민해야 합니다. DDD 테스트 코드 작성 방법에 대한 정의 DDD(Domain-Driven Design) 테스트 코드 개발은 기본 개발 과정과는 달리 개발을 위해 만들어진 도메인, 제품, 데이터모델과 같은 미리 정의된 모델을 사용합니다. 이는 개발 시에 점진적인 개발이 가능하게 해줍니다. 기본적으로 DDD 테스트 코드 작성 방법과는 다르게 개발에 대하여 다양한 요구사항과 의사 결정이 먼저 들어가게 됩니다. DDD 테스트 코드 작성의 장단점 DDD 테스트 코드 작성 방법은 기존의 개발 방법과 차이가 있지만 관련된 장단점이 있습니다. 장점 다른 시스템과 연동하기 쉽다. 빠른 시간 안에 기능을 추가할 수 있다. 개발 시간이…","fields":{"slug":"/2023-04-21/#-ddd-테스트-코드-작성-방법-17:33:01/"},"frontmatter":{"categories":"DDD TestCode JAVA","title":"# DDD 테스트 코드 작성 방법 ","date":"April 21, 2023"}},"next":{"fields":{"slug":"/2023-04-21/ddd-java를-활용한-아키텍처-17:09:45/"}},"previous":null}]}},
+    "staticQueryHashes": ["1073350324","1956554647","2938748437"]}
