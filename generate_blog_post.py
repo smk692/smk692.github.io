@@ -8,7 +8,7 @@ def create_blog_post(emoji, title, tags, author, categories, contents):
     now = datetime.datetime.now()
 
     # 블로그 포스트에 사용될 파일 이름
-    filename = "content/" + now.strftime("%Y-%m-%d") + "/" + now.strftime('%Y-%m-%d %H:%M:%S')+ "_" + title.lower().replace(" ", "-") + ".md"
+    filename = "content/" + now.strftime("%Y-%m-%d") + "/" + title.lower().replace(" ", "-") + now.strftime('%H:%M:%S')+ ".md"
 
     # 블로그 포스트에 사용될 메타데이터
     metadata = [
@@ -50,6 +50,7 @@ def generate_contents(topic):
     9. Please write sample code for actual use and cases in the middle.
     10. Briefly explain the advantages and disadvantages of using
     11. Most importantly, make it legible
+    12. If you get fired, keep writing
     12. please write in korean
     '''
 
