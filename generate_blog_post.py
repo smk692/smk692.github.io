@@ -92,16 +92,12 @@ if __name__ == "__main__":
 
     topic = "자바 가비지 컬렉터"
     categories = "ALL JAVA"
-    contants, tags = generate_contents(topic)
+    contents, tags = generate_contents(topic)
 
-    print(contants)
+    print(contents)
 
     emoji = create_emoji()
-    title = contants.split('\n')[0]
-    tags = tags
+    title = contents.split('\n')[1]
     author = "손(Son/손민기)"
-    categories = categories
-
-    contents = contants
 
     create_blog_post(emoji, title, tags, author, categories, contents)
