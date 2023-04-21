@@ -33,10 +33,10 @@ def create_blog_post(emoji, title, tags, author,categories):
 
 
 if __name__ == "__main__":
-    emoji = input("🔮")
-    title = input("블로그 글 제목을 입력하세요: ")
-    tags = input("태그를 입력하세요 (쉼표로 구분): ").split(",")
-    author = input("손(Son/손민기)")
-    categories = input("카테고리를 입력하세요 (쉼표로 구분): ").split(",")
+    emoji = "🔮"
+    title = "블로그 글 제목을 입력하세요: "
+    tags = "sample, frist".split(",")
+    author = "손(Son/손민기)"
+    categories = "블로그, SAMPLE".split(",")
 
     create_blog_post(emoji, title, tags, author, categories)
