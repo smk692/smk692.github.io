@@ -7,8 +7,15 @@ import openai
 def create_blog_post(emoji, title, tags, author, categories, contents):
     now = datetime.datetime.now()
 
-    # 블로그 포스트에 사용될 파일 이름
-    filename = "content/" + now.strftime("%Y-%m-%d") + "/" + title.lower().replace(" ", "-") + now.strftime('%H:%M:%S')+ ".md"
+    directory_path = "content/" + now.strftime("%Y-%m-%d")
+    file_name = directory_path + "/" + title.lower().replace(" ", "-") + now.strftime('%H:%M:%S')+ ".md"
+
+    # 블로그 포스트에 저장할 구조
+    directory = os.path.dirname(directory_path)
+
+    # 폴더가 없으면 생성
+    if not os.path.exists(directory):
+        os.makedirs(directory)
 
     # 블로그 포스트에 사용될 메타데이터
     metadata = [
@@ -27,13 +34,13 @@ def create_blog_post(emoji, title, tags, author, categories, contents):
     body = f"# {title}\n\n"
 
     # 블로그 포스트 파일 생성
-    with open(filename, "w") as f:
+    with open(file_name, "w") as f:
         f.write("\n".join(metadata))
         f.write("\n")
         f.write(body)
         f.write(contents)
 
-    print(f"블로그 포스트 파일이 생성되었습니다: {filename}")
+    print(f"블로그 포스트 파일이 생성되었습니다: {file_name}")
 
 def generate_contents(topic):
     openai.api_key = os.getenv("OPENAI_API_KEY")
@@ -52,6 +59,8 @@ def generate_contents(topic):
     11. Most importantly, make it legible
     12. If you get fired, keep writing
     12. please write in korean
+
+    Please follow the above rules
     '''
 
     return connection_chatgpt(prompt)
