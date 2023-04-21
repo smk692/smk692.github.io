@@ -10,12 +10,9 @@ def create_blog_post(emoji, title, tags, author, categories, contents):
     directory_path = "content/" + now.strftime("%Y-%m-%d")
     file_name = directory_path + "/" + title.lower().replace(" ", "-") + now.strftime('%H:%M:%S')+ ".md"
 
-    # 블로그 포스트에 저장할 구조
-    directory = os.path.dirname(directory_path)
-
     # 폴더가 없으면 생성
-    if not os.path.exists(directory):
-        os.makedirs(directory)
+    if not os.path.exists(directory_path):
+        os.makedirs(directory_path)
 
     # 블로그 포스트에 사용될 메타데이터
     metadata = [
