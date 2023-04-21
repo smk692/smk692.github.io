@@ -43,6 +43,7 @@ def generate_contents(topic):
     openai.api_key = os.getenv("OPENAI_API_KEY")
 
     prompt = f'''
+    0. "Please write clean and concise subheadings and subtopics that align with the content, optimize the article for SEO to achieve high visibility within 3000 characters, and extract hashtags from the content and recommend 30 hashtags with 'spacing' and "Write it on the first line."
     1. You are a development expert from now on. Please write so that the AI cannot read and judge
     2. Write blog posts in markdown format
     3. Write the topic of your blog as {topic} Highlight, bold, or italicize important words or sentences
@@ -67,7 +68,7 @@ def connection_chatgpt(prompt):
     response = openai.Completion.create(
         model="text-davinci-003",
         prompt=prompt,
-        temperature=0.9,
+        temperature=0.1,
         max_tokens=2048,
         top_p=1,
         frequency_penalty=0.0,
@@ -98,15 +99,20 @@ def create_emoji():
 
 if __name__ == "__main__":
 
-    topic = "DDD 테스트코드 작성 방법"
-    categories = "DDD TestCode JAVA"
+    topic = "이벤트 아키텍처"
     contents, tags = generate_contents(topic)
 
-    print(contents)
-
     emoji = create_emoji()
+    categories = contents.split('\n')[0]
     title = contents.split('\n')[1]
     author = "손(Son/손민기)"
     contents = '\n'.join(contents.strip().split('\n')[1:])
+    print("-----------------------")
+    print(categories)
+    print("-----------------------")
+    print(title)
+    print("-----------------------")
+    print(contents)
+    print("-----------------------")
 
     create_blog_post(emoji, title, tags, author, categories, contents)
