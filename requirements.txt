@@ -1,0 +1,5 @@
+openai==3.0.0
+datetime==4.0.0
+os==0.1.0
+re==2.2.1
+random==0.1.0
