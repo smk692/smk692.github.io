@@ -41,6 +41,9 @@ jobs:
         run: |
           git config --local user.email "smk692@naver.com"
           git config --local user.name "smk692"
+          
+          git remote set-url origin https://${{ secrets.MY_NAME }}:${{ secrets.MY_PASSWORD }}@github.com/smk692/smk692.github.io.git
+
           git add .
           git commit -m "Add a new blog post"
           git push

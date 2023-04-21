@@ -5,7 +5,7 @@ def create_blog_post(emoji, title, tags, author, categories, contents):
     now = datetime.datetime.now()
 
     # 블로그 포스트에 사용될 파일 이름
-    filename = "content/" + now.strftime("%Y-%m-%d") + "-" + title.lower().replace(" ", "-") + ".md"
+    filename = "content/" + now.strftime("%Y-%m-%d-%H-%M-%S") + "-" + title.lower().replace(" ", "-") + ".md"
 
     # 블로그 포스트에 사용될 메타데이터
     metadata = [
