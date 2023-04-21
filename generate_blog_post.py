@@ -13,7 +13,7 @@ def create_blog_post(emoji, title, tags, author, categories, contents):
         "layout: post",
         f"emoji: {emoji}",
         f"title: \"{title}\"",
-        f"date: {str(now.strftime('%Y-%m-%d %H:%M:%S'))}",
+        f"date: '{now.strftime('%Y-%m-%d %H:%M:%S')}'",
         f"author: {author}",
         f"tags: {tags}",
         f"categories: {categories}",
