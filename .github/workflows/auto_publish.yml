@@ -45,6 +45,6 @@ jobs:
           git commit -m "Add a new blog post"
           git push
 
-          npm run deploy 
+          npm run deploy
 
 
