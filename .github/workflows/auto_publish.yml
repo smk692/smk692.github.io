@@ -41,7 +41,7 @@ jobs:
         env:
           MY_EMAIL: ${{ secrets.MY_EMAIL }} 
           MY_NAME: ${{ secrets.MY_NAME }}
-          MY_PASSWORD : ${{ secrets.MY_TOKEN }}
+          MY_TOKEN : ${{ secrets.MY_TOKEN }}
         run: |
           git config --local user.email "smk692@naver.com"
           git config --local user.name "smk692"
