@@ -38,16 +38,21 @@ jobs:
           npm install
 
       - name: Commit Changes
+        env:
+          MY_EMAIL: ${{ secrets.MY_EMAIL }} 
+          MY_NAME: ${{ secrets.MY_NAME }}
+          MY_PASSWORD : ${{ secrets.MY_PASSWORD }}
         run: |
           git config --local user.email "smk692@naver.com"
           git config --local user.name "smk692"
           
-          git remote set-url origin https://${{ secrets.MY_NAME }}:${{ secrets.MY_PASSWORD }}@github.com/smk692/smk692.github.io.git
+          git remote set-url origin https://$MY_NAME:$MY_PASSWORD@github.com/smk692/smk692.github.io.git
 
           git add .
           git commit -m "Add a new blog post"
           git push
 
           npm run deploy
+
 
 
