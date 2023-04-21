@@ -1,0 +1,26 @@
+name: Auto Publish Blog Posts
+on:
+  schedule:
+    - cron: '5 * * * *' # 매일 자정마다 실행
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+
+      - name: Install Required Python Packages
+        run: |
+          python -m pip install --upgrade pip
+          pip install gitpython
+
+      - name: Generate Blog Post
+        run: python generate_blog_post.py
+
+      - name: Commit Changes
+        run: |
+          git config --local user.name "smk692"
+          git add .
+          git commit -m "Add a new blog post"
+          git push
