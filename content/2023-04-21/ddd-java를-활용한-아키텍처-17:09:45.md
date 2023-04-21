@@ -4,7 +4,7 @@ title: DDD JAVA를 활용한 아키텍처
 date: '2023-04-21 17:09:45'
 author: 손(Son/손민기)
 tags: 아키텍처 Architecture DDD Java
-categories: ALL JAVA 아키텍처
+categories: JAVA 아키텍처
 ---
 # DDD JAVA를 활용한 아키텍처
 

@@ -98,8 +98,8 @@ def create_emoji():
 
 if __name__ == "__main__":
 
-    topic = "DDD JAVA를 활용한 아키텍처"
-    categories = "ALL Java Architecture"
+    topic = "DDD 테스트코드 작성 방법"
+    categories = "DDD TestCode JAVA"
     contents, tags = generate_contents(topic)
 
     print(contents)
@@ -107,5 +107,6 @@ if __name__ == "__main__":
     emoji = create_emoji()
     title = contents.split('\n')[1]
     author = "손(Son/손민기)"
+    contents = '\n'.join(contents.strip().split('\n')[1:])
 
     create_blog_post(emoji, title, tags, author, categories, contents)
