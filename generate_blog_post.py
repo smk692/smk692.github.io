@@ -49,12 +49,12 @@ def generate_contents(topic):
     4. Please make the entire blog less than 10 minutes long.
     5. Include helpful information for expert developers
     6. The audience reading this article is a developer
-    7. Create several hashtags and add them only at the end.
+    7. Create several hashtags and add them only at the very end of the post.
     8. Add a summary of the entire article at the beginning of the article.
     9. Please write sample code for actual use and cases in the middle.
     10. Briefly explain the advantages and disadvantages of using
     11. Most importantly, make it legible
-    12. If you get fired, keep writing
+    12. If the text is interrupted, continue writing
     12. please write in korean
 
     Please follow the above rules
@@ -86,7 +86,8 @@ def hashtag_export(contents):
     hashtags = [w[1:] for w in re.findall(hashtag_pattern, contents)]
     tag_str = ""
     for w in hashtags:
-        tag_str += f'{w}, '
+        print(w)
+        tag_str += f'{w} '
 
     return tag_str
 
@@ -97,8 +98,8 @@ def create_emoji():
 
 if __name__ == "__main__":
 
-    topic = "자바 가비지 컬렉터"
-    categories = "ALL JAVA"
+    topic = "DDD JAVA를 활용한 아키텍처"
+    categories = "ALL Java Architecture"
     contents, tags = generate_contents(topic)
 
     print(contents)
