@@ -33,6 +33,10 @@ jobs:
       - name: Generate Blog Post
         run: python generate_blog_post.py
 
+      - name: Npm install
+        run: |
+          npm install
+
       - name: Commit Changes
         run: |
           git config --local user.email "smk692@naver.com"
