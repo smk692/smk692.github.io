@@ -2,7 +2,7 @@ name: Auto Publish Blog Posts
 
 on:
   schedule:
-    - cron: '5 0 * * *'
+    - cron: '*/5 * * *'
 
 jobs:
   build:
@@ -10,6 +10,10 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v2
+
+      - uses: actions/setup-node@v3
+        with:
+          node-version: v14.17.4
 
       - name: Set up Python
         uses: actions/setup-python@v2
@@ -31,3 +35,7 @@ jobs:
           git add .
           git commit -m "Add a new blog post"
           git push
+
+          npm run deploy
+
+
