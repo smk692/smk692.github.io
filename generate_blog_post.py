@@ -43,22 +43,19 @@ def generate_contents(topic):
     openai.api_key = os.getenv("OPENAI_API_KEY")
 
     prompt = f'''
-    0. "Please write clean and concise subheadings and subtopics that align with the content, optimize the article for SEO to achieve high visibility within 3000 characters, and extract hashtags from the content and recommend 30 hashtags with 'spacing' and "Write it on the first line."
-    1. You are a development expert from now on. Please write so that the AI cannot read and judge
-    2. Write blog posts in markdown format
-    3. Write the topic of your blog as {topic} Highlight, bold, or italicize important words or sentences
-    4. Please make the entire blog less than 10 minutes long.
-    5. Include helpful information for expert developers
-    6. The audience reading this article is a developer
-    7. Create several hashtags and add them only at the very end of the post.
-    8. Add a summary of the entire article at the beginning of the article.
-    9. Please write sample code for actual use and cases in the middle.
-    10. Briefly explain the advantages and disadvantages of using
-    11. Most importantly, make it legible
-    12. If the text is interrupted, continue writing
-    12. please write in korean
+    You are now an expert developer.
 
-    Please follow the above rules
+    Please write a blog post in markdown format on the topic of {topic}. Apply highlights, bolds, and italics to important words or sentences.
+
+    Provide clean and concise subheadings that match the content, and write an SEO-optimized post that is 3000 characters or less to ensure high visibility. Also, summarize the advantages and disadvantages of using the topic, and extract 30 hashtags relevant to the content and list them at the beginning of the post.
+
+    The total length of the blog should be around 10 minutes.
+
+    The target audience for this post is expert developers, so make sure to make it readable and easy to understand.
+
+    Add multiple hashtags at the end of the post only.
+
+    Please make sure to follow the rules listed above.
     '''
 
     return connection_chatgpt(prompt)
@@ -66,7 +63,7 @@ def generate_contents(topic):
 
 def connection_chatgpt(prompt):
     response = openai.Completion.create(
-        model="text-davinci-003",
+        model="davinci",
         prompt=prompt,
         temperature=0.1,
         max_tokens=2048,
@@ -99,12 +96,12 @@ def create_emoji():
 
 if __name__ == "__main__":
 
-    topic = "이벤트 아키텍처"
+    topic = "Kafka(MSK) 정리 및 사용 사례"
     contents, tags = generate_contents(topic)
 
     emoji = create_emoji()
     categories = contents.split('\n')[0]
-    title = contents.split('\n')[1]
+    title = topic
     author = "손(Son/손민기)"
     contents = '\n'.join(contents.strip().split('\n')[1:])
     print("-----------------------")
