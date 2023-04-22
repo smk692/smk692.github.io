@@ -10,7 +10,7 @@ on:
       - master
 
 jobs:
-  build:
+  generate-blog-post:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
@@ -33,6 +33,14 @@ jobs:
         with:
           python-version: 3.x
 
+      - name: Cache Python packages
+        uses: actions/cache@v2
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
       - name: Install Required Python Packages
         run: |
           python -m pip install --upgrade pip
@@ -41,8 +49,27 @@ jobs:
 
       - name: Generate Blog Post
         env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}  # 환경 변수 설정
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: python generate_blog_post.py
+
+  deploy:
+    needs: generate-blog-post
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+
+      - uses: actions/setup-node@v3
+        with:
+          node-version: v14.17.4
+
+      - name: Cache node modules
+        uses: actions/cache@v2
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-npm-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-npm-
 
       - name: Npm install
         run: |
@@ -64,6 +91,3 @@ jobs:
           git push
 
           npm run deploy
-
-
-

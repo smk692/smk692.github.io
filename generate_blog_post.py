@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import datetime
 import os
 import re
@@ -44,29 +46,21 @@ def generate_contents(topic):
 
     prompt = f'''
     You are now an expert developer.
-
     Please write a blog post in markdown format on the topic of {topic}. Apply highlights, bolds, and italics to important words or sentences.
-
     Provide clean and concise subheadings that match the content, and write an SEO-optimized post that is 3000 characters or less to ensure high visibility. Also, summarize the advantages and disadvantages of using the topic, and extract 30 hashtags relevant to the content and list them at the beginning of the post.
-
     The total length of the blog should be around 10 minutes.
-
     The target audience for this post is expert developers, so make sure to make it readable and easy to understand.
-
     Add multiple hashtags at the end of the post only.
-
     Please make sure to follow the rules listed above.
     '''
-
     return connection_chatgpt(prompt)
 
 
 def connection_chatgpt(prompt):
     response = openai.Completion.create(
-        model="davinci",
+        model="text-davinci-003",
         prompt=prompt,
-        temperature=0.1,
-        max_tokens=2048,
+        temperature=0.9,
         top_p=1,
         frequency_penalty=0.0,
         presence_penalty=0.6,
@@ -95,12 +89,11 @@ def create_emoji():
     return chr(random.randint(start, end))  # 랜덤한 이모지 선택
 
 if __name__ == "__main__":
-
     topic = "Kafka(MSK) 정리 및 사용 사례"
     contents, tags = generate_contents(topic)
 
     emoji = create_emoji()
-    categories = contents.split('\n')[0]
+    categories = "테스트"
     title = topic
     author = "손(Son/손민기)"
     contents = '\n'.join(contents.strip().split('\n')[1:])
@@ -111,5 +104,6 @@ if __name__ == "__main__":
     print("-----------------------")
     print(contents)
     print("-----------------------")
+    print(tags)
 
     create_blog_post(emoji, title, tags, author, categories, contents)
