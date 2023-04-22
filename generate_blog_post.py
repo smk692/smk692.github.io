@@ -5,6 +5,7 @@ import os
 import re
 import random
 import openai
+import pprint
 
 def create_blog_post(emoji, title, tags, author, categories, contents):
     now = datetime.datetime.now()
@@ -44,66 +45,70 @@ def create_blog_post(emoji, title, tags, author, categories, contents):
 def generate_contents(topic):
     openai.api_key = os.getenv("OPENAI_API_KEY")
 
-    prompt = f'''
-    You are now an expert developer.
-    Please write a blog post in markdown format on the topic of {topic}. Apply highlights, bolds, and italics to important words or sentences.
-    Provide clean and concise subheadings that match the content, and write an SEO-optimized post that is 3000 characters or less to ensure high visibility. Also, summarize the advantages and disadvantages of using the topic, and extract 30 hashtags relevant to the content and list them at the beginning of the post.
-    The total length of the blog should be around 10 minutes.
-    The target audience for this post is expert developers, so make sure to make it readable and easy to understand.
-    Add multiple hashtags at the end of the post only.
-    Please make sure to follow the rules listed above.
+    prompt_contents = f'''
+        Please write in Korean:
+        From now on, you are an IT expert. Please write a blog post in markdown format on the topic of {topic}. Apply highlights, bolds, and italics to important words or sentences.
+        In the markdown format, define the introduction, subheadings, advantages and disadvantages, application examples, and sample results.
+        Provide clean and concise subheadings that match the content, and write an SEO-optimized post that is 3000 characters or less to ensure high visibility. Also, summarize the advantages and disadvantages of using the topic
+        The target audience for this post is expert developers, so make sure to make it readable and easy to understand.
     '''
-    return connection_chatgpt(prompt)
+    prompt_tags = f'''
+        {prompt_contents}
+        Could you please summarize and supplement the previous message into a message that is within 3300 characters? The previous message contained information regarding the previous conversation and it would be great if it could be made to sound more human-like and create a place to insert images.
+        Impontant! Please supplement and continue writing based on the initial question and extract 30 hashtags relevant to the content and list them at the beginning of the post using a comma as a separator.
+    '''
 
+    contents = connection_chatgpt(prompt_contents)
+    contents += connection_chatgpt(prompt_tags)
+
+    return contents, hashtag_export(contents)
 
 def connection_chatgpt(prompt):
     response = openai.Completion.create(
         model="text-davinci-003",
         prompt=prompt,
-        temperature=0.9,
+        temperature=0.1,
+        max_tokens=3500,
         top_p=1,
         frequency_penalty=0.0,
         presence_penalty=0.6,
     )
-    contents = response.choices[0].text
+    contents = ""
+    for choice in response.choices:
+        contents += choice.text
 
-    hashtag = hashtag_export(contents)
-
-    return contents, hashtag
+    return contents
 
 def hashtag_export(contents):
-    hashtag_pattern = r'(#+[a-zA-Z0-9(_){1,}])'
-    re.findall(hashtag_pattern, contents)
 
-    hashtags = [w[1:] for w in re.findall(hashtag_pattern, contents)]
-    tag_str = ""
-    for w in hashtags:
-        print(w)
-        tag_str += f'{w} '
+    hashtags_part = contents.split("# Hashtags")[-1]
 
-    return tag_str
+    hashtag_pattern = r'\B#\w+'
+    hashtags = re.findall(hashtag_pattern, hashtags_part)
+
+    clean_hashtags = []
+    for hashtag in hashtags:
+        clean_hashtag = re.sub(r'[^\w\s]', '', hashtag)
+        clean_hashtags.append(clean_hashtag)
+
+    return " ".join(clean_hashtags)
 
 def create_emoji():
-    start = 0x1F600     # 이모지 시작 유니코드 값
-    end = 0x1F64F       # 이모지 끝 유니코드 값
-    return chr(random.randint(start, end))  # 랜덤한 이모지 선택
+    start = 0x1F600
+    end = 0x1F64F
+    return chr(random.randint(start, end))
 
 if __name__ == "__main__":
     topic = "Kafka(MSK) 정리 및 사용 사례"
     contents, tags = generate_contents(topic)
 
+    pprint.pprint("-----------------------")
+    pprint.pprint(contents)
+
     emoji = create_emoji()
-    categories = "테스트"
+    categories = "KAFKA"
     title = topic
     author = "손(Son/손민기)"
-    contents = '\n'.join(contents.strip().split('\n')[1:])
-    print("-----------------------")
-    print(categories)
-    print("-----------------------")
-    print(title)
-    print("-----------------------")
-    print(contents)
-    print("-----------------------")
-    print(tags)
+    contents = '\n'.join(contents.strip().split('\n')[0:])
 
     create_blog_post(emoji, title, tags, author, categories, contents)
