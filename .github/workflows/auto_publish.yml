@@ -87,8 +87,17 @@ jobs:
             ${{ runner.os }}-npm-
 
       - name: Npm install
-        run: |
-          npm install
+        run: npm install
 
-      - name: Commit Changes
-        run: npm run deploy
+      - name: Update blog
+        env:
+          MY_EMAIL: ${{ secrets.MY_EMAIL }}
+          MY_NAME: ${{ secrets.MY_NAME }}
+          MY_TOKEN : ${{ secrets.MY_TOKEN }}
+        run: |
+          git config --local user.email $MY_EMAIL
+          git config --local user.name $MY_NAME
+
+          git remote set-url origin https://$MY_NAME:$MY_TOKEN@github.com/smk692/smk692.github.io.git
+
+          npm run deploy
