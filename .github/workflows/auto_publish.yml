@@ -7,7 +7,7 @@ name: Auto Publish Blog Posts
 on:
   push:
     branches:
-      - develop
+      - master
 
 jobs:
   build:
