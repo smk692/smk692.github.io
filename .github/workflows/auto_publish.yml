@@ -52,6 +52,21 @@ jobs:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: python generate_blog_post.py
 
+      - name: Commit Changes
+        env:
+          MY_EMAIL: ${{ secrets.MY_EMAIL }}
+          MY_NAME: ${{ secrets.MY_NAME }}
+          MY_TOKEN : ${{ secrets.MY_TOKEN }}
+        run: |
+          git config --local user.email $MY_EMAIL
+          git config --local user.name $MY_NAME
+
+          git remote set-url origin https://$MY_NAME:$MY_TOKEN@github.com/smk692/smk692.github.io.git
+
+          git add .
+          git commit -m "Add a new blog post"
+          git push
+
   deploy:
     needs: generate-blog-post
     runs-on: ubuntu-latest
@@ -76,18 +91,4 @@ jobs:
           npm install
 
       - name: Commit Changes
-        env:
-          MY_EMAIL: ${{ secrets.MY_EMAIL }} 
-          MY_NAME: ${{ secrets.MY_NAME }}
-          MY_TOKEN : ${{ secrets.MY_TOKEN }}
-        run: |
-          git config --local user.email $MY_EMAIL
-          git config --local user.name $MY_NAME
-          
-          git remote set-url origin https://$MY_NAME:$MY_TOKEN@github.com/smk692/smk692.github.io.git
-
-          git add .
-          git commit -m "Add a new blog post"
-          git push
-
-          npm run deploy
+        run: npm run deploy
