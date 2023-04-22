@@ -48,7 +48,7 @@ def generate_contents(topic):
     prompt_contents = f'''
         Please write in Korean:
         From now on, you are an IT expert. Please write a blog post in markdown format on the topic of {topic}. Apply highlights, bolds, and italics to important words or sentences.
-        In the markdown format, define the introduction, subheadings, advantages and disadvantages, application examples, and sample results.
+        Define subheadings, advantages and disadvantages, application examples, and sample results in markdown format.
         Provide clean and concise subheadings that match the content, and write an SEO-optimized post that is 3000 characters or less to ensure high visibility. Also, summarize the advantages and disadvantages of using the topic
         The target audience for this post is expert developers, so make sure to make it readable and easy to understand.
     '''
@@ -99,7 +99,7 @@ def create_emoji():
     return chr(random.randint(start, end))
 
 if __name__ == "__main__":
-    topic = "Kafka(MSK) 정리 및 사용 사례"
+    topic = "Kafka 구조, 내용 및 사용 사례"
     contents, tags = generate_contents(topic)
 
     pprint.pprint("-----------------------")

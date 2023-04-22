@@ -7,10 +7,6 @@ author: 손(Son/손민기)
 tags: 
 categories: KAFKA
 ---
-# Kafka(MSK) 정리 및 사용 사례
-
-# Kafka(MSK) 정리 및 사용 사례
-
 ## 개요
 Kafka는 Apache Software Foundation의 오픈 소스 메시지 브로커 프로젝트로, 빠르고 확장 가능한 메시지 시스템이다. Amazon Managed Streaming for Kafka (MSK)는 AWS에서 제공하는 완전 관리형 서비스로, 사용자는 설정과 관리를 할 필요가 없고, 신뢰할 수 있는 성능과 보안을 제공한다.
 
