@@ -127,96 +127,132 @@ ps.나중에 그림 추가 예정입니다. </code></pre></div>
 </ul>
 <h3 id="자동화-스크립트-작성" style="position:relative;"><a href="#%EC%9E%90%EB%8F%99%ED%99%94-%EC%8A%A4%ED%81%AC%EB%A6%BD%ED%8A%B8-%EC%9E%91%EC%84%B1" aria-label="자동화 스크립트 작성 permalink" class="anchor before"><svg aria-hidden="true" focusable="false" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>자동화 스크립트 작성</h3>
 <ul>
-<li>
-<p>GitHub Actions을 사용하여 블로그를 자동으로 빌드하고 배포하는 자동화 스크립트를 작성합니다. 이 스크립트는 블로그 저장소의 .github/workflows 디렉토리에 작성됩니다. 아래는 예시입니다.</p>
-<div class="gatsby-highlight" data-language="yaml"><pre class="language-yaml"><code class="language-yaml"><span class="token key atrule">name</span><span class="token punctuation">:</span> Auto Publish Blog Posts by 손(Son/손민기)
+<li>GitHub Actions을 사용하여 블로그를 자동으로 빌드하고 배포하는 자동화 스크립트를 작성합니다.</li>
+</ul>
+<p><strong>Github action 전에 준비 작업</strong>
+해당하는 Github Reposittory > setting > security > action</p>
+<ul>
+<li>MY_EMAIL, MY_NAME, MY_TOKEN, OPENAI_API_KEY 추가해주세요.</li>
+</ul>
+<blockquote>
+<p><span
+      class="gatsby-resp-image-wrapper"
+      style="position: relative; display: block; margin-left: auto; margin-right: auto; max-width: 720px; "
+    >
+      <span
+    class="gatsby-resp-image-background-image"
+    style="padding-bottom: 73.33333333333334%; position: relative; bottom: 0; left: 0; background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAPCAYAAADkmO9VAAAACXBIWXMAABYlAAAWJQFJUiTwAAACBUlEQVQ4y21U266VMBDl/39E3zXx1R8w+mD0xcSTcIBy20DphZa2y8xQkK1nkpXusjurs9YMFIuUCCGAIsbI67wsqKoKVfUK0dQoy5L3+74z6Dzhvk8pMYp5XiBvpBR0SSV6VL1CORh0s8WwWHTDhLbt0PU9r3XToGpqxvh4HISUPIwjjLEX4WOa8FLWeCkFfr92KOsWtegh2g5CCEzzDClXBnwC/JWKYppmyFUx+xnOOa5aKwVrDbx38M7Be884Je5hx6efn/Hu6we8//YRo55QUPnkAxMFD+0MUqTD5FNEiJGT4x0xMuj/H+IXvpTfGcqZg1BpzYSUHGKA3RxEP6LtR0hlYN0O63xen2GUg1osNu2BlCWTJ3fJROz9zqDf1m7QxmaYY9UGznn4fYfznkHVc4Vsbo6z/em2J/mM/Rn3cbnGhm7kpHyAwtgNohvQjxOUsYe8zT/jssDDbB7aOlZTdF3Po0DzSN2loCbRXimdm/APUuLLadTIDvJ8VUdhRVU3aESLiQk9+0aEyyJht+3ZhgtgQmomKSTSVWl+XlAiDTc3I0SugAml5Ga95VPKFSptLkK5ZkK5rpfUs9N0mA6SpLfIUp7Fzbmjw84zeTq6PPB7SQ+vsQkBq1LQWnPif4RZDV1orGVrLkJK2EN4+jgw4Xq8q9vmckV/35RT8klGleqs5g9xEo8Ml2rgbgAAAABJRU5ErkJggg=='); background-size: cover; display: block;"
+  ></span>
+  <img
+        class="gatsby-resp-image-image"
+        alt="blog3.png"
+        title="blog3.png"
+        src="/static/84e37f967d303757f008c1673736992a/37523/blog3.png"
+        srcset="/static/84e37f967d303757f008c1673736992a/e9ff0/blog3.png 180w,
+/static/84e37f967d303757f008c1673736992a/f21e7/blog3.png 360w,
+/static/84e37f967d303757f008c1673736992a/37523/blog3.png 720w,
+/static/84e37f967d303757f008c1673736992a/302a4/blog3.png 1080w,
+/static/84e37f967d303757f008c1673736992a/07a9c/blog3.png 1440w,
+/static/84e37f967d303757f008c1673736992a/fa63f/blog3.png 2298w"
+        sizes="(max-width: 720px) 100vw, 720px"
+        style="width:100%;height:100%;margin:0;vertical-align:middle;position:absolute;top:0;left:0;"
+        loading="lazy"
+        decoding="async"
+      />
+    </span></p>
+</blockquote>
+<p>이 스크립트는 블로그 저장소의 .github/workflows 디렉토리에 작성됩니다.</p>
+<p>아래는 예시입니다.</p>
+<div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">```yaml
+name: Auto Publish Blog Posts by 손(Son/손민기)
 
-<span class="token key atrule">on</span><span class="token punctuation">:</span>
-<span class="token key atrule">schedule</span><span class="token punctuation">:</span>
-    <span class="token punctuation">-</span> <span class="token key atrule">cron</span><span class="token punctuation">:</span> <span class="token string">'0 0 * * *'</span>
+on:
+schedule:
+    - cron: '0 0 * * *'
 
-<span class="token key atrule">jobs</span><span class="token punctuation">:</span>
-<span class="token key atrule">generate-blog-post</span><span class="token punctuation">:</span>
-    <span class="token key atrule">runs-on</span><span class="token punctuation">:</span> ubuntu<span class="token punctuation">-</span>latest
-    <span class="token key atrule">steps</span><span class="token punctuation">:</span>
-    <span class="token punctuation">-</span> <span class="token key atrule">name</span><span class="token punctuation">:</span> Checkout Repository
-        <span class="token key atrule">uses</span><span class="token punctuation">:</span> actions/checkout@v2
+jobs:
+generate-blog-post:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout Repository
+        uses: actions/checkout@v2
 
-    <span class="token punctuation">-</span> <span class="token key atrule">name</span><span class="token punctuation">:</span> Set up Python
-        <span class="token key atrule">uses</span><span class="token punctuation">:</span> actions/setup<span class="token punctuation">-</span>python@v2
-        <span class="token key atrule">with</span><span class="token punctuation">:</span>
-        <span class="token key atrule">python-version</span><span class="token punctuation">:</span> 3.x
+    - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+        python-version: 3.x
 
-    <span class="token punctuation">-</span> <span class="token key atrule">name</span><span class="token punctuation">:</span> Cache Python packages
-        <span class="token key atrule">uses</span><span class="token punctuation">:</span> actions/cache@v2
-        <span class="token key atrule">with</span><span class="token punctuation">:</span>
-        <span class="token key atrule">path</span><span class="token punctuation">:</span> ~/.cache/pip
-        <span class="token key atrule">key</span><span class="token punctuation">:</span> $<span class="token punctuation">{</span><span class="token punctuation">{</span> runner.os <span class="token punctuation">}</span><span class="token punctuation">}</span><span class="token punctuation">-</span>pip<span class="token punctuation">-</span>$<span class="token punctuation">{</span><span class="token punctuation">{</span> hashFiles('<span class="token important">**/requirements.txt')</span> <span class="token punctuation">}</span><span class="token punctuation">}</span>
-        <span class="token key atrule">restore-keys</span><span class="token punctuation">:</span> <span class="token punctuation">|</span><span class="token scalar string">
-            ${{ runner.os }}-pip-</span>
+    - name: Cache Python packages
+        uses: actions/cache@v2
+        with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+        restore-keys: |
+            ${{ runner.os }}-pip-
 
-    <span class="token punctuation">-</span> <span class="token key atrule">name</span><span class="token punctuation">:</span> Install Required Python Packages
-        <span class="token key atrule">run</span><span class="token punctuation">:</span> <span class="token punctuation">|</span><span class="token scalar string">
+    - name: Install Required Python Packages
+        run: |
         python -m pip install --upgrade pip
         pip install gitpython
-        pip install -r requirements.txt</span>
+        pip install -r requirements.txt
 
-    <span class="token punctuation">-</span> <span class="token key atrule">name</span><span class="token punctuation">:</span> Generate Blog Post
-        <span class="token key atrule">env</span><span class="token punctuation">:</span>
-        <span class="token key atrule">OPENAI_API_KEY</span><span class="token punctuation">:</span> $<span class="token punctuation">{</span><span class="token punctuation">{</span> secrets.OPENAI_API_KEY <span class="token punctuation">}</span><span class="token punctuation">}</span>
-        <span class="token key atrule">run</span><span class="token punctuation">:</span> python generate_blog_post.py
+    - name: Generate Blog Post
+        env:
+        OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: python generate_blog_post.py
 
-    <span class="token punctuation">-</span> <span class="token key atrule">name</span><span class="token punctuation">:</span> Commit Changes
-        <span class="token key atrule">env</span><span class="token punctuation">:</span>
-        <span class="token key atrule">MY_EMAIL</span><span class="token punctuation">:</span> $<span class="token punctuation">{</span><span class="token punctuation">{</span> secrets.MY_EMAIL <span class="token punctuation">}</span><span class="token punctuation">}</span>
-        <span class="token key atrule">MY_NAME</span><span class="token punctuation">:</span> $<span class="token punctuation">{</span><span class="token punctuation">{</span> secrets.MY_NAME <span class="token punctuation">}</span><span class="token punctuation">}</span>
-        <span class="token key atrule">MY_TOKEN</span> <span class="token punctuation">:</span> $<span class="token punctuation">{</span><span class="token punctuation">{</span> secrets.MY_TOKEN <span class="token punctuation">}</span><span class="token punctuation">}</span>
-        <span class="token key atrule">run</span><span class="token punctuation">:</span> <span class="token punctuation">|</span><span class="token scalar string">
+    - name: Commit Changes
+        env:
+        MY_EMAIL: ${{ secrets.MY_EMAIL }}
+        MY_NAME: ${{ secrets.MY_NAME }}
+        MY_TOKEN : ${{ secrets.MY_TOKEN }}
+        run: |
         git config --local user.email $MY_EMAIL
-        git config --local user.name $MY_NAME</span>
+        git config --local user.name $MY_NAME
 
-        git remote set<span class="token punctuation">-</span>url origin https<span class="token punctuation">:</span>//$MY_NAME<span class="token punctuation">:</span>$MY_TOKEN@github.com/smk692/smk692.github.io.git
+        git remote set-url origin https://$MY_NAME:$MY_TOKEN@github.com/smk692/smk692.github.io.git
 
         git add .
-        git commit <span class="token punctuation">-</span>m "Add a new blog post"
+        git commit -m "Add a new blog post"
         git push
 
-<span class="token key atrule">deploy</span><span class="token punctuation">:</span>
-    <span class="token key atrule">needs</span><span class="token punctuation">:</span> generate<span class="token punctuation">-</span>blog<span class="token punctuation">-</span>post
-    <span class="token key atrule">runs-on</span><span class="token punctuation">:</span> ubuntu<span class="token punctuation">-</span>latest
-    <span class="token key atrule">steps</span><span class="token punctuation">:</span>
-    <span class="token punctuation">-</span> <span class="token key atrule">name</span><span class="token punctuation">:</span> Checkout Repository
-        <span class="token key atrule">uses</span><span class="token punctuation">:</span> actions/checkout@v2
+deploy:
+    needs: generate-blog-post
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout Repository
+        uses: actions/checkout@v2
 
-    <span class="token punctuation">-</span> <span class="token key atrule">uses</span><span class="token punctuation">:</span> actions/setup<span class="token punctuation">-</span>node@v3
-        <span class="token key atrule">with</span><span class="token punctuation">:</span>
-        <span class="token key atrule">node-version</span><span class="token punctuation">:</span> v14.17.4
+    - uses: actions/setup-node@v3
+        with:
+        node-version: v14.17.4
 
-    <span class="token punctuation">-</span> <span class="token key atrule">name</span><span class="token punctuation">:</span> Cache node modules
-        <span class="token key atrule">uses</span><span class="token punctuation">:</span> actions/cache@v2
-        <span class="token key atrule">with</span><span class="token punctuation">:</span>
-        <span class="token key atrule">path</span><span class="token punctuation">:</span> ~/.npm
-        <span class="token key atrule">key</span><span class="token punctuation">:</span> $<span class="token punctuation">{</span><span class="token punctuation">{</span> runner.os <span class="token punctuation">}</span><span class="token punctuation">}</span><span class="token punctuation">-</span>npm<span class="token punctuation">-</span>$<span class="token punctuation">{</span><span class="token punctuation">{</span> hashFiles('<span class="token important">**/package-lock.json')</span> <span class="token punctuation">}</span><span class="token punctuation">}</span>
-        <span class="token key atrule">restore-keys</span><span class="token punctuation">:</span> <span class="token punctuation">|</span><span class="token scalar string">
-            ${{ runner.os }}-npm-</span>
+    - name: Cache node modules
+        uses: actions/cache@v2
+        with:
+        path: ~/.npm
+        key: ${{ runner.os }}-npm-${{ hashFiles('**/package-lock.json') }}
+        restore-keys: |
+            ${{ runner.os }}-npm-
 
-    <span class="token punctuation">-</span> <span class="token key atrule">name</span><span class="token punctuation">:</span> Npm install
-        <span class="token key atrule">run</span><span class="token punctuation">:</span> npm install
+    - name: Npm install
+        run: npm install
 
-    <span class="token punctuation">-</span> <span class="token key atrule">name</span><span class="token punctuation">:</span> Update blog
-        <span class="token key atrule">env</span><span class="token punctuation">:</span>
-        <span class="token key atrule">MY_EMAIL</span><span class="token punctuation">:</span> $<span class="token punctuation">{</span><span class="token punctuation">{</span> secrets.MY_EMAIL <span class="token punctuation">}</span><span class="token punctuation">}</span>
-        <span class="token key atrule">MY_NAME</span><span class="token punctuation">:</span> $<span class="token punctuation">{</span><span class="token punctuation">{</span> secrets.MY_NAME <span class="token punctuation">}</span><span class="token punctuation">}</span>
-        <span class="token key atrule">MY_TOKEN</span> <span class="token punctuation">:</span> $<span class="token punctuation">{</span><span class="token punctuation">{</span> secrets.MY_TOKEN <span class="token punctuation">}</span><span class="token punctuation">}</span>
-        <span class="token key atrule">run</span><span class="token punctuation">:</span> <span class="token punctuation">|</span><span class="token scalar string">
+    - name: Update blog
+        env:
+        MY_EMAIL: ${{ secrets.MY_EMAIL }}
+        MY_NAME: ${{ secrets.MY_NAME }}
+        MY_TOKEN : ${{ secrets.MY_TOKEN }}
+        run: |
         git config --local user.email $MY_EMAIL
-        git config --local user.name $MY_NAME</span>
+        git config --local user.name $MY_NAME
 
-        git remote set<span class="token punctuation">-</span>url origin https<span class="token punctuation">:</span>//$MY_NAME<span class="token punctuation">:</span>$MY_TOKEN@github.com/smk692/smk692.github.io.git
+        git remote set-url origin https://$MY_NAME:$MY_TOKEN@github.com/smk692/smk692.github.io.git
 
         npm run deploy
-</code></pre></div>
-</li>
+
+```</code></pre></div>
+<ul>
 <li>
 <p>GitHub Actions을 사용하여 블로그 컨텐츠 업데이트하는 파이썬 코드입니다.</p>
 <div class="gatsby-highlight" data-language="python"><pre class="language-python"><code class="language-python"><span class="token comment"># ...import 부분 생략 </span>
@@ -250,7 +286,7 @@ ps.나중에 그림 추가 예정입니다. </code></pre></div>
 
     <span class="token keyword">return</span> contents
 
-<span class="token keyword">def</span> <span class="token function">create_blog_post</span><span class="token punctuation">(</span>topic<span class="token operator">=</span> <span class="token string">"블로그 자동화!"</span><span class="token punctuation">,</span> tags<span class="token operator">=</span><span class="token string">"gitblog"</span><span class="token punctuation">,</span> categories<span class="token operator">=</span><span class="token string">"자동화"</span><span class="token punctuation">,</span> contents<span class="token punctuation">)</span><span class="token punctuation">:</span>
+<span class="token keyword">def</span> <span class="token function">create_blog_post</span><span class="token punctuation">(</span>topic<span class="token punctuation">,</span> tags<span class="token punctuation">,</span> categories<span class="token punctuation">,</span> contents<span class="token punctuation">)</span><span class="token punctuation">:</span>
 
     <span class="token comment"># 폴더가 없으면 생성</span>
     <span class="token keyword">if</span> <span class="token keyword">not</span> os<span class="token punctuation">.</span>path<span class="token punctuation">.</span>exists<span class="token punctuation">(</span>directory_path<span class="token punctuation">)</span><span class="token punctuation">:</span>
