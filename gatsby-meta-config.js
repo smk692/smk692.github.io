@@ -1,5 +1,5 @@
 module.exports = {
-  title: 'smk692.github.io',
+  title: '손코딩의 끄적끄적 블로그',
   description: '손코딩의 끄적끄적 블로그',
   language: `ko`, // `ko`, `en` => currently support versions for Korean and English
   siteUrl: 'https://smk692.github.io/',
@@ -9,7 +9,7 @@ module.exports = {
       repo: `smk692/blog-comments`, // `zoomkoding/zoomkoding-gatsby-blog`,
     },
   },
-  ga: 'G-4M42P9M1Z9', // Google Analytics Tracking ID
+  ga: 'UA-265647540-1', // Google Analytics Tracking ID
   author: {
     name: `손민기`,
     bio: {
