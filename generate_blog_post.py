@@ -6,25 +6,61 @@ import re
 import random
 import openai
 import pprint
+import requests
 
-def create_blog_post(emoji, title, tags, author, categories, contents):
-    now = datetime.datetime.now()
+from PIL import Image
+from io import BytesIO
 
-    directory_path = "content/" + now.strftime("%Y-%m-%d")
-    file_name = directory_path + "/" + title.lower().replace(" ", "-") + now.strftime('%H:%M:%S')+ ".md"
+
+topic           = "confluent kafka 내용 및 사용 사례"
+categories      = "KAFKA"
+
+now             = datetime.datetime.now()
+directory_path  = "content/" + now.strftime("%Y-%m-%d")
+main_picture    = directory_path + "/" + topic + ".png"
+file_name       = directory_path + "/" + topic.lower().replace(" ", "-") + now.strftime('%H:%M:%S')+ ".md"
+
+def main_image_create():
+    # 이미지를 생성할 prompt와 이미지 크기 지정
+    prompt = f'''Kafka 토픽 및 파티션에 대한 구조 정리한 사진 만들어줘'''
+
+    # chatgpt 모델을 사용하여 이미지 생성 요청
+    response = openai.Image.create(
+        prompt=prompt,
+        n=1,
+        size="1024x1024",
+        model="image-alpha-001",
+    )
+
+    # 생성된 이미지 URL 추출
+    image_url = response["data"][0]["url"]
+
+    # 추출한 이미지 URL로부터 이미지 다운로드
+    image_data = requests.get(image_url).content
+
+    # 다운로드한 이미지 PIL Image 객체로 변환
+    image = Image.open(BytesIO(image_data))
+
+    # 이미지 파일로 저장
+    image.save(main_picture)
+
+def create_blog_post(topic, tags, categories, contents):
 
     # 폴더가 없으면 생성
     if not os.path.exists(directory_path):
         os.makedirs(directory_path)
+
+    # 이모지 생성
+    emoji = create_emoji()
 
     # 블로그 포스트에 사용될 메타데이터
     metadata = [
         "---",
         "layout: post",
         f"emoji: {emoji}",
-        f"title: \"{title}\"",
+        f"title: \"{topic}\"",
         f"date: '{now.strftime('%Y-%m-%d %H:%M:%S')}'",
-        f"author: {author}",
+        f"author: 손(Son/손민기)",
         f"tags: {tags}",
         f"categories: {categories}",
         "---"
@@ -32,8 +68,10 @@ def create_blog_post(emoji, title, tags, author, categories, contents):
 
     # 블로그 포스트 파일 생성
     with open(file_name, "w") as f:
+        
         f.write("\n".join(metadata))
         f.write("\n")
+        f.write("![main_picture]" + main_picture)
         f.write(contents)
 
     print(f"블로그 포스트 파일이 생성되었습니다: {file_name}")
@@ -57,6 +95,8 @@ def generate_contents(topic):
     '''
 
     contents = connection_chatgpt(prompt_contents)
+
+    contents = '\n'.join(contents.strip().split('\n')[3:])
 
     return contents, hashtag_export(contents)
 
@@ -96,16 +136,8 @@ def create_emoji():
     return chr(random.randint(start, end))
 
 if __name__ == "__main__":
-    topic = "Kafka AWS MSK 내용 및 사용 사례"
+    # main_image_create()
     contents, tags = generate_contents(topic)
-
-    pprint.pprint("-----------------------")
     pprint.pprint(contents)
 
-    emoji = create_emoji()
-    categories = "KAFKA"
-    title = topic
-    author = "손(Son/손민기)"
-    contents = '\n'.join(contents.strip().split('\n')[0:])
-
-    create_blog_post(emoji, title, tags, author, categories, contents)
+    create_blog_post(topic, tags, categories, contents)
