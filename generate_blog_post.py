@@ -12,7 +12,7 @@ from PIL import Image
 from io import BytesIO
 
 
-topic           = "confluent kafka 내용 및 사용 사례"
+topic           = "kafka broker, topic, partition 내용 및 사용 사례"
 categories      = "KAFKA"
 
 now             = datetime.datetime.now()
@@ -71,8 +71,9 @@ def create_blog_post(topic, tags, categories, contents):
         
         f.write("\n".join(metadata))
         f.write("\n")
-        f.write("![main_picture]" + main_picture)
+        # f.write("![main_picture]" + main_picture)
         f.write(contents)
+        f.write('```toc```')
 
     print(f"블로그 포스트 파일이 생성되었습니다: {file_name}")
 

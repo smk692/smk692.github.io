@@ -9,12 +9,12 @@ module.exports = {
       repo: `smk692/blog-comments`, // `zoomkoding/zoomkoding-gatsby-blog`,
     },
   },
-  ga: '0', // Google Analytics Tracking ID
+  ga: 'G-4M42P9M1Z9', // Google Analytics Tracking ID
   author: {
     name: `손민기`,
     bio: {
       role: '백엔드 개발자',
-      description: ['개발에 미친놈', '모든걸 자동화하여 게으러지고 싶은', '큰 그림을 그리는 아키텍처'],
+      description: ['개발에 미친놈', '큰 그림을 그리는 아키텍처', '조금 더 알고 싶은'],
       thumbnail: 'sample.png', // Path to the image in the 'asset' folder
     },
     social: {
