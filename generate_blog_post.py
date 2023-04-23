@@ -73,7 +73,7 @@ def create_blog_post(topic, tags, categories, contents):
         f.write("\n")
         # f.write("![main_picture]" + main_picture)
         f.write(contents)
-        f.write('```toc```')
+        f.write('```' + "\n" + "toc```")
 
     print(f"블로그 포스트 파일이 생성되었습니다: {file_name}")
 
@@ -105,7 +105,7 @@ def connection_chatgpt(prompt):
     response = openai.Completion.create(
         model="text-davinci-003",
         prompt=prompt,
-        temperature=0.1,
+        temperature=1,
         max_tokens=3800,
         top_p=1,
         frequency_penalty=0.0,
