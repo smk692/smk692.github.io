@@ -5,7 +5,7 @@ title: "Kafka AWS MSK 내용 및 사용 사례"
 date: '2023-04-22 15:17:20'
 author: 손(Son/손민기)
 tags: Kafka AWS MSK ApacheKafka AmazonMSK DataStreaming DataAnalysis DataStorage Java SampleCode CodeResult AutomatedManagement StablePerformance EasyToUse HighCost HighExpertise UseCases CreateCluster ClusterName ClusterARN ITExpert MarkdownFormat Highlights Bolds Italics Subheadings Advantages Disadvantages ApplicationExamples JavaSampleCode CodeResults SEOOptimized TargetAudience HumanLike InsertImages PreviousConversation
-categories: KAFKA
+categories: kafka
 ---
 ## 개요
 **Amazon Managed Streaming for Apache Kafka (Amazon MSK)**은 **Apache Kafka**를 관리하기 위한 **AWS**의 완전 관리형 서비스입니다. Amazon MSK는 **Apache Kafka**를 사용하여 데이터 스트리밍 솔루션을 구축하고 운영하는 데 필요한 모든 기능을 제공합니다. Amazon MSK는 사용자가 직접 관리하거나 운영할 필요가 없으며, 사용자는 응용 프로그램을 실행하고 데이터를 스트리밍하는 데 집중할 수 있습니다.

@@ -4,7 +4,7 @@ title: 자바 가비지 컬렉터에 대한 중요한 사항
 date: '2023-04-21 16:55:46'
 author: 손(Son/손민기)
 tags: JAVA, Garbage Collection, MemoryManagement, 자바
-categories: JAVA
+categories: java
 ---
 # # 자바 가비지 컬렉터에 대한 중요한 사항
 
