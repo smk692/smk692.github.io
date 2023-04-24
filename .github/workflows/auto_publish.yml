@@ -1,4 +1,4 @@
-name: Auto Publish Blog Posts
+name: Auto Publish Blog Posts by 손(Son/손민기)
 
 # on:
 #   schedule:
@@ -7,10 +7,56 @@ name: Auto Publish Blog Posts
 on:
   push:
     branches:
-      - master
+      - develop
 
 jobs:
-  build:
+  generate-blog-post:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.x
+
+      - name: Cache Python packages
+        uses: actions/cache@v2
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: Install Required Python Packages
+        run: |
+          python -m pip install --upgrade pip
+          pip install gitpython
+          pip install -r requirements.txt
+
+      - name: Generate Blog Post
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: python generate_blog_post.py
+
+      - name: Commit Changes
+        env:
+          MY_EMAIL: ${{ secrets.MY_EMAIL }}
+          MY_NAME: ${{ secrets.MY_NAME }}
+          MY_TOKEN : ${{ secrets.MY_TOKEN }}
+        run: |
+          git config --local user.email $MY_EMAIL
+          git config --local user.name $MY_NAME
+
+          git remote set-url origin https://$MY_NAME:$MY_TOKEN@github.com/smk692/smk692.github.io.git
+
+          git add .
+          git commit -m "Add a new blog post"
+          git push
+
+  deploy:
+    needs: generate-blog-post
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
@@ -20,39 +66,24 @@ jobs:
         with:
           node-version: v14.17.4
 
-      - name: Set up Python
-        uses: actions/setup-python@v2
+      - name: Cache node modules
+        uses: actions/cache@v2
         with:
-          python-version: 3.x
-
-      - name: Install Required Python Packages
-        run: |
-          python -m pip install --upgrade pip
-          pip install gitpython
-
-      - name: Generate Blog Post
-        run: python generate_blog_post.py
+          path: ~/.npm
+          key: ${{ runner.os }}-npm-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-npm-
 
       - name: Npm install
-        run: |
-          npm install
+        run: npm install
 
-      - name: Commit Changes
+      - name: Update blog
         env:
-          MY_EMAIL: ${{ secrets.MY_EMAIL }} 
+          MY_EMAIL: ${{ secrets.MY_EMAIL }}
           MY_NAME: ${{ secrets.MY_NAME }}
-          MY_PASSWORD : ${{ secrets.MY_PASSWORD }}
+          MY_TOKEN : ${{ secrets.MY_TOKEN }}
         run: |
-          git config --local user.email "smk692@naver.com"
-          git config --local user.name "smk692"
-          
-          git remote set-url origin https://$MY_NAME:$MY_PASSWORD@github.com/smk692/smk692.github.io.git
+          git config --local user.email $MY_EMAIL
+          git config --local user.name $MY_NAME
 
-          git add .
-          git commit -m "Add a new blog post"
-          git push
-
-          npm run deploy
-
-
-
+          git remote set-url origin https://$MY_NAME:$MY_TOKEN@github.com/smk692/smk692.github.io.git

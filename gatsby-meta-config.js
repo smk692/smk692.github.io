@@ -1,5 +1,5 @@
 module.exports = {
-  title: 'smk692.github.io',
+  title: '손코딩의 끄적끄적 블로그',
   description: '손코딩의 끄적끄적 블로그',
   language: `ko`, // `ko`, `en` => currently support versions for Korean and English
   siteUrl: 'https://smk692.github.io/',
@@ -9,12 +9,12 @@ module.exports = {
       repo: `smk692/blog-comments`, // `zoomkoding/zoomkoding-gatsby-blog`,
     },
   },
-  ga: '0', // Google Analytics Tracking ID
+  ga: 'UA-265647540-1', // Google Analytics Tracking ID
   author: {
     name: `손민기`,
     bio: {
       role: '백엔드 개발자',
-      description: ['개발에 미친놈', '절대 두번 일하지 않으려고 하는 게으름으로 발전하는', '큰 그림을 그리는 아키텍처 '],
+      description: ['개발에 미친놈', '큰 그림을 그리는 아키텍처', '조금 더 알고 싶은'],
       thumbnail: 'sample.png', // Path to the image in the 'asset' folder
     },
     social: {
