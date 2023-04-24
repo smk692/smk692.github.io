@@ -1,5 +1,5 @@
 module.exports = {
-  title: '손코딩의 끄적끄적 블로그',
+  title: '👋 손코딩의 끄적끄적 블로그',
   description: '손코딩의 끄적끄적 블로그',
   language: `ko`, // `ko`, `en` => currently support versions for Korean and English
   siteUrl: 'https://smk692.github.io/',
