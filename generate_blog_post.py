@@ -12,8 +12,8 @@ from PIL import Image
 from io import BytesIO
 
 
-topic           = "kafka broker, topic, partition 내용 및 사용 사례"
-categories      = "KAFKA"
+topic           = "백엔드 개발 면접 질문"
+categories      = "CS"
 
 now             = datetime.datetime.now()
 directory_path  = "content/" + now.strftime("%Y-%m-%d")

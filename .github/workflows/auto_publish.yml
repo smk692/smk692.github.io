@@ -7,7 +7,7 @@ name: Auto Publish Blog Posts by 손(Son/손민기)
 on:
   push:
     branches:
-      - develop
+      - master
 
 jobs:
   generate-blog-post:
