@@ -53,6 +53,5 @@ categories: CS
 - JDBC(Java Database Connectivity)는 자바에서 데이터베이스에 접속하여 데이터를 처리하는 데 사용하는 API입니다.
 - JDBC는 DriverManager, Connection, Statement 등의 인터페이스와 클래스를 제공하며, 데이터베이스 연결, 쿼리 실행, 결과 처리 등의 작업을 수행할 수 있습니다. 예를 들어, 데이터베이스 연결을 위해서는 DriverManager.getConnection() 메서드를 사용할 수 있습니다.
 
-```
-toc
+```toc
 ```
