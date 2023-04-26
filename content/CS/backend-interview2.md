@@ -4,7 +4,7 @@ emoji: 😱
 title: "👿백엔드 개발 면접 질문2"
 date: '2023-04-26 01:01:30'
 author: 손(Son/손민기)
-tags: 백엔드 REST API 비누 마이크로서비스 아키텍처 NoSQL RDBMS 인증 인정 세션 쿠키 HTTP HTTPS 서버리스 아키텍처 MVC 패턴 오름 SQL 인젝션 CDN AWS 빅데이터 처리 하둡 스파크 도커 쿠버네티스 콘텐츠 전송 네트워크 클라우드 컴퓨팅 가상화 오픈 소스 컨테이너화 오케스트레이션 확장성 벡엔드면접 면접질문
+tags: 백엔드 REST API 비누 마이크로서비스 아키텍처 NoSQL RDBMS 인증 인정 세션 쿠키 HTTP HTTPS 서버리스 아키텍처 MVC 패턴 오름 SQL 인젝션 CDN AWS 빅데이터 처리 하둡 스파크 도커 쿠버네티스 콘텐츠 전송 네트워크 클라우드 컴퓨팅 가상화 오픈 소스 컨테이너화 오케스트레이션 확장성 벡엔드면접 면접질문 backend
 categories: CS
 ---
 
