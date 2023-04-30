@@ -5,7 +5,7 @@ title: "confluent kafka 내용 및 사용 사례"
 date: '2023-04-23 10:45:25'
 author: 손(Son/손민기)
 tags: ConfluentKafka ApacheKafka DataStreaming DistributedMessagingSystem DataIntelligence MessagingSolution JavaSampleCode KafkaProducer MyTopic StringSerializer KafkaCommonSerialization DataProcessing FastMessaging StableDataStreaming DataAnalytics RealTimeDataProcessing DataIntegration DataManagement BigData DataStorage DataMining DataVisualization DataScience DataEngineering DataArchitecture DataGovernance DataSecurity DataAnalyticsTools
-categories: kafka
+categories: 인프라
 ---
 ## 1. Confluent Kafka는 다음과 같은 장점을 가지고 있습니다.
 

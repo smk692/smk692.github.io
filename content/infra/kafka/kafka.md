@@ -5,7 +5,7 @@ title: "kafka broker, topic, partition 내용 및 사용 사례"
 date: '2023-04-23 16:36:14'
 author: 손(Son/손민기)
 tags: Kafka KafkaBroker KafkaTopic KafkaPartition MessagingSystem DataStreaming LogCollection StreamingDataProcessing Messaging DataProcessing DistributedMessagingSystem CentralizedComponent MessageBuffer MessageStoring MessageDistribution Advantages Disadvantages ApplicationExamples JavaSampleCode CodeResults SEOOptimizedPost TargetAudience HumanLikePost InsertImages Hashtags
-categories: kafka
+categories: 인프라
 ---
 
 ## Kafka Broker
