@@ -5,7 +5,7 @@ title: "테라폼(Terraform) 기초의 모든것!"
 date: '2023-04-25 02:15:25'
 author: 손(Son/손민기)
 tags: 테라폼 인프라 클라우드 AWS Azure GCP 인프라자동화 모듈화 재사용성 AWS인프라관리 Terraform코드작성 Terraform연동 테스트자동화 코드검토 보안관리 커스텀이미지 테라그런트 Atlantis 테라폼시작하기 인프라스트럭처 DevOps CI/CD Docker Kubernetes CloudFormation Packer Vault Ansible IaC InfrastructureasCode
-categories: terraform 자동화
+categories: 인프라
 ---
 
 ## 📒 테라폼(Terraform) 이란?
