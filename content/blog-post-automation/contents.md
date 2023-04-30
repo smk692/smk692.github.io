@@ -5,7 +5,7 @@ title: "🚀 Git Blog 자동화 하는법"
 date: '2023-04-24 03:21:25'
 author: 손(Son/손민기)
 tags: 블로그 자동화 Git 자동화 정적 사이트 생성기 Jekyll HugoPelican 마크다운 에디터 Typora Visual Studio Code GitHub GitLab Bitbucket Gitea CI/CD 개발자 블로그 기술 블로그 경험 공유 지식 공유 포트폴리오 개인 브랜딩 블로그 저장소 블로그 테마 블로그 컨텐츠 블로그 운영 블로그 구조 동적 블로그 서버 블로그 기능 유연성
-categories: 블로그 featured 자동화
+categories: featured
 ---
 ## 🚀 블로그를 왜 써야 하는지?!
 개발자는 기술 블로그를 통해 자신의 경험을 공유하고, 다른 개발자들과 지식을 공유하며 성장할 수 있습니다. 
