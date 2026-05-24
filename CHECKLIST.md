@@ -63,6 +63,7 @@
 | gatsby-node.js | ✅ 완료 | readingTime, series, keywords |
 | CI/CD 워크플로우 | ✅ 완료 | PR기반, Lighthouse 통합 |
 | 이미지 생성 | ⚠️ 미지원 | OAuth 모드에서 비활성화 |
+| **배포** | ✅ 성공 | Node.js 18, 36.6초 빌드 |
 
 ---
 
@@ -88,6 +89,9 @@
 
 ### 로컬 개발
 ```bash
+# Node.js 18 필수 (nvm use 18)
+nvm use 18         # Node.js 18로 전환
+npm install --legacy-peer-deps  # 의존성 설치
 npm start          # 개발 서버 (localhost:8000)
 npm run build      # 프로덕션 빌드
 npm run deploy     # GitHub Pages 배포
