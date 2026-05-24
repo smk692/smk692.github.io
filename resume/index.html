@@ -1,0 +1,978 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>손민기 - Backend Developer & Tech Lead</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.7;
+            color: #333;
+            background: #f5f5f5;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            padding: 60px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding-bottom: 30px;
+            border-bottom: 2px solid #2563eb;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            color: #1e293b;
+            margin-bottom: 8px;
+        }
+
+        .title {
+            font-size: 1.2rem;
+            color: #2563eb;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+
+        .contact {
+            font-size: 0.95rem;
+            color: #64748b;
+        }
+
+        .contact a {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        .contact span {
+            margin: 0 8px;
+        }
+
+        section {
+            margin-bottom: 35px;
+        }
+
+        h2 {
+            font-size: 1.3rem;
+            color: #1e293b;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 8px;
+            margin-bottom: 20px;
+            letter-spacing: 1px;
+        }
+
+        h3 {
+            font-size: 1.1rem;
+            color: #334155;
+            margin-bottom: 5px;
+        }
+
+        h4 {
+            font-size: 1rem;
+            color: #475569;
+            margin-top: 20px;
+            margin-bottom: 10px;
+            padding-left: 12px;
+            border-left: 3px solid #2563eb;
+        }
+
+        .summary {
+            background: #f8fafc;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #2563eb;
+        }
+
+        .summary p {
+            font-size: 0.95rem;
+            color: #475569;
+        }
+
+        .summary strong {
+            color: #2563eb;
+        }
+
+        .career-summary {
+            background: linear-gradient(135deg, #eff6ff 0%, #f0fdf4 100%);
+            padding: 25px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+        }
+
+        .career-summary h3 {
+            color: #1e40af;
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+        }
+
+        .career-summary-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+
+        .career-summary-item {
+            background: white;
+            padding: 15px;
+            border-radius: 6px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .career-summary-item .company {
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 5px;
+        }
+
+        .career-summary-item .period {
+            font-size: 0.85rem;
+            color: #64748b;
+            margin-bottom: 8px;
+        }
+
+        .career-summary-item .role {
+            font-size: 0.9rem;
+            color: #2563eb;
+            font-weight: 500;
+        }
+
+        .career-summary-item .desc {
+            font-size: 0.85rem;
+            color: #475569;
+            margin-top: 5px;
+        }
+
+        .skills-grid {
+            display: grid;
+            grid-template-columns: 140px 1fr;
+            gap: 8px 15px;
+            font-size: 0.9rem;
+        }
+
+        .skill-category {
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        .skill-list {
+            color: #475569;
+        }
+
+        .experience-item {
+            margin-bottom: 30px;
+            padding-bottom: 25px;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .experience-item:last-child {
+            border-bottom: none;
+        }
+
+        .experience-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+        }
+
+        .company-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .period {
+            color: #64748b;
+            font-size: 0.9rem;
+        }
+
+        .role-highlight {
+            background: #dbeafe;
+            color: #1e40af;
+            padding: 2px 10px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        ul {
+            padding-left: 20px;
+            margin-top: 10px;
+        }
+
+        li {
+            margin-bottom: 6px;
+            font-size: 0.9rem;
+            color: #475569;
+        }
+
+        li strong {
+            color: #334155;
+        }
+
+        .tech-stack {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 12px;
+        }
+
+        .tech-tag {
+            background: #e0e7ff;
+            color: #3730a3;
+            padding: 3px 10px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+        }
+
+        .ai-strategy {
+            background: linear-gradient(135deg, #faf5ff 0%, #f0f9ff 100%);
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 15px;
+        }
+
+        .ai-strategy h4 {
+            border-left: none;
+            padding-left: 0;
+            color: #6b21a8;
+            margin-top: 0;
+        }
+
+        .ai-strategy ol {
+            padding-left: 20px;
+        }
+
+        .ai-strategy li {
+            color: #581c87;
+        }
+
+        .education-item {
+            margin-bottom: 15px;
+        }
+
+        .cert-list {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .cert-list li {
+            padding: 8px 0;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .cert-list li:last-child {
+            border-bottom: none;
+        }
+
+        .metrics-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+            font-size: 0.85rem;
+        }
+
+        .metrics-table th,
+        .metrics-table td {
+            padding: 10px 12px;
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .metrics-table th {
+            background: #f8fafc;
+            color: #475569;
+            font-weight: 600;
+        }
+
+        .metrics-table td:last-child {
+            color: #2563eb;
+            font-weight: 600;
+        }
+
+        footer {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #e2e8f0;
+            text-align: center;
+            font-size: 0.85rem;
+            color: #94a3b8;
+        }
+
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+            .container {
+                box-shadow: none;
+                padding: 40px;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 30px 20px;
+            }
+            .career-summary-grid {
+                grid-template-columns: 1fr;
+            }
+            .experience-header {
+                flex-direction: column;
+                gap: 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>손민기</h1>
+            <div class="title">Backend Developer & Tech Lead</div>
+            <div class="contact">
+                smk2692@naver.com <span>|</span> 010-7420-0799 <span>|</span>
+                <a href="https://github.com/smk692">GitHub</a>
+            </div>
+        </header>
+
+        <section>
+            <h2>소개</h2>
+            <div class="summary">
+                <p>
+                    인생은 도전과 선택의 반복이며 현재 삶에 안주하는 순간 더 나은 삶은 없다고 생각하는 <strong>도전하는 개발자</strong>입니다.
+                    책임감을 갖고 주도적으로 일을 진행하며, 동료들과 끊임없이 토론하여 더 좋은 프로세스를 만드는 것을 좋아합니다.
+                    빠르게 바뀌는 시대에 적응하기 위해 논문 및 개발 강의를 통해 지식을 쌓았으며, 회사에서 논문 자료와 구축 사례로 설득하여 새로운 기술을 적용해왔습니다.
+                </p>
+            </div>
+        </section>
+
+        <section>
+            <h2>기술 스택</h2>
+            <div class="skills-grid">
+                <div class="skill-category">Languages</div>
+                <div class="skill-list">Java 17/21, Python, TypeScript, Node.js, JavaScript</div>
+
+                <div class="skill-category">Frameworks</div>
+                <div class="skill-list">Spring Boot 3.x, Spring WebFlux, Spring Batch, JPA, MyBatis, Hibernate</div>
+
+                <div class="skill-category">Streaming</div>
+                <div class="skill-list">Kafka, Kafka Streams, Schema Registry, MSK Connect</div>
+
+                <div class="skill-category">Databases</div>
+                <div class="skill-list">MySQL, MongoDB/DocumentDB, OpenSearch, Redis, Oracle, DB2, PostgreSQL, DynamoDB</div>
+
+                <div class="skill-category">Infrastructure</div>
+                <div class="skill-list">AWS (ECS, EKS, MSK, RDS, S3, DMS, Lambda, SNS), Terraform, Docker, Linux</div>
+
+                <div class="skill-category">DevOps</div>
+                <div class="skill-list">GitHub Actions, Jenkins, CircleCI, Blue/Green Deployment, GitOps</div>
+
+                <div class="skill-category">Monitoring</div>
+                <div class="skill-list">Prometheus, Grafana, Sentry, CloudWatch, OpenSearch</div>
+
+                <div class="skill-category">Frontend</div>
+                <div class="skill-list">Vue.js, React, HTML/CSS, JavaScript</div>
+            </div>
+        </section>
+
+        <section>
+            <h2>경력 요약</h2>
+            <div class="career-summary">
+                <div class="career-summary-grid">
+                    <div class="career-summary-item">
+                        <div class="company">(주)펫프렌즈</div>
+                        <div class="period">2021.03 - 현재 (5년 3개월)</div>
+                        <div class="role">팀장 (인터널서비스팀)</div>
+                        <div class="desc">물류/발주/판매자/정산/WMS/광고 플랫폼 개발 및 인프라 관리</div>
+                    </div>
+                    <div class="career-summary-item">
+                        <div class="company">주식회사 동그라미소프트</div>
+                        <div class="period">2018.10 - 2021.02 (2년 5개월)</div>
+                        <div class="role">백엔드 개발자</div>
+                        <div class="desc">삼성전자 B2B 프로젝트 (GEHS, IRP, ERP)</div>
+                    </div>
+                    <div class="career-summary-item">
+                        <div class="company">총 경력</div>
+                        <div class="period">8년 3개월</div>
+                        <div class="role">Backend Developer & Tech Lead</div>
+                        <div class="desc">MSA 설계, 대규모 시스템 내재화, 팀 리딩</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section>
+            <h2>경력 성장</h2>
+            <table class="metrics-table">
+                <tr>
+                    <th>시기</th>
+                    <th>직책</th>
+                    <th>역할</th>
+                </tr>
+                <tr>
+                    <td>2023.07</td>
+                    <td>팀장 (인터널서비스팀)</td>
+                    <td>물류개발팀 → 인터널서비스팀 승격</td>
+                </tr>
+                <tr>
+                    <td>2021.05</td>
+                    <td>파트장</td>
+                    <td>팀원 → 파트장 진급</td>
+                </tr>
+                <tr>
+                    <td>2021.03</td>
+                    <td>물류개발팀 팀원</td>
+                    <td>펫프렌즈 입사</td>
+                </tr>
+            </table>
+        </section>
+
+        <section>
+            <h2>경력 사항</h2>
+
+            <!-- 펫프렌즈 -->
+            <div class="experience-item">
+                <div class="experience-header">
+                    <div class="company-info">
+                        <h3>팀장 (인터널서비스팀) | (주)펫프렌즈</h3>
+                        <span class="role-highlight">5~7명 팀 리드</span>
+                    </div>
+                    <span class="period">2021.03 - 현재 (5년 3개월)</span>
+                </div>
+                <p style="font-size: 0.9rem; color: #64748b; margin-bottom: 15px;">
+                    담당: 배송 관리, WMS 창고 시스템, 발주서비스, 판매자서비스, 정산 서비스, 인프라 관리
+                </p>
+
+                <!-- 운영업무 -->
+                <h4>운영업무 (상시)</h4>
+                <p style="font-size: 0.85rem; color: #64748b; margin-bottom: 10px;">2023.07 - 현재</p>
+                <ul>
+                    <li>배송 관리</li>
+                    <li>WMS 창고 시스템 관리</li>
+                    <li>발주서비스 (매입 상품에 대한 관리자 및 거래처 발주 시스템 관리)</li>
+                    <li>판매자서비스 (위탁 & 업체 관리자 및 거래처 관리 시스템 관리)</li>
+                    <li>정산 서비스 관리</li>
+                    <li>인프라 관리</li>
+                </ul>
+
+                <!-- 광고 플랫폼 내재화 -->
+                <h4>광고 플랫폼 내재화 프로젝트</h4>
+                <p style="font-size: 0.85rem; color: #64748b; margin-bottom: 10px;">2025.07 - 2026.05 (10개월) | 아키텍처 설계 및 팀 리드</p>
+                <p style="font-size: 0.9rem; color: #475569; margin-bottom: 10px;">
+                    외부 광고 플랫폼(CitrusAD) 의존도를 제거하고 자체 광고 시스템 구축
+                </p>
+                <ul>
+                    <li>Microservices Architecture 설계 (5개 서비스), 외부 플랫폼 수수료 <strong>100% 절감</strong></li>
+                    <li><strong>27,885 SKU</strong> 상품 Meta CPAS Catalog 연동으로 Cross-Platform 광고 지원</li>
+                    <li>Kafka Streams 기반 실시간 이벤트 파이프라인 구축 (<strong>일 10,000건+</strong> 광고 노출/클릭 처리)</li>
+                    <li><strong>Gumbel Top-k Distribution</strong> 알고리즘으로 확률적 광고 랭킹 구현 (<strong>200ms 응답</strong>)</li>
+                    <li>OpenSearch 읽기/쓰기 인덱스 분리 설계, 15분 간격 Phase Switching</li>
+                    <li>CitrusAD → 내재화 플랫폼 Migration Simulation 진행 (15분/1시간 광고 선정 비교)</li>
+                    <li><strong>9개 항목 체크리스트</strong> 기반 무중단 Production 배포 완료</li>
+                    <li>OOM 장애 대응: R2DBC Connection Pool Metrics를 Prometheus에 등록</li>
+                </ul>
+                <div class="tech-stack">
+                    <span class="tech-tag">Java</span>
+                    <span class="tech-tag">Spring Boot</span>
+                    <span class="tech-tag">Kafka Streams</span>
+                    <span class="tech-tag">OpenSearch</span>
+                    <span class="tech-tag">DocumentDB</span>
+                    <span class="tech-tag">AWS ECS</span>
+                    <span class="tech-tag">Terraform</span>
+                </div>
+
+                <!-- MSK 이관 -->
+                <h4>MSK (Managed Streaming for Kafka) 이관</h4>
+                <p style="font-size: 0.85rem; color: #64748b; margin-bottom: 10px;">2025.11 - 2026.01 (3개월) | Terraform 모듈 개발</p>
+                <ul>
+                    <li><strong>msk_cluster, msk_replicator, msk_connector</strong> Terraform 모듈 개발</li>
+                    <li>Source/Target 클러스터 Infrastructure 배포 및 Replication 테스트</li>
+                    <li>RDS CDC SecretManager 개발</li>
+                    <li>Migration Playbook 및 Monitoring 설정</li>
+                </ul>
+
+                <!-- 인프라 현대화 -->
+                <h4>인프라 현대화</h4>
+                <p style="font-size: 0.85rem; color: #64748b; margin-bottom: 10px;">2024 - 현재</p>
+                <ul>
+                    <li>EKS Terraform → <strong>GitOps Bridge</strong> Architecture 전환</li>
+                    <li>IRSA → <strong>Pod Identity</strong> 전환으로 AWS IAM 보안 강화</li>
+                    <li>Spring Gateway → <strong>Fargate</strong> 전환으로 비용 최적화</li>
+                    <li><strong>Claude 기반 Code Review Bot</strong> 구현으로 자동화된 PR 리뷰</li>
+                    <li>Prometheus + Grafana Monitoring Manage VPC 이관</li>
+                </ul>
+
+                <!-- 판매자 심쿵배송 -->
+                <h4>판매자 심쿵배송 (제트배송)</h4>
+                <p style="font-size: 0.85rem; color: #64748b; margin-bottom: 10px;">2023.07 - 2023.11 (5개월) | 전체 설계 및 개발</p>
+                <p style="font-size: 0.9rem; color: #475569; margin-bottom: 10px;">
+                    업체에서 위탁 판매하는 재고 품목을 펫프렌즈 물류창고에서 보관, 배송 및 반품 등 서비스를 대리 제공하여 수익을 내는 프로젝트
+                </p>
+                <ul>
+                    <li>전체적인 테이블 및 업무 설계</li>
+                    <li>기획팀 및 물류팀 요구사항 정리</li>
+                    <li>팀원 일정 관리 및 코드 리뷰 주도</li>
+                    <li>프로젝트 오픈 완료</li>
+                </ul>
+
+                <!-- 파트장에서 팀장 진급 -->
+                <h4>파트장에서 팀장 진급</h4>
+                <p style="font-size: 0.85rem; color: #64748b; margin-bottom: 10px;">2023.07</p>
+                <ul>
+                    <li>승격: 물류개발팀 → 인터널서비스팀</li>
+                    <li>진급: 파트장 → 팀장</li>
+                </ul>
+
+                <!-- Node 배치 선셋 -->
+                <h4>Node 배치 선셋</h4>
+                <p style="font-size: 0.85rem; color: #64748b; margin-bottom: 10px;">2023.05 - 2023.07 (3개월) | 분석 및 이관</p>
+                <p style="font-size: 0.9rem; color: #475569; margin-bottom: 10px;">
+                    펫프렌즈 Node 레거시 배치 → Python or Java 배치로 이관 (관리되지 않는 레거시 배치 정리)
+                </p>
+                <ul>
+                    <li>Node 배치 분석 및 이관</li>
+                    <li>데이터 증가로 인한 인덱싱 문제 개선, 약 <strong>2,000줄 쿼리 로직 분리 및 최적화</strong></li>
+                    <li>min(id), max(id) 범위 조건으로 모수 쿼리 최적화</li>
+                    <li>MySQL In절 slowQuery 해결: In 건수 분할 실행 방식 적용</li>
+                    <li>이관 완료</li>
+                </ul>
+
+                <!-- 데이터 판매를 위한 데이터 이관 -->
+                <h4>데이터 판매를 위한 데이터 이관 (ETL - DBMS)</h4>
+                <p style="font-size: 0.85rem; color: #64748b; margin-bottom: 10px;">2023.04 - 2023.05 (2개월) | 설계 및 개발</p>
+                <p style="font-size: 0.9rem; color: #475569; margin-bottom: 10px;">
+                    펫프렌즈의 데이터를 외부로 판매하기 위해 특정 개인정보를 제외한 신규 DB에 데이터 이관 및 실시간 동기화 제공
+                </p>
+                <ul>
+                    <li><strong>AWS DMS</strong> 이용 데이터 이관 후 CDC 연동 (데이터하우스)</li>
+                    <li>특정 개인 정보 및 필드 제외 작업</li>
+                    <li>DMS Terraform 모듈화 진행</li>
+                    <li>DMS 실패 시 AWS SNS + Lambda 연동 Slack 알람 생성</li>
+                    <li>부하테스트 및 검증, 트러블 슈팅 정리</li>
+                    <li>이관 완료</li>
+                </ul>
+                <div class="tech-stack">
+                    <span class="tech-tag">AWS DMS</span>
+                    <span class="tech-tag">Terraform</span>
+                    <span class="tech-tag">AWS SNS</span>
+                    <span class="tech-tag">Lambda</span>
+                    <span class="tech-tag">Slack</span>
+                </div>
+
+                <!-- 창고다원화 프로젝트 -->
+                <h4>창고다원화 프로젝트</h4>
+                <p style="font-size: 0.85rem; color: #64748b; margin-bottom: 10px;">2023.01 - 2023.06 (6개월) | 설계 및 개발</p>
+                <p style="font-size: 0.9rem; color: #475569; margin-bottom: 10px;">
+                    메인 CJ 물류 창고를 팀프레시 창고로 이관하여 두 개의 물류 창고 사용
+                </p>
+                <ul>
+                    <li>창고별 재고 관리 및 주문 분배를 위한 <strong>Redis 메타데이터 연동</strong></li>
+                    <li>여러 센터 확장 가능한 Interface 테이블 및 파이프라인 코드 설계</li>
+                    <li><strong>Spring Batch 도입</strong>: CI/CD 구축, Jenkins 스케줄링</li>
+                    <li>기존 Jenkins 이용하여 스케줄링, SSH 사용하여 다른 서버에서 실행하는 방식 구성</li>
+                    <li>Jenkins version 너무 낮아 플러그인 업데이트가 안되서 EFS 이용한 버전 업데이트</li>
+                    <li>단위 TestCode 샘플 작성</li>
+                    <li>확장성 있는 Job 생성을 위한 패턴화 및 패키지 구조 설계</li>
+                    <li>오픈 완료</li>
+                </ul>
+                <div class="tech-stack">
+                    <span class="tech-tag">Spring Batch</span>
+                    <span class="tech-tag">SpringBatchTest</span>
+                    <span class="tech-tag">Redis</span>
+                    <span class="tech-tag">Jenkins</span>
+                    <span class="tech-tag">AWS EFS</span>
+                </div>
+
+                <!-- 발주어드민, 판매자어드민 고도화 -->
+                <h4>발주어드민, 판매자어드민 고도화 및 리팩터링</h4>
+                <p style="font-size: 0.85rem; color: #64748b; margin-bottom: 10px;">2022.11 - 2023.03 (5개월) | 아키텍처 개선</p>
+                <p style="font-size: 0.9rem; color: #475569; margin-bottom: 10px;">
+                    발주어드민: 각 거래처에 입고 요청을 하여 입고 확정, 정산까지 진행 / 판매자어드민: 펫프렌즈 서비스에서 거래처 물건을 대신 팔아주는 서비스
+                </p>
+                <ul>
+                    <li>JPA 제대로 사용할 수 있게 코드 개선 및 Service Layer → Domain 구조로 변경</li>
+                    <li>전체적인 아키텍처 Package 구조 정의</li>
+                    <li>Java 버전 및 Gradle 의존성 관리 업데이트</li>
+                    <li>데이터 수천만 건 증가에 따른 쿼리 튜닝</li>
+                    <li>Index 관리 및 서비스 튜닝</li>
+                </ul>
+
+                <!-- WMS 프로젝트 -->
+                <h4>WMS (Warehouse Management System) 내재화</h4>
+                <p style="font-size: 0.85rem; color: #64748b; margin-bottom: 10px;">2022.04 - 2026.03 (약 4년) | 아키텍처 설계 및 개발 리드</p>
+                <p style="font-size: 0.9rem; color: #475569; margin-bottom: 10px;">
+                    외부 솔루션(월 900만원) → 창고관리시스템 자체 개발 및 3PL 연동 / 창고별 자재 및 입/출고 관리
+                </p>
+                <ul>
+                    <li><strong>업무 프로세스 및 데이터 flow 설계</strong>
+                        <ul>
+                            <li>MSA 위한 신규 Database 도입 및 <strong>WMS 107개 테이블</strong> DB 설계</li>
+                            <li>WMS 도입으로 변경된 프로세스 Data Flow 도식화</li>
+                            <li>CJ I/F 연동 및 재고 동기화 업무 정리</li>
+                            <li>Timf 3PL 시스템과 <strong>9개 센터</strong> 연동</li>
+                            <li><strong>340,137건</strong> 재고 레코드 실시간 동기화 관리</li>
+                        </ul>
+                    </li>
+                    <li><strong>CI/CD 전체적으로 수정</strong>
+                        <ul>
+                            <li>GitHub Actions 사용</li>
+                            <li>컨테이너 기반으로 변경 ECS 도입</li>
+                            <li>배포 프로세스 발표 및 도식화</li>
+                        </ul>
+                    </li>
+                    <li><strong>DDD Architecture, Test Code 도입</strong>
+                        <ul>
+                            <li>Event Storming 도입 (전사적으로 소통하여 진행)</li>
+                            <li>각각의 연동 서비스들이 들어와도 업무 코드는 변하지 않게 전략 패턴으로 틀을 잡고 진행</li>
+                        </ul>
+                    </li>
+                    <li><strong>Spring Event 도입</strong>
+                        <ul>
+                            <li>각 바운더리 컨텍스트의 의존관계 제거하기 위해 사용</li>
+                            <li>MessageQueue, Slack 업무 서비스 영향 없게 진행 용도로 사용</li>
+                        </ul>
+                    </li>
+                    <li><strong>MSK Producer, Consumer 설계</strong> (Node, Python, Java)
+                        <ul>
+                            <li>Message Format 공통화 작업</li>
+                            <li>Producer, Consumer 실패 전략 수립하여 자동화되도록 개발</li>
+                            <li>Prometheus, Grafana, Kafka KOWL 모니터링 도입</li>
+                            <li>MSK (Amazon Kafka) 설계 및 개발하여 공통으로 도입할 수 있게 레퍼런스 발표 진행</li>
+                            <li>MSK Connect 사용한 CDC (Debezium) 구축</li>
+                        </ul>
+                    </li>
+                    <li><strong>Terraform 사용</strong>
+                        <ul>
+                            <li>서버 관리 및 생성 용도</li>
+                            <li>수동으로 직접 EC2, ALB, AutoScaling 등 만들던 것을 Terraform 사용하여 ECS 모듈화</li>
+                        </ul>
+                    </li>
+                    <li><strong>모니터링 도입</strong>
+                        <ul>
+                            <li>Prometheus, Grafana, Kafka-UI, SonarQube 오픈소스 사용하여 새로운 기술에 대한 안정성 및 지표 확보</li>
+                            <li>OpenSearch 로그 중앙화</li>
+                        </ul>
+                    </li>
+                    <li>Swagger 도입</li>
+                    <li>Spring Boot 2 → 3.2.3, Java 11 → 17, Maven → Gradle Migration</li>
+                    <li>WMS 연동 이슈 <strong>8건 동시 해결</strong> (인증키, API 전송, TMS 연결 등)</li>
+                </ul>
+                <div class="tech-stack">
+                    <span class="tech-tag">Java 17</span>
+                    <span class="tech-tag">Spring Boot 3.2.3</span>
+                    <span class="tech-tag">Spring Event</span>
+                    <span class="tech-tag">JPA</span>
+                    <span class="tech-tag">MSK (Kafka)</span>
+                    <span class="tech-tag">Terraform</span>
+                    <span class="tech-tag">Docker</span>
+                    <span class="tech-tag">DynamoDB</span>
+                    <span class="tech-tag">MySQL</span>
+                </div>
+
+                <!-- 개발 서버 VPC 변경 작업 -->
+                <h4>개발 서버 VPC 변경 작업</h4>
+                <p style="font-size: 0.85rem; color: #64748b; margin-bottom: 10px;">2022.01 - 2022.03 (3개월) | 인프라 이관</p>
+                <p style="font-size: 0.9rem; color: #475569; margin-bottom: 10px;">
+                    레거시 서버 인프라 VPC 이관 작업
+                </p>
+                <ul>
+                    <li>기존 수기로 만든 인프라 제거</li>
+                    <li><strong>작업 순위 1</strong>
+                        <ul>
+                            <li>기존 EC2 → ECS 이관 Terraform 코드 작성</li>
+                            <li>dev vpc용 보안그룹 세팅</li>
+                            <li>로드밸런서 및 오토스케일링 그룹 세팅</li>
+                            <li>업무 서비스 GitHub Actions CI 세팅</li>
+                            <li>ECR, ECS 생성 및 배포 테스트</li>
+                            <li>로그 중앙화 수집기(사이드카) 추가</li>
+                        </ul>
+                    </li>
+                    <li><strong>작업 순위 2</strong>: 배포, 통신 등 정상 동작 확인</li>
+                    <li><strong>작업 순위 3</strong>: 기존 서버 인스턴스, 로드밸런서 등 제거, Route53 → 신규 로드밸런서 변경</li>
+                    <li><strong>무중단 이관 완료</strong></li>
+                </ul>
+                <div class="tech-stack">
+                    <span class="tech-tag">AWS</span>
+                    <span class="tech-tag">Terraform</span>
+                    <span class="tech-tag">GitHub Actions</span>
+                    <span class="tech-tag">Shell Script</span>
+                </div>
+
+                <!-- 발주어드민 오픈 및 유지 보수 -->
+                <h4>발주어드민 오픈 및 유지 보수</h4>
+                <p style="font-size: 0.85rem; color: #64748b; margin-bottom: 10px;">2021.07 - 2022.01 (7개월) | 설계 및 개발</p>
+                <p style="font-size: 0.9rem; color: #475569; margin-bottom: 10px;">
+                    이전에 카카오톡 또는 메일 등 시스템 없이 수기로 발주를 진행 → 물류팀, MD팀의 리소스를 줄이기 위해 개발 착수.
+                    파트너 상품을 제외한 자체 관리하는 상품들을 시스템적으로 발주 등록 및 정산 처리까지 처리하는 시스템
+                </p>
+                <ul>
+                    <li>개발팀 스케줄 관리 및 업무 정의</li>
+                    <li>전체적인 테이블 설계</li>
+                    <li>Server Setting</li>
+                    <li>발주 등록 및 관리 프로세스 개발</li>
+                    <li>JWT Token 기반 로그인 프로세스 개발</li>
+                    <li>Enum 사용하여 공통 코드 관리 진행</li>
+                    <li>@Transaction 이용하여 Master DB / Slave DB 분리하여 사용 가능하도록 개발</li>
+                    <li>엑셀 다운로드/업로드 공통 모듈 개발</li>
+                    <li>전체적인 업무 개발자들이 편하게 코드를 짤 수 있게 공통 모듈 개발</li>
+                    <li>CJ I/F Log DynamoDB 적재</li>
+                    <li>오픈 완료</li>
+                </ul>
+                <div class="tech-stack">
+                    <span class="tech-tag">Java</span>
+                    <span class="tech-tag">Spring Boot</span>
+                    <span class="tech-tag">JPA</span>
+                    <span class="tech-tag">Gradle</span>
+                    <span class="tech-tag">JWT</span>
+                    <span class="tech-tag">DynamoDB</span>
+                    <span class="tech-tag">Jenkins</span>
+                    <span class="tech-tag">Python</span>
+                </div>
+
+                <!-- 모놀리틱→마이크로서비스 -->
+                <h4>펫프렌즈 모놀리틱 → 마이크로서비스 전환</h4>
+                <p style="font-size: 0.85rem; color: #64748b; margin-bottom: 10px;">2021.05 - 2021.11 (7개월) | 서버 환경 및 배포 방식 변경</p>
+                <p style="font-size: 0.9rem; color: #475569; margin-bottom: 10px;">
+                    AS-IS: 펫프렌즈 서비스 5개로 파이프라인 구성 (mobile, admin, rider, partner, worker), 각 서비스 코드 하나를 수정할 시 5개의 서비스를 배포해야 됨 → 상용 배포 시 약 20분 이상 걸림<br>
+                    TO-BE: 5개의 서비스를 각각 repository를 분리하여 각 변경된 서비스 코드만 배포하는 방식으로 변경
+                </p>
+                <ul>
+                    <li>5개 서비스 (mobile, admin, rider, partner, worker) 각각 Repository 분리</li>
+                    <li>상용 배포 시간 <strong>20분 → 4분으로 단축</strong></li>
+                    <li>기존 배포 방식 정리 및 사이드이펙트, 코드 배포 레퍼런스 확인</li>
+                    <li>새로운 배포 방식에 맞는 AWS 이용한 서버 환경 구성</li>
+                    <li>Docker 설정 및 CircleCI 배포 설정 파일 수정</li>
+                    <li>AWS CodeDeploy 연동</li>
+                    <li>5개 중 1개 (Admin) 분리 완료, 사이드 이펙트 없음</li>
+                </ul>
+                <div class="tech-stack">
+                    <span class="tech-tag">Node.js (Koa)</span>
+                    <span class="tech-tag">CircleCI</span>
+                    <span class="tech-tag">CodeDeploy</span>
+                    <span class="tech-tag">Docker</span>
+                    <span class="tech-tag">GitHub</span>
+                </div>
+
+                <!-- 팀원에서 파트장 진급 -->
+                <h4>팀원에서 파트장 진급</h4>
+                <p style="font-size: 0.85rem; color: #64748b; margin-bottom: 10px;">2021.05</p>
+                <ul>
+                    <li>10명 이하 팀으로 구성</li>
+                    <li>이전 서비스 유지보수 및 프로젝트 여러 개 병렬로 진행</li>
+                </ul>
+
+                <!-- 펫프렌즈 바디챌린지 -->
+                <h4>펫프렌즈 바디챌린지 (입사 프로젝트)</h4>
+                <p style="font-size: 0.85rem; color: #64748b; margin-bottom: 10px;">2021.03 - 2021.05 (3개월) | 물류개발팀 팀원 입사</p>
+                <p style="font-size: 0.9rem; color: #475569; margin-bottom: 10px;">
+                    자체 라이더 → 심쿵배송(당일 배송) 전체적인 프로세스 변경 / CJ I/F 물류 연동
+                </p>
+                <ul>
+                    <li>라이더 앱 API, 어드민 페이지 API, CJ 연동 개발 및 유지보수</li>
+                    <li>어드민 페이지 (Node.js) 개발</li>
+                    <li>운송사 관리, 라이더 관리, 배차화면 등 관리 툴 페이지 개발</li>
+                    <li>ERD 및 업무 프로세스 도식화 진행</li>
+                    <li>히스토리가 하나도 남은 게 없어서 Notion 문서 정리</li>
+                </ul>
+                <div class="tech-stack">
+                    <span class="tech-tag">Node.js (Koa)</span>
+                    <span class="tech-tag">Python</span>
+                    <span class="tech-tag">CircleCI</span>
+                    <span class="tech-tag">Jenkins</span>
+                    <span class="tech-tag">MySQL</span>
+                    <span class="tech-tag">AWS</span>
+                </div>
+            </div>
+
+            <!-- 동그라미소프트 -->
+            <div class="experience-item">
+                <div class="experience-header">
+                    <h3>백엔드 개발자 | 주식회사 동그라미소프트</h3>
+                    <span class="period">2018.10 - 2021.02 (2년 5개월)</span>
+                </div>
+                <p style="font-size: 0.9rem; color: #64748b; margin-bottom: 15px;">
+                    삼성전자 B2B 프로젝트 전문 SI 기업에서 MES/ERP 시스템 개발
+                </p>
+
+                <h4>삼성전자 GEHS 2단계 (Global Environment, Health and Safety)</h4>
+                <p style="font-size: 0.85rem; color: #64748b; margin-bottom: 10px;">2020.03 - 2021.02 (1년)</p>
+                <p style="font-size: 0.9rem; color: #475569; margin-bottom: 10px;">
+                    공통, 화학물질, 안전방재, 국내보건, 해외보건 4개 모듈 클라우드 서비스
+                </p>
+                <ul>
+                    <li>Front window.SessionStorage 사용하여 검색조건 유지 개발</li>
+                    <li>Vue.js 공통 컴포넌트 개발</li>
+                    <li>ExcelDownLoad, ExcelUpload Java 공통 서비스 개발</li>
+                    <li>업무에서 OzReport Tool 사용 시 data log BackUp 개발</li>
+                    <li>Service 트랜잭션 발생 시 application 레벨에서 실행 전 query 파싱 후 이전 데이터 백업 개발 (MyBatis Plugin 사용)</li>
+                    <li>SA 서버 관리 보조 (git Branch를 개발, QA, SPD(운영 전 서버), 운영으로 나눠서 관리)</li>
+                    <li>화학물질, 안전방재 (업무): Front 화면 개발, Back-end MVC 패턴 서비스 로직 개발</li>
+                    <li>배치 및 메일링 개발</li>
+                    <li>ERD 및 DB 설계 및 수정</li>
+                    <li>AS-IS → TO-BE Migration: <strong>최대 3천만 건</strong> 데이터 이관</li>
+                    <li>삼성 내부 결재(Knox) 및 후처리 개발</li>
+                </ul>
+                <div class="tech-stack">
+                    <span class="tech-tag">Vue.js</span>
+                    <span class="tech-tag">Velocity</span>
+                    <span class="tech-tag">Node.js</span>
+                    <span class="tech-tag">Java</span>
+                    <span class="tech-tag">Spring Boot</span>
+                    <span class="tech-tag">Spring Batch</span>
+                    <span class="tech-tag">MyBatis</span>
+                    <span class="tech-tag">DB2</span>
+                    <span class="tech-tag">Jeus</span>
+                    <span class="tech-tag">Jenkins</span>
+                </div>
+
+                <h4>삼성전자 제품환경서비스 프로젝트</h4>
+                <p style="font-size: 0.85rem; color: #64748b; margin-bottom: 10px;">2020.02 (1개월)</p>
+                <p style="font-size: 0.9rem; color: #475569; margin-bottom: 10px;">
+                    새로운 Login Process 개발
+                </p>
+                <ul>
+                    <li>기존 Login Logic (Knox Login) + New Login Logic (AD Login) 개발</li>
+                    <li>IE와 Chrome 구별하여 각각의 예전 로그인, 신규 로그인 탈 수 있게 개발</li>
+                    <li>API 호출 후 CallBack 데이터를 받아와서 로그인 로직 처리</li>
+                </ul>
+                <div class="tech-stack">
+                    <span class="tech-tag">애니프레임워크</span>
+                    <span class="tech-tag">Java</span>
+                    <span class="tech-tag">XML</span>
+                    <span class="tech-tag">Retrofit2</span>
+                    <span class="tech-tag">DB2</span>
+                </div>
+
+                <h4>삼성전자 GEHS 1단계 (Global Environment, Health and Safety)</h4>
+                <p style="font-size: 0.85rem; color: #64748b; margin-bottom: 10px;">2019.04 - 2020.01 (10개월)</p>
+                <p style="font-size: 0.9rem; color: #475569; margin-bottom: 10px;">
+                    공통, BQMS, FLMS (ERP 시스템) 패키지화
+                </p>
+                <ul>
+                    <li>FLMS (Facility LifeCycle Management System) 설비 수명 관리 시스템 개발</li>
+                    <li>Front 화면 개발, Back-end MVC 패턴 서비스 로직 개발</li>
+                    <li>배치 및 메일링 개발</li>
+                    <li>삼성 내부 결재(Knox) 및 후처리 개발</li>
+                </ul>
+                <div class="tech-stack">
+                    <span class="tech-tag">Vue.js</span>
+                    <span class="tech-tag">Velocity</span>
+                    <span class="tech-tag">Node.js</span>
+                    <span class="tech-tag">Java</span>
+                    <span class="tech-tag">Spring Boot</span>
+                    <span class="tech-tag">Spring Batch</span>
+                    <span class="tech-tag">MyBatis</span>
+                    <span class="tech-tag">Oracle</span>
+                    <span class="tech-tag">DB2</span>
+                    <span class="tech-tag">PostgreSQL</span>
+                </div>
+
+                <h4>삼성바이오로직스 ERP 관리 시스템</h4>
+                <p style="font-size: 0.85rem; color: #64748b; margin-bottom: 10px;">2019.03 (1개월)</p>
+                <p style="font-size: 0.9rem; color: #475569; margin-bottom: 10px;">
+                    삼성 바이오로직스 ERP 시스템 개발
+                </p>
+                <ul>
+                    <li>넥사크로(Front Tool) 개발</li>
+                    <li>애니프레임워크, Java, XML 기반 개발</li>
+                    <li>사양서 작성</li>
+                </ul>
+                <div class="tech-stack">
+                    <span class="tech-tag">넥사크로</span>
+                    <span class="tech-tag">Java 8</span>
+                    <span class="tech-tag">Spring</span>
+                    <span class="tech-tag">애니프레임워크</span>
+                    <span class="tech-tag">MyBatis</span>
+                    <span class="tech-tag">DB2</span>
+                </div>
+
+                <h4>삼성전자 IRP (IT투자 / 운영비용 관리체계 개선)</h4>
+                <p style="font-size: 0.85rem; color: #64748b; margin-bottom: 10px;">2018.10 - 2019.03 (6개월)</p>
+                <p style="font-size: 0.9rem; color: #475569; margin-bottom: 10px;">
+                    IT투자 / 운영비용 관리체계 개선
+                </p>
+                <ul>
+                    <li>Velocity 이용한 화면 개발</li>
+                    <li>Hibernate 사용하는 서비스 로직 수정</li>
+                </ul>
+                <div class="tech-stack">
+                    <span class="tech-tag">Java</span>
+                    <span class="tech-tag">Spring</span>
+                    <span class="tech-tag">Hibernate</span>
+                    <span class="tech-tag">Velocity</span>
+                    <span class="tech-tag">MyBatis</span>
+                    <span class="tech-tag">DB2</span>
+                </div>
+            </div>
+
+        </section>
+
+        <section>
+            <h2>핵심 성과</h2>
+            <div style="font-size: 0.9rem; color: #475569; line-height: 1.8;">
+                <p style="margin-bottom: 15px;">
+                    외부 광고 플랫폼(CitrusAD) 의존도를 제거하고 자체 광고 시스템을 구축하여 <strong>외부 플랫폼 수수료 100% 절감</strong>.
+                    Microservices Architecture 5개 서비스 설계, Kafka Streams 기반 실시간 이벤트 파이프라인 구축.
+                </p>
+                <p style="margin-bottom: 15px;">
+                    외부 WMS 솔루션(<strong>월 900만원</strong>) 대신 창고관리시스템 자체 개발.
+                    DDD 기반 <strong>107개 테이블</strong> DB 설계, Timf 3PL 시스템과 <strong>9개 센터 연동</strong>,
+                    <strong>340,137건</strong> 재고 레코드 실시간 동기화 관리.
+                </p>
+                <p style="margin-bottom: 15px;">
+                    모놀리틱 서비스를 마이크로서비스로 전환하여 상용 배포 시간 <strong>20분 → 4분으로 80% 단축</strong>.
+                    5개 서비스(mobile, admin, rider, partner, worker) 각각 Repository 분리.
+                </p>
+                <p style="margin-bottom: 15px;">
+                    삼성전자 GEHS 프로젝트에서 AS-IS → TO-BE Migration으로 <strong>최대 3천만 건</strong> 데이터 이관 수행.
+                </p>
+                <p>
+                    인터널서비스팀 팀장으로서 <strong>5~7명 팀 리딩</strong> 및 <strong>6개 프로젝트 병렬 관리</strong>.
+                    광고 플랫폼, WMS, 배송 시스템, 발주/판매자 어드민, 정산 시스템, 인프라 관리 담당.
+                </p>
+            </div>
+        </section>
+
+        <section>
+            <h2>학력</h2>
+            <div class="education-item">
+                <h3>세명대학교</h3>
+                <p style="font-size: 0.9rem; color: #64748b;">소프트웨어학과, 컴퓨터시스템학과 (복수전공)</p>
+                <span class="period">2013.03 - 2018.02</span>
+                <ul style="margin-top: 10px; font-size: 0.85rem;">
+                    <li>1학년: 학생회</li>
+                    <li>2학년: 과 대표</li>
+                    <li>3학년: 과 대표</li>
+                    <li>4학년: 취업 및 사회 생활을 준비하기 위해 반 학기 휴학 후 졸업</li>
+                </ul>
+            </div>
+        </section>
+
+        <section>
+            <h2>자격증 및 수상</h2>
+            <ul class="cert-list">
+                <li><strong>NCS 국가직무능력표준 (오픈소스 기반 웹 전문가)</strong> - 개인프로젝트 대상 (2018.05)</li>
+                <li><strong>NCS 국가직무능력표준 (오픈소스 기반 웹 전문가)</strong> - 팀프로젝트 우수상 (2018.09)</li>
+            </ul>
+        </section>
+
+        <footer>
+            <p>최종 업데이트: 2026-05-24</p>
+        </footer>
+    </div>
+</body>
+</html>
