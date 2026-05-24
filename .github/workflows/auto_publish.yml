@@ -1,89 +1,267 @@
 name: Auto Publish Blog Posts by 손(Son/손민기)
 
-# on:
-#   schedule:
-#     - cron: '*/1 * * * *'
-
 on:
   push:
     branches:
       - develop
+  # PR 생성 시에도 빌드 테스트
+  pull_request:
+    branches:
+      - main
+      - develop
+  # 수동 실행 지원
+  workflow_dispatch:
+    inputs:
+      topic:
+        description: '블로그 주제'
+        required: false
+        type: string
+      categories:
+        description: '카테고리'
+        required: false
+        default: 'Tech'
+        type: string
+      generate_image:
+        description: '이미지 생성'
+        required: false
+        default: false
+        type: boolean
+
+env:
+  NODE_VERSION: '20'
+  PYTHON_VERSION: '3.11'
 
 jobs:
+  # ============================================
+  # 1단계: 블로그 포스트 자동 생성 (선택적)
+  # ============================================
   generate-blog-post:
     runs-on: ubuntu-latest
+    # workflow_dispatch로 실행되었고 topic이 있을 때만 실행
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.topic != ''
+
+    outputs:
+      post_generated: ${{ steps.generate.outputs.generated }}
+      post_path: ${{ steps.generate.outputs.path }}
+
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v5
         with:
-          python-version: 3.x
-
-      - name: Cache Python packages
-        uses: actions/cache@v2
-        with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
-          restore-keys: |
-            ${{ runner.os }}-pip-
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
 
       - name: Install Required Python Packages
         run: |
           python -m pip install --upgrade pip
-          pip install gitpython
-          pip install -r requirements.txt
+          pip install openai pillow requests
 
       - name: Generate Blog Post
+        id: generate
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-        run: python generate_blog_post.py
-
-      - name: Commit Changes
-        env:
-          MY_EMAIL: ${{ secrets.MY_EMAIL }}
-          MY_NAME: ${{ secrets.MY_NAME }}
-          MY_TOKEN : ${{ secrets.MY_TOKEN }}
         run: |
-          git config --local user.email $MY_EMAIL
-          git config --local user.name $MY_NAME
+          python generate_blog_post.py \
+            --topic "${{ github.event.inputs.topic }}" \
+            --categories "${{ github.event.inputs.categories }}" \
+            ${{ github.event.inputs.generate_image == 'true' && '--image' || '' }}
 
-          git remote set-url origin https://$MY_NAME:$MY_TOKEN@github.com/smk692/smk692.github.io.git
+          # 생성된 파일 경로 출력
+          NEW_FILES=$(git status --porcelain | grep "^??" | cut -c4-)
+          echo "generated=true" >> $GITHUB_OUTPUT
+          echo "path=$NEW_FILES" >> $GITHUB_OUTPUT
 
-          git add .
-          git commit -m "Add a new blog post"
-          git push
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.MY_TOKEN }}
+          commit-message: "📝 Add new blog post: ${{ github.event.inputs.topic }}"
+          title: "📝 [Blog] ${{ github.event.inputs.topic }}"
+          body: |
+            ## 자동 생성된 블로그 포스트
 
-  deploy:
-    needs: generate-blog-post
+            - **주제**: ${{ github.event.inputs.topic }}
+            - **카테고리**: ${{ github.event.inputs.categories }}
+            - **이미지 생성**: ${{ github.event.inputs.generate_image }}
+
+            ### 체크리스트
+            - [ ] 내용 검토 완료
+            - [ ] 코드 예시 동작 확인
+            - [ ] 오탈자 수정
+            - [ ] 이미지/링크 확인
+
+            ---
+            🤖 이 PR은 GitHub Actions에 의해 자동 생성되었습니다.
+          branch: blog/${{ github.run_id }}
+          labels: blog, auto-generated
+
+  # ============================================
+  # 2단계: 빌드 및 테스트
+  # ============================================
+  build-and-test:
     runs-on: ubuntu-latest
+    needs: [generate-blog-post]
+    # 포스트 생성 job이 실행되지 않았거나 성공한 경우 실행
+    if: always() && (needs.generate-blog-post.result == 'success' || needs.generate-blog-post.result == 'skipped')
+
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v2
-
-      - uses: actions/setup-node@v3
+        uses: actions/checkout@v4
         with:
-          node-version: v14.17.4
+          ref: ${{ github.head_ref || github.ref }}
 
-      - name: Cache node modules
-        uses: actions/cache@v2
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          path: ~/.npm
-          key: ${{ runner.os }}-npm-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-npm-
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
 
-      - name: Npm install
-        run: npm install
+      - name: Install Dependencies
+        run: npm ci
 
-      - name: Update blog
+      - name: Build
+        run: npm run build
+        env:
+          CI: true
+
+      - name: Upload Build Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: gatsby-public
+          path: public/
+          retention-days: 1
+
+  # ============================================
+  # 3단계: Lighthouse 성능 테스트
+  # ============================================
+  lighthouse:
+    runs-on: ubuntu-latest
+    needs: [build-and-test]
+    if: github.event_name == 'pull_request'
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Download Build Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: gatsby-public
+          path: public/
+
+      - name: Run Lighthouse CI
+        uses: treosh/lighthouse-ci-action@v11
+        with:
+          uploadArtifacts: true
+          temporaryPublicStorage: true
+          configPath: './.lighthouserc.json'
+        continue-on-error: true
+
+      - name: Comment Lighthouse Results
+        uses: actions/github-script@v7
+        if: github.event_name == 'pull_request'
+        with:
+          script: |
+            const fs = require('fs');
+            try {
+              const results = JSON.parse(fs.readFileSync('.lighthouseci/manifest.json', 'utf8'));
+              const summary = results[0]?.summary || {};
+
+              const scores = {
+                performance: Math.round((summary.performance || 0) * 100),
+                accessibility: Math.round((summary.accessibility || 0) * 100),
+                bestPractices: Math.round((summary['best-practices'] || 0) * 100),
+                seo: Math.round((summary.seo || 0) * 100),
+              };
+
+              const comment = `## 🔍 Lighthouse 성능 리포트
+
+              | 항목 | 점수 |
+              |------|------|
+              | ⚡ Performance | ${scores.performance} |
+              | ♿ Accessibility | ${scores.accessibility} |
+              | ✅ Best Practices | ${scores.bestPractices} |
+              | 🔎 SEO | ${scores.seo} |
+
+              > 80점 이상 권장`;
+
+              github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: comment
+              });
+            } catch (e) {
+              console.log('Lighthouse results not found:', e.message);
+            }
+
+  # ============================================
+  # 4단계: 배포 (main 브랜치 머지 시)
+  # ============================================
+  deploy:
+    runs-on: ubuntu-latest
+    needs: [build-and-test]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+
+    permissions:
+      contents: write
+      pages: write
+      id-token: write
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Download Build Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: gatsby-public
+          path: public/
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./public
+          cname: smk692.github.io
+
+      - name: Notify Deployment Success
+        run: |
+          echo "🚀 Deployment completed successfully!"
+          echo "📍 URL: https://smk692.github.io"
+
+  # ============================================
+  # 레거시: develop 브랜치 직접 배포 (기존 워크플로우 호환)
+  # ============================================
+  legacy-deploy:
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/develop' && github.event_name == 'push'
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Build and Deploy
         env:
           MY_EMAIL: ${{ secrets.MY_EMAIL }}
           MY_NAME: ${{ secrets.MY_NAME }}
-          MY_TOKEN : ${{ secrets.MY_TOKEN }}
+          MY_TOKEN: ${{ secrets.MY_TOKEN }}
         run: |
-          git config --local user.email $MY_EMAIL
-          git config --local user.name $MY_NAME
-
+          git config --local user.email "$MY_EMAIL"
+          git config --local user.name "$MY_NAME"
           git remote set-url origin https://$MY_NAME:$MY_TOKEN@github.com/smk692/smk692.github.io.git
+          npm run deploy

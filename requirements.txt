@@ -1,2 +1,5 @@
-openai
-pillow
+# AI Blog Post Generator v2.1 Dependencies
+openai>=1.0.0
+pillow>=10.0.0
+requests>=2.31.0
+codex-open-client>=0.2.0  # ChatGPT Plus OAuth 인증 (Python 3.9+)

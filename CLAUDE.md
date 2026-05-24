@@ -5,7 +5,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## 프로젝트 개요
 
 손민기(smk692)의 기술 블로그. Gatsby v4 기반 정적 사이트로 GitHub Pages에 배포됨.
-주요 콘텐츠: 백엔드 개발, 인프라(Kubernetes, Kafka, Terraform), CS 면접 질문.
+주요 콘텐츠: 백엔드 개발, 인프라, CS 면접 질문.
 
 ## 주요 명령어
 
@@ -47,6 +47,10 @@ date: '2024-01-01 12:00:00'
 author: 손(Son/손민기)
 tags: tag1 tag2 tag3
 categories: 카테고리명
+readingTime: 5              # 읽기 시간 (분, 자동 계산됨)
+series: "시리즈명"           # 시리즈 포스트 연결 (선택)
+updatedDate: '2024-01-15'   # 마지막 수정일 (선택)
+thumbnail: ./thumbnail.png   # 대표 이미지 (선택)
 ---
 ```
 
@@ -79,9 +83,32 @@ categories: 카테고리명
 4. SEO 자동 생성 (sitemap.xml, robots.txt)
 
 ### CI/CD
-- `develop` 브랜치 push 시 GitHub Actions 실행
-- `generate_blog_post.py`: OpenAI API로 블로그 포스트 자동 생성 (선택적)
-- Node.js v14.17.4 필요
+- `develop` 브랜치 push → 자동 빌드 및 배포
+- `main` 브랜치 PR → Lighthouse 성능 테스트 자동 실행
+- `workflow_dispatch` → GitHub Actions에서 수동 포스트 생성
+- Node.js v20 LTS 사용
+
+### AI 포스트 생성 (generate_blog_post.py v2.0)
+```bash
+# 대화형 모드
+python generate_blog_post.py
+
+# CLI 모드
+python generate_blog_post.py --topic "주제" --categories "Tech" --image
+
+# 옵션
+--topic       : 블로그 주제 (필수)
+--categories  : 카테고리 (기본: Tech)
+--series      : 시리즈 이름 (선택)
+--image       : DALL-E 이미지 생성
+--interactive : 대화형 모드
+```
+
+특징:
+- GPT-4o 기반 고품질 콘텐츠
+- AI 클리셰 단어 자동 필터링
+- E-E-A-T 프레임워크 준수
+- 품질 점수 자동 측정
 
 ## 설정 변경
 

@@ -25,3 +25,9 @@ public
 
 # Mac files
 .DS_Store
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+*.pyo
