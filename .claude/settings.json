@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "if echo \"$TOOL_INPUT\" | grep -q 'generate_blog_post.py'; then echo '\\n[BLOG_POST_GENERATED] 포스트 생성 완료. 품질 점검 후 배포를 진행합니다.'; fi"
+          }
+        ]
+      }
+    ]
+  }
+}
