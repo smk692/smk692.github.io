@@ -157,7 +157,7 @@ class BlogPostGenerator:
         if self.use_oauth and USING_OAUTH:
             # CodexClient: responses API (스트리밍으로 텍스트 수집)
             stream = self.client.responses.create(
-                model="gpt-5.4",  # ChatGPT Plus에서 지원하는 모델
+                model="gpt-5.5",  # 최고 품질 모델
                 instructions=system_msg,
                 input=prompt,
                 stream=True,
@@ -203,7 +203,7 @@ class BlogPostGenerator:
         if self.use_oauth:
             # CodexClient: responses API (스트리밍)
             stream = self.client.responses.create(
-                model="gpt-5.4-mini",  # 빠른 작업용 모델
+                model="gpt-5.5",  # 최고 품질 모델
                 instructions="SEO 전문가로서 해시태그를 추출합니다.",
                 input=prompt,
                 stream=True,
