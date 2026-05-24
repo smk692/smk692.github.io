@@ -378,7 +378,7 @@
                 <div class="skill-list">MySQL, MongoDB/DocumentDB, OpenSearch, Redis, Oracle, DB2, PostgreSQL, DynamoDB</div>
 
                 <div class="skill-category">Infrastructure</div>
-                <div class="skill-list">AWS (ECS, EKS, MSK, RDS, S3, DMS, Lambda, SNS), Terraform, Docker, Linux</div>
+                <div class="skill-list">AWS (ECS, EKS, MSK, Batch, RDS, S3, DMS, Lambda, SNS), Terraform, Docker, Linux</div>
 
                 <div class="skill-category">DevOps</div>
                 <div class="skill-list">GitHub Actions, Jenkins, CircleCI, Blue/Green Deployment, GitOps</div>
@@ -484,7 +484,6 @@
                     <li><strong>Gumbel Top-k Distribution</strong> 알고리즘으로 확률적 광고 랭킹 구현 (<strong>200ms 응답</strong>)</li>
                     <li>OpenSearch 읽기/쓰기 인덱스 분리 설계, 15분 간격 Phase Switching</li>
                     <li>CitrusAD → 내재화 플랫폼 Migration Simulation 진행 (15분/1시간 광고 선정 비교)</li>
-                    <li><strong>9개 항목 체크리스트</strong> 기반 무중단 Production 배포 완료</li>
                     <li>OOM 장애 대응: R2DBC Connection Pool Metrics를 Prometheus에 등록</li>
                 </ul>
                 <div class="tech-stack">
@@ -517,6 +516,52 @@
                     <li><strong>Claude 기반 Code Review Bot</strong> 구현으로 자동화된 PR 리뷰</li>
                     <li>Prometheus + Grafana Monitoring Manage VPC 이관</li>
                 </ul>
+
+                <!-- AWS Batch 아키텍처 설계 및 도입 -->
+                <h4>AWS Batch 아키텍처 설계 및 전사 도입</h4>
+                <p style="font-size: 0.85rem; color: #64748b; margin-bottom: 10px;">2023.11 - 2024.11 (1년) | 아키텍처 설계 및 모듈 개발</p>
+                <p style="font-size: 0.9rem; color: #475569; margin-bottom: 10px;">
+                    EC2 기반 배치 처리를 AWS Batch로 전환하여 비용 최적화 및 리소스 동적 활용 구현
+                </p>
+                <ul>
+                    <li><strong>AWS Batch 아키텍처 설계</strong>
+                        <ul>
+                            <li>작업 정의(Job Definition), 작업 큐(Job Queue), 컴퓨팅 환경 구성</li>
+                            <li>Fargate Spot 기반 구성으로 온디맨드 대비 <strong>70% 비용 절감</strong></li>
+                            <li>ADR(Architecture Decision Record) 작성 및 전사 공유</li>
+                        </ul>
+                    </li>
+                    <li><strong>Terraform 모듈 개발</strong>
+                        <ul>
+                            <li>aws_batch 모듈 개발 (infra/app 분리 구조)</li>
+                            <li>WMS, Supply, 검색 등 다중 도메인 적용</li>
+                            <li>env-dev.tfvars, env-prod.tfvars 환경별 설정 분리</li>
+                        </ul>
+                    </li>
+                    <li><strong>CI/CD 파이프라인 구축</strong>
+                        <ul>
+                            <li>GitHub Actions + ECR + Jenkins 스케줄링 연동</li>
+                            <li>Docker Multi-stage Build 적용</li>
+                            <li>검색엔진 배포 시 자동 전체색인 실행 자동화</li>
+                        </ul>
+                    </li>
+                    <li><strong>Python 배치 프레임워크 개발</strong>
+                        <ul>
+                            <li>petfriends-batch-template 레포지토리 생성</li>
+                            <li>팀/파트별 AWS Batch 구축 가이드 문서 작성</li>
+                            <li>공통 라이브러리 패키지화 (DB, SecretManager, Kafka, Slack 등)</li>
+                        </ul>
+                    </li>
+                </ul>
+                <div class="tech-stack">
+                    <span class="tech-tag">AWS Batch</span>
+                    <span class="tech-tag">Fargate Spot</span>
+                    <span class="tech-tag">Terraform</span>
+                    <span class="tech-tag">GitHub Actions</span>
+                    <span class="tech-tag">Jenkins</span>
+                    <span class="tech-tag">Python</span>
+                    <span class="tech-tag">Docker</span>
+                </div>
 
                 <!-- 판매자 심쿵배송 -->
                 <h4>판매자 심쿵배송 (제트배송)</h4>
@@ -671,7 +716,6 @@
                     </li>
                     <li>Swagger 도입</li>
                     <li>Spring Boot 2 → 3.2.3, Java 11 → 17, Maven → Gradle Migration</li>
-                    <li>WMS 연동 이슈 <strong>8건 동시 해결</strong> (인증키, API 전송, TMS 연결 등)</li>
                 </ul>
                 <div class="tech-stack">
                     <span class="tech-tag">Java 17</span>
@@ -938,6 +982,10 @@
                 <p style="margin-bottom: 15px;">
                     모놀리틱 서비스를 마이크로서비스로 전환하여 상용 배포 시간 <strong>20분 → 4분으로 80% 단축</strong>.
                     5개 서비스(mobile, admin, rider, partner, worker) 각각 Repository 분리.
+                </p>
+                <p style="margin-bottom: 15px;">
+                    AWS Batch 아키텍처를 설계하고 Terraform 모듈을 개발하여 Fargate Spot 기반 <strong>70% 비용 절감</strong> 달성.
+                    전사 배치 시스템 표준화를 위한 템플릿 레포지토리 및 가이드 문서 작성.
                 </p>
                 <p style="margin-bottom: 15px;">
                     삼성전자 GEHS 프로젝트에서 AS-IS → TO-BE Migration으로 <strong>최대 3천만 건</strong> 데이터 이관 수행.
