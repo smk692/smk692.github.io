@@ -5,12 +5,11 @@ on:
     branches:
       - develop
       - master
-  # PR 생성 시에도 빌드 테스트
+      - main
   pull_request:
     branches:
       - main
       - develop
-  # 수동 실행 지원
   workflow_dispatch:
     inputs:
       topic:
@@ -38,12 +37,7 @@ jobs:
   # ============================================
   generate-blog-post:
     runs-on: ubuntu-latest
-    # workflow_dispatch로 실행되었고 topic이 있을 때만 실행
     if: github.event_name == 'workflow_dispatch' && github.event.inputs.topic != ''
-
-    outputs:
-      post_generated: ${{ steps.generate.outputs.generated }}
-      post_path: ${{ steps.generate.outputs.path }}
 
     steps:
       - name: Checkout Repository
@@ -72,15 +66,10 @@ jobs:
             --categories "${{ github.event.inputs.categories }}" \
             ${{ github.event.inputs.generate_image == 'true' && '--image' || '' }}
 
-          # 생성된 파일 경로 출력
-          NEW_FILES=$(git status --porcelain | grep "^??" | cut -c4-)
-          echo "generated=true" >> $GITHUB_OUTPUT
-          echo "path=$NEW_FILES" >> $GITHUB_OUTPUT
-
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v6
         with:
-          token: ${{ secrets.MY_TOKEN }}
+          token: ${{ secrets.GITHUB_TOKEN }}
           commit-message: "📝 Add new blog post: ${{ github.event.inputs.topic }}"
           title: "📝 [Blog] ${{ github.event.inputs.topic }}"
           body: |
@@ -102,19 +91,55 @@ jobs:
           labels: blog, auto-generated
 
   # ============================================
-  # 2단계: 빌드 및 테스트
+  # 2단계: 빌드 및 배포 (로컬 npm run deploy와 동일)
   # ============================================
-  build-and-test:
+  build-and-deploy:
     runs-on: ubuntu-latest
-    needs: [generate-blog-post]
-    # 포스트 생성 job이 실행되지 않았거나 성공한 경우 실행
-    if: always() && (needs.generate-blog-post.result == 'success' || needs.generate-blog-post.result == 'skipped')
+    if: github.event_name == 'push'
+
+    permissions:
+      contents: write
 
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          ref: ${{ github.head_ref || github.ref }}
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm install --legacy-peer-deps
+
+      - name: Build
+        run: npm run build
+        env:
+          CI: true
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./public
+          cname: smk692.github.io
+
+      - name: Notify Deployment Success
+        run: |
+          echo "🚀 Deployment completed successfully!"
+          echo "📍 URL: https://smk692.github.io"
+
+  # ============================================
+  # 3단계: PR 빌드 테스트 (배포 없음)
+  # ============================================
+  build-test:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -138,11 +163,11 @@ jobs:
           retention-days: 1
 
   # ============================================
-  # 3단계: Lighthouse 성능 테스트
+  # 4단계: Lighthouse 성능 테스트 (PR만)
   # ============================================
   lighthouse:
     runs-on: ubuntu-latest
-    needs: [build-and-test]
+    needs: [build-test]
     if: github.event_name == 'pull_request'
 
     steps:
@@ -165,7 +190,6 @@ jobs:
 
       - name: Comment Lighthouse Results
         uses: actions/github-script@v7
-        if: github.event_name == 'pull_request'
         with:
           script: |
             const fs = require('fs');
@@ -200,39 +224,3 @@ jobs:
             } catch (e) {
               console.log('Lighthouse results not found:', e.message);
             }
-
-  # ============================================
-  # 4단계: 배포 (main 브랜치 머지 시)
-  # ============================================
-  deploy:
-    runs-on: ubuntu-latest
-    needs: [build-and-test]
-    if: (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master' || github.ref == 'refs/heads/develop') && github.event_name == 'push'
-
-    permissions:
-      contents: write
-      pages: write
-      id-token: write
-
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-
-      - name: Download Build Artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: gatsby-public
-          path: public/
-
-      - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v4
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./public
-          cname: smk692.github.io
-
-      - name: Notify Deployment Success
-        run: |
-          echo "🚀 Deployment completed successfully!"
-          echo "📍 URL: https://smk692.github.io"
-
