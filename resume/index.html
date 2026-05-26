@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>손민기 - Backend Developer & Tech Lead</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Nanum+Gothic:wght@400;700;800&display=swap" rel="stylesheet">
     <style>
         * {
             margin: 0;
@@ -12,7 +15,7 @@
         }
 
         body {
-            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-family: 'Nanum Gothic', 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             line-height: 1.7;
             color: #475569;
             background: #f5f5f5;
@@ -315,6 +318,60 @@
             margin-bottom: 0;
         }
 
+        /* AS-IS / TO-BE 비교 박스 */
+        .asis-tobe {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            padding: 15px;
+            margin: 12px 0;
+        }
+
+        .asis-tobe .asis,
+        .asis-tobe .tobe {
+            padding: 12px 14px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            line-height: 1.6;
+        }
+
+        .asis-tobe .asis {
+            background: #fef2f2;
+            border-left: 3px solid #ef4444;
+            color: #475569;
+        }
+
+        .asis-tobe .tobe {
+            background: #eff6ff;
+            border-left: 3px solid #2563eb;
+            color: #475569;
+        }
+
+        .asis-tobe .label {
+            display: inline-block;
+            font-weight: 700;
+            font-size: 0.78rem;
+            letter-spacing: 0.5px;
+            margin-bottom: 5px;
+        }
+
+        .asis-tobe .asis .label {
+            color: #dc2626;
+        }
+
+        .asis-tobe .tobe .label {
+            color: #2563eb;
+        }
+
+        @media (max-width: 600px) {
+            .asis-tobe {
+                grid-template-columns: 1fr;
+            }
+        }
+
         .ai-strategy {
             background: #f8fafc;
             padding: 20px;
@@ -398,6 +455,30 @@
             .container {
                 box-shadow: none;
                 padding: 40px;
+                max-width: 100%;
+            }
+            /* 카테고리(섹션)별로 새 페이지에서 시작 */
+            section {
+                page-break-before: always;
+                break-before: page;
+            }
+            section:first-of-type {
+                page-break-before: avoid;
+                break-before: avoid;
+            }
+            /* 카드/항목이 페이지 경계에서 잘리지 않도록 */
+            .project-card,
+            .experience-item,
+            .career-summary-item,
+            .education-item {
+                page-break-inside: avoid;
+                break-inside: avoid;
+            }
+            /* 제목이 페이지 끝에 홀로 남지 않도록 */
+            h2, h3, h4,
+            .experience-header {
+                page-break-after: avoid;
+                break-after: avoid;
             }
         }
 
@@ -431,12 +512,14 @@
             <h2>소개</h2>
             <div class="summary">
                 <p>
-                    인생은 도전과 선택의 반복이며 현재 삶에 안주하는 순간 더 나은 삶은 없다고 생각하는 <strong>도전하는 개발자</strong>입니다.
-                    </p>
-
-                    책임감을 갖고 주도적으로 일을 진행하며, 동료들과 끊임없이 토론하여 더 좋은 프로세스를 만드는 것을 좋아합니다.
-                    </p>
-                    빠르게 바뀌는 시대에 적응하기 위해 논문 및 개발 강의를 통해 부족한 지식을 쌓았으며, 회사에서 ADR 과 구축 사례로 설득하여 새로운 기술을 적용해왔습니다.
+                    <strong>"익숙함에 머무르기보다, 더 나은 방향을 만드는 개발자"</strong>가 되고자 합니다.
+                </p>
+                <p>
+                    현재에 안주하는 순간 성장은 멈춘다고 믿기에, 늘 새로운 도전과 변화를 즐기는 개발자입니다.
+                    문제가 보이면 먼저 움직이고, 더 나은 답을 찾기 위해 동료들과 치열하게 토론하는 과정을 좋아합니다.
+                </p>
+                <p>
+                    빠르게 변하는 기술 흐름 속에서도 논문과 강의로 꾸준히 배우며, ADR과 실제 구축 사례를 근거로 새로운 기술을 팀에 자연스럽게 스며들게 해왔습니다.
                 </p>
             </div>
         </section>
@@ -526,7 +609,10 @@
 
                 <!-- 운영업무 -->
                 <div class="project-card">
-                    <h4>운영업무 (상시) <span style="font-size: 0.85rem; font-weight: normal;"> ~ NOW() </span></h4>
+                    <h4>운영업무 <span style="font-size: 0.85rem; font-weight: normal;">상시</span></h4>
+                    <p style="font-size: 0.9rem; color: #475569; margin-bottom: 10px;">
+                        팀이 담당하는 배송·물류·발주·판매자·정산·광고·인프라 도메인을 상시 운영·관리하는 업무
+                    </p>
                     <ul>
                         <li>배송 관리: 당일배송(심쿵배송), 새벽배송, 택배배송 전체 프로세스 관리</li>
                         <li>WMS 창고 시스템 관리: CJ, 팀프레시, JD 등 3PL 연동 및 재고 동기화</li>
@@ -748,7 +834,7 @@
                 <div class="project-card">
                     <h4>판매자 심쿵배송 (제트배송) <span style="font-size: 0.85rem; font-weight: normal;">2023.07 - 2023.11</span></h4>
                     <p style="font-size: 0.9rem; color: #475569; margin-bottom: 10px;">
-                        업체에서 위탁 판매하는 재고 품목을 펫프렌즈 물류창고에서 보관, 배송 및 반품 등 서비스를 대리 제공하여 수익을 내는 프로젝트
+                        셀러가 위탁 판매하는 품목을 펫프렌즈 창고에서 풀필먼트 대행하여 추가 수익을 창출한 프로젝트
                     </p>
                     <ul>
                         <li>전체적인 테이블 및 업무 설계</li>
@@ -838,7 +924,8 @@
                 <div class="project-card">
                     <h4>발주어드민, 판매자어드민 고도화 및 리팩터링 <span style="font-size: 0.85rem; font-weight: normal;">2022.11 - 2023.03</span></h4>
                     <p style="font-size: 0.9rem; color: #475569; margin-bottom: 10px;">
-                        발주어드민: 각 거래처에 입고 요청을 하여 입고 확정, 정산까지 진행 / 판매자어드민: 펫프렌즈 서비스에서 거래처 물건을 대신 팔아주는 서비스
+                        발주어드민: 각 거래처에 입고 요청을 하여 입고 확정, 정산까지 진행하는 발주 원스톱 솔루션<br>
+                        판매자어드민: 펫프렌즈에서 거래처 물건을 대신 판매하는 서비스를 위한 시스템 솔루션
                     </p>
                     <ul>
                         <li>JPA 제대로 사용할 수 있게 코드 개선 및 Service Layer → Domain 구조로 변경</li>
@@ -963,9 +1050,18 @@
                 <div class="project-card">
                     <h4>발주어드민 오픈 및 유지 보수 <span style="font-size: 0.85rem; font-weight: normal;">2021.07 - 2022.01</span></h4>
                     <p style="font-size: 0.9rem; color: #475569; margin-bottom: 10px;">
-                        이전에 카카오톡 또는 메일 등 시스템 없이 수기로 발주를 진행 → 물류팀, MD팀의 리소스를 줄이기 위해 개발 착수.
-                        파트너 상품을 제외한 자체 관리하는 상품들을 시스템적으로 발주 등록 및 정산 처리까지 처리하는 시스템
+                        펫프렌즈 PB상품을 자동으로 발주 등록 및 정산까지 처리하는 시스템
                     </p>
+                    <div class="asis-tobe">
+                        <div class="asis">
+                            <span class="label">AS-IS</span>
+                            카카오톡 또는 메일 등 시스템 없이 물류팀, MD팀에서 수기로 발주를 진행
+                        </div>
+                        <div class="tobe">
+                            <span class="label">TO-BE</span>
+                            파트너 상품을 제외한 자체 관리하는 상품들을 시스템적으로 발주 등록 및 정산 처리까지 처리
+                        </div>
+                    </div>
                     <ul>
                         <li>개발팀 스케줄 관리 및 업무 정의</li>
                         <li>전체적인 테이블 설계</li>
@@ -994,10 +1090,16 @@
                 <!-- 모놀리틱→마이크로서비스 -->
                 <div class="project-card">
                     <h4>펫프렌즈 모놀리틱 → 마이크로서비스 전환 <span style="font-size: 0.85rem; font-weight: normal;">2021.05 - 2021.11</span></h4>
-                    <p style="font-size: 0.9rem; color: #475569; margin-bottom: 10px;">
-                        AS-IS: 펫프렌즈 서비스 5개로 파이프라인 구성 (mobile, admin, rider, partner, worker), 각 서비스 코드 하나를 수정할 시 5개의 서비스를 배포해야 됨 → 상용 배포 시 약 20분 이상 걸림<br>
-                        TO-BE: 5개의 서비스를 각각 repository를 분리하여 각 변경된 서비스 코드만 배포하는 방식으로 변경
-                    </p>
+                    <div class="asis-tobe">
+                        <div class="asis">
+                            <span class="label">AS-IS</span>
+                            펫프렌즈 서비스 5개(mobile, admin, rider, partner, worker)로 파이프라인 구성. 서비스 코드 하나만 수정해도 5개 서비스를 모두 배포해야 하여 상용 배포에 약 20분 이상 소요
+                        </div>
+                        <div class="tobe">
+                            <span class="label">TO-BE</span>
+                            5개 서비스를 각각 repository로 분리하여 변경된 서비스 코드만 배포하는 방식으로 전환
+                        </div>
+                    </div>
                     <ul>
                         <li>5개 서비스 (mobile, admin, rider, partner, worker) 각각 Repository 분리</li>
                         <li>상용 배포 시간 <strong>20분 → 4분으로 단축</strong></li>
@@ -1244,7 +1346,7 @@
         </section>
 
         <footer>
-            <p>최종 업데이트: 2026-05-25</p>
+            <p>최종 업데이트: 2026-05-26</p>
         </footer>
     </div>
 </body>
