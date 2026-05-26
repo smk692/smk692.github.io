@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><rss xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title><![CDATA[👋 손코딩의 끄적끄적 블로그 RSS Feed]]></title><description><![CDATA[손코딩의 끄적끄적 블로그]]></description><link>http://github.com/dylang/node-rss</link><generator>GatsbyJS</generator><lastBuildDate>Tue, 26 May 2026 15:44:13 GMT</lastBuildDate><item><title><![CDATA[Obsidian 볼트를 지식 그래프로: Understand-Anything으로 내 노트 연결 구조 보기]]></title><description><![CDATA[지난 글에서 Understand-Anything…]]></description><link>https://smk692.github.io/2026-05-27-understand-anything-obsidian/</link><guid isPermaLink="false">https://smk692.github.io/2026-05-27-understand-anything-obsidian/</guid><pubDate>Wed, 27 May 2026 12:00:00 GMT</pubDate><content:encoded>&lt;p&gt;&lt;a href=&quot;/2026-05-24-understand-anything&quot;&gt;지난 글&lt;/a&gt;에서 &lt;strong&gt;Understand-Anything&lt;/strong&gt;으로 코드베이스를 지식 그래프로 시각화하는 방법을 다뤘다. 그런데 이 도구에는 코드 분석 말고도 흥미로운 기능이 하나 더 있다. 바로 &lt;code class=&quot;language-text&quot;&gt;/understand-knowledge&lt;/code&gt;다.&lt;/p&gt;
+<?xml version="1.0" encoding="UTF-8"?><rss xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title><![CDATA[👋 손코딩의 끄적끄적 블로그 RSS Feed]]></title><description><![CDATA[손코딩의 끄적끄적 블로그]]></description><link>http://github.com/dylang/node-rss</link><generator>GatsbyJS</generator><lastBuildDate>Tue, 26 May 2026 15:47:39 GMT</lastBuildDate><item><title><![CDATA[Obsidian 볼트를 지식 그래프로: Understand-Anything으로 내 노트 연결 구조 보기]]></title><description><![CDATA[지난 글에서 Understand-Anything…]]></description><link>https://smk692.github.io/2026-05-27-understand-anything-obsidian/</link><guid isPermaLink="false">https://smk692.github.io/2026-05-27-understand-anything-obsidian/</guid><pubDate>Wed, 27 May 2026 12:00:00 GMT</pubDate><content:encoded>&lt;p&gt;&lt;a href=&quot;/2026-05-24-understand-anything&quot;&gt;지난 글&lt;/a&gt;에서 &lt;strong&gt;Understand-Anything&lt;/strong&gt;으로 코드베이스를 지식 그래프로 시각화하는 방법을 다뤘다. 그런데 이 도구에는 코드 분석 말고도 흥미로운 기능이 하나 더 있다. 바로 &lt;code class=&quot;language-text&quot;&gt;/understand-knowledge&lt;/code&gt;다.&lt;/p&gt;
 &lt;p&gt;이 명령어는 &lt;strong&gt;마크다운 위키(지식 베이스)를 분석&lt;/strong&gt;한다. 그리고 그 감지 조건이 사실상 &lt;strong&gt;Obsidian 볼트 구조와 동일&lt;/strong&gt;하다. 즉, 내가 몇 년간 쌓아온 Obsidian 노트를 그대로 지식 그래프로 만들 수 있다는 뜻이다.&lt;/p&gt;
 &lt;h2 id=&quot;obsidian-그래프-뷰의-한계&quot; style=&quot;position:relative;&quot;&gt;&lt;a href=&quot;#obsidian-%EA%B7%B8%EB%9E%98%ED%94%84-%EB%B7%B0%EC%9D%98-%ED%95%9C%EA%B3%84&quot; aria-label=&quot;obsidian 그래프 뷰의 한계 permalink&quot; class=&quot;anchor before&quot;&gt;&lt;svg aria-hidden=&quot;true&quot; focusable=&quot;false&quot; height=&quot;16&quot; version=&quot;1.1&quot; viewBox=&quot;0 0 16 16&quot; width=&quot;16&quot;&gt;&lt;path fill-rule=&quot;evenodd&quot; d=&quot;M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z&quot;&gt;&lt;/path&gt;&lt;/svg&gt;&lt;/a&gt;Obsidian 그래프 뷰의 한계&lt;/h2&gt;
 &lt;p&gt;Obsidian에는 이미 그래프 뷰가 있다. 노트들이 점으로 표시되고 &lt;code class=&quot;language-text&quot;&gt;[[링크]]&lt;/code&gt;로 연결된다. 처음 보면 멋있다. 그런데 노트가 수백 개 쌓이면 이렇게 된다.&lt;/p&gt;
@@ -65,31 +65,27 @@
 &lt;li&gt;&lt;strong&gt;DASHBOARD&lt;/strong&gt; — &lt;code class=&quot;language-text&quot;&gt;/understand-dashboard&lt;/code&gt;로 force-directed 그래프 + 커뮤니티 클러스터링 + 의미 검색 제공&lt;/li&gt;
 &lt;/ol&gt;
 &lt;p&gt;흐름으로 그리면 이렇다. &lt;strong&gt;결정론적 파서&lt;/strong&gt;가 뼈대를 만들고, &lt;strong&gt;LLM&lt;/strong&gt;이 살을 붙이는 구조다.&lt;/p&gt;
-&lt;div class=&quot;gatsby-highlight&quot; data-language=&quot;text&quot;&gt;&lt;pre class=&quot;language-text&quot;&gt;&lt;code class=&quot;language-text&quot;&gt;  Obsidian 볼트 (.md + [[링크]] + index.md)
-              │
-              ▼
-┌──────────────────────────────┐
-│  ① PARSE  (결정론적, LLM 0)   │   index.md·wikilink·헤딩 추출
-│  parse-knowledge-base.py      │ → scan-manifest.json
-└──────────────┬───────────────┘
-               │  article·topic 노드 + related/categorized 엣지
-               ▼
-┌──────────────────────────────┐
-│  ② ANALYZE  (LLM, 병렬 3배치) │   본문을 읽고 &quot;숨은 관계&quot; 발굴
-│  article-analyzer ×N          │ → analysis-batch-*.json
-└──────────────┬───────────────┘
-               │  entity·claim 노드 + builds_on/cites/exemplifies 엣지
-               ▼
-┌──────────────────────────────┐
-│  ③ MERGE  (결정론적)          │   중복 제거·레이어·투어 생성
-│  merge-knowledge-graph.py     │ → assembled-graph.json
-└──────────────┬───────────────┘
-               ▼
-┌──────────────────────────────┐
-│  ④ SAVE → ⑤ DASHBOARD         │   검증 후 저장 + 시각화
-└──────────────┬───────────────┘
-               ▼
-   knowledge-graph.json ──► 인터랙티브 그래프 대시보드&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;div class=&quot;gatsby-highlight&quot; data-language=&quot;mermaid&quot;&gt;&lt;pre class=&quot;language-mermaid&quot;&gt;&lt;code class=&quot;language-mermaid&quot;&gt;&lt;span class=&quot;token keyword&quot;&gt;flowchart&lt;/span&gt; TD
+    V&lt;span class=&quot;token text string&quot;&gt;[&quot;📂 Obsidian 볼트&amp;lt;br/&gt;.md + [[링크]] + index.md&quot;]&lt;/span&gt; &lt;span class=&quot;token arrow operator&quot;&gt;--&gt;&lt;/span&gt; P
+
+    &lt;span class=&quot;token keyword&quot;&gt;subgraph&lt;/span&gt; 결정론 &lt;span class=&quot;token text string&quot;&gt;[&quot;결정론적 (LLM 0, 빠름)&quot;]&lt;/span&gt;
+        P&lt;span class=&quot;token text string&quot;&gt;[&quot;① PARSE&amp;lt;br/&gt;parse-knowledge-base.py&quot;]&lt;/span&gt;
+        M&lt;span class=&quot;token text string&quot;&gt;[&quot;③ MERGE&amp;lt;br/&gt;merge-knowledge-graph.py&quot;]&lt;/span&gt;
+    &lt;span class=&quot;token keyword&quot;&gt;end&lt;/span&gt;
+
+    &lt;span class=&quot;token keyword&quot;&gt;subgraph&lt;/span&gt; 엘엘엠 &lt;span class=&quot;token text string&quot;&gt;[&quot;LLM (비용 발생)&quot;]&lt;/span&gt;
+        A&lt;span class=&quot;token text string&quot;&gt;[&quot;② ANALYZE&amp;lt;br/&gt;article-analyzer ×N (병렬 3배치)&quot;]&lt;/span&gt;
+    &lt;span class=&quot;token keyword&quot;&gt;end&lt;/span&gt;
+
+    P &lt;span class=&quot;token arrow operator&quot;&gt;--&gt;&lt;/span&gt;&lt;span class=&quot;token label property&quot;&gt;|&quot;scan-manifest.json&amp;lt;br/&gt;article·topic 노드&quot;|&lt;/span&gt; A
+    A &lt;span class=&quot;token arrow operator&quot;&gt;--&gt;&lt;/span&gt;&lt;span class=&quot;token label property&quot;&gt;|&quot;analysis-batch-*.json&amp;lt;br/&gt;entity·claim + builds_on/cites&quot;|&lt;/span&gt; M
+    M &lt;span class=&quot;token arrow operator&quot;&gt;--&gt;&lt;/span&gt;&lt;span class=&quot;token label property&quot;&gt;|&quot;assembled-graph.json&quot;|&lt;/span&gt; S&lt;span class=&quot;token text string&quot;&gt;[&quot;④ SAVE&amp;lt;br/&gt;검증 후 저장&quot;]&lt;/span&gt;
+    S &lt;span class=&quot;token arrow operator&quot;&gt;--&gt;&lt;/span&gt; D&lt;span class=&quot;token text string&quot;&gt;[&quot;⑤ DASHBOARD&amp;lt;br/&gt;인터랙티브 그래프&quot;]&lt;/span&gt;
+
+    &lt;span class=&quot;token keyword&quot;&gt;style&lt;/span&gt; 결정론 fill&lt;span class=&quot;token operator&quot;&gt;:&lt;/span&gt;#eef6ff,stroke&lt;span class=&quot;token operator&quot;&gt;:&lt;/span&gt;#5b9bd5
+    &lt;span class=&quot;token keyword&quot;&gt;style&lt;/span&gt; 엘엘엠 fill&lt;span class=&quot;token operator&quot;&gt;:&lt;/span&gt;#fff4e6,stroke&lt;span class=&quot;token operator&quot;&gt;:&lt;/span&gt;#e0a458
+    &lt;span class=&quot;token keyword&quot;&gt;style&lt;/span&gt; A &lt;span class=&quot;token style&quot;&gt;&lt;span class=&quot;token property&quot;&gt;fill&lt;/span&gt;&lt;span class=&quot;token operator&quot;&gt;:&lt;/span&gt;#ffe9c7&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;token property&quot;&gt;stroke&lt;/span&gt;&lt;span class=&quot;token operator&quot;&gt;:&lt;/span&gt;#e0a458&lt;/span&gt;
+    &lt;span class=&quot;token keyword&quot;&gt;style&lt;/span&gt; D &lt;span class=&quot;token style&quot;&gt;&lt;span class=&quot;token property&quot;&gt;fill&lt;/span&gt;&lt;span class=&quot;token operator&quot;&gt;:&lt;/span&gt;#e6f5e6&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;token property&quot;&gt;stroke&lt;/span&gt;&lt;span class=&quot;token operator&quot;&gt;:&lt;/span&gt;#5bbd6b&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 &lt;blockquote&gt;
 &lt;p&gt;&lt;strong&gt;핵심&lt;/strong&gt;: ①③은 &lt;strong&gt;공짜이고 빠른&lt;/strong&gt; 결정론적 단계, ②만 &lt;strong&gt;LLM 비용&lt;/strong&gt;이 드는 단계다. 그래서 노트 양이 많아질수록 ②를 주제 폴더 단위로 쪼개는 게 비용·품질 모두 유리하다.&lt;/p&gt;
 &lt;/blockquote&gt;
@@ -211,7 +207,31 @@
 &lt;li&gt;&lt;strong&gt;&lt;code class=&quot;language-text&quot;&gt;exemplifies&lt;/code&gt; 3개&lt;/strong&gt; — MenuGen이 “소프트웨어 소멸” 논지의 &lt;em&gt;구체 사례&lt;/em&gt;임을 연결&lt;/li&gt;
 &lt;li&gt;&lt;strong&gt;&lt;code class=&quot;language-text&quot;&gt;cites&lt;/code&gt; 2개&lt;/strong&gt; — CLAUDE.md 200줄 한계의 근거로 &lt;em&gt;Anthropic 연구&lt;/em&gt;를 인용했음을 포착&lt;/li&gt;
 &lt;/ul&gt;
-&lt;p&gt;Obsidian 그래프 뷰였다면 5개 노트가 그냥 서로 연결된 점 5개로만 보였을 것이다. 반면 여기서는 “이 노트들이 &lt;strong&gt;Karpathy의 Software 3.0이라는 뿌리에서 출발해, 4원칙 → CLAUDE.md 설계 → 팀 거버넌스로 점점 구체화되는 한 줄기의 사고 흐름&lt;/strong&gt;“이라는 게 드러난다.&lt;/p&gt;
+&lt;p&gt;Obsidian 그래프 뷰였다면 5개 노트가 그냥 서로 연결된 점 5개로만 보였을 것이다. 반면 여기서는 “이 노트들이 &lt;strong&gt;Karpathy의 Software 3.0이라는 뿌리에서 출발해, 4원칙 → CLAUDE.md 설계 → 팀 거버넌스로 점점 구체화되는 한 줄기의 사고 흐름&lt;/strong&gt;“이라는 게 드러난다. LLM이 찾아낸 &lt;code class=&quot;language-text&quot;&gt;builds_on&lt;/code&gt; 관계만 추려 그리면 이렇다.&lt;/p&gt;
+&lt;div class=&quot;gatsby-highlight&quot; data-language=&quot;mermaid&quot;&gt;&lt;pre class=&quot;language-mermaid&quot;&gt;&lt;code class=&quot;language-mermaid&quot;&gt;&lt;span class=&quot;token keyword&quot;&gt;flowchart&lt;/span&gt; TD
+    S3&lt;span class=&quot;token text string&quot;&gt;[&quot;Software 3.0 프레임워크&quot;]&lt;/span&gt;
+    P4&lt;span class=&quot;token text string&quot;&gt;[&quot;LLM 코딩 4원칙&quot;]&lt;/span&gt;
+    CE&lt;span class=&quot;token text string&quot;&gt;[&quot;Context Engineering 실무 가이드&quot;]&lt;/span&gt;
+    CM&lt;span class=&quot;token text string&quot;&gt;[&quot;CLAUDE.md 설계 원칙&quot;]&lt;/span&gt;
+    TM&lt;span class=&quot;token text string&quot;&gt;[&quot;팀 도입 안티패턴&quot;]&lt;/span&gt;
+
+    K&lt;span class=&quot;token text string&quot;&gt;([&quot;👤 Andrej Karpathy&quot;])&lt;/span&gt;
+    MG&lt;span class=&quot;token text string&quot;&gt;([&quot;🍽️ MenuGen&quot;])&lt;/span&gt;
+
+    P4 &lt;span class=&quot;token arrow operator&quot;&gt;--&gt;&lt;/span&gt;&lt;span class=&quot;token label property&quot;&gt;|builds_on|&lt;/span&gt; S3
+    CE &lt;span class=&quot;token arrow operator&quot;&gt;--&gt;&lt;/span&gt;&lt;span class=&quot;token label property&quot;&gt;|builds_on|&lt;/span&gt; S3
+    CM &lt;span class=&quot;token arrow operator&quot;&gt;--&gt;&lt;/span&gt;&lt;span class=&quot;token label property&quot;&gt;|builds_on|&lt;/span&gt; P4
+    CM &lt;span class=&quot;token arrow operator&quot;&gt;--&gt;&lt;/span&gt;&lt;span class=&quot;token label property&quot;&gt;|builds_on|&lt;/span&gt; CE
+    TM &lt;span class=&quot;token arrow operator&quot;&gt;--&gt;&lt;/span&gt;&lt;span class=&quot;token label property&quot;&gt;|builds_on|&lt;/span&gt; CM
+
+    S3 &lt;span class=&quot;token inter-arrow-label&quot;&gt;&lt;span class=&quot;token arrow-head arrow operator&quot;&gt;-.&lt;/span&gt;&lt;span class=&quot;token label property&quot;&gt;authored_by&lt;/span&gt;&lt;span class=&quot;token arrow operator&quot;&gt;.-&gt;&lt;/span&gt;&lt;/span&gt; K
+    P4 &lt;span class=&quot;token inter-arrow-label&quot;&gt;&lt;span class=&quot;token arrow-head arrow operator&quot;&gt;-.&lt;/span&gt;&lt;span class=&quot;token label property&quot;&gt;authored_by&lt;/span&gt;&lt;span class=&quot;token arrow operator&quot;&gt;.-&gt;&lt;/span&gt;&lt;/span&gt; K
+    S3 &lt;span class=&quot;token inter-arrow-label&quot;&gt;&lt;span class=&quot;token arrow-head arrow operator&quot;&gt;-.&lt;/span&gt;&lt;span class=&quot;token label property&quot;&gt;exemplifies&lt;/span&gt;&lt;span class=&quot;token arrow operator&quot;&gt;.-&gt;&lt;/span&gt;&lt;/span&gt; MG
+
+    &lt;span class=&quot;token keyword&quot;&gt;style&lt;/span&gt; S3 &lt;span class=&quot;token style&quot;&gt;&lt;span class=&quot;token property&quot;&gt;fill&lt;/span&gt;&lt;span class=&quot;token operator&quot;&gt;:&lt;/span&gt;#ffe0b2&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;token property&quot;&gt;stroke&lt;/span&gt;&lt;span class=&quot;token operator&quot;&gt;:&lt;/span&gt;#e0a458&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;token property&quot;&gt;stroke-width&lt;/span&gt;&lt;span class=&quot;token operator&quot;&gt;:&lt;/span&gt;2px&lt;/span&gt;
+    &lt;span class=&quot;token keyword&quot;&gt;style&lt;/span&gt; K &lt;span class=&quot;token style&quot;&gt;&lt;span class=&quot;token property&quot;&gt;fill&lt;/span&gt;&lt;span class=&quot;token operator&quot;&gt;:&lt;/span&gt;#e3f2fd&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;token property&quot;&gt;stroke&lt;/span&gt;&lt;span class=&quot;token operator&quot;&gt;:&lt;/span&gt;#5b9bd5&lt;/span&gt;
+    &lt;span class=&quot;token keyword&quot;&gt;style&lt;/span&gt; MG &lt;span class=&quot;token style&quot;&gt;&lt;span class=&quot;token property&quot;&gt;fill&lt;/span&gt;&lt;span class=&quot;token operator&quot;&gt;:&lt;/span&gt;#e3f2fd&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;token property&quot;&gt;stroke&lt;/span&gt;&lt;span class=&quot;token operator&quot;&gt;:&lt;/span&gt;#5b9bd5&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;화살표가 &lt;strong&gt;추상 → 구체&lt;/strong&gt; 방향(Software 3.0 → 4원칙 → CLAUDE.md → 팀 거버넌스)을 그대로 가리킨다. 단순 양방향 &lt;code class=&quot;language-text&quot;&gt;[[링크]]&lt;/code&gt;로는 절대 안 보이는, &lt;strong&gt;지식의 위계와 발전 순서&lt;/strong&gt;다.&lt;/p&gt;
 &lt;h3 id=&quot;대시보드로-본-결과&quot; style=&quot;position:relative;&quot;&gt;&lt;a href=&quot;#%EB%8C%80%EC%8B%9C%EB%B3%B4%EB%93%9C%EB%A1%9C-%EB%B3%B8-%EA%B2%B0%EA%B3%BC&quot; aria-label=&quot;대시보드로 본 결과 permalink&quot; class=&quot;anchor before&quot;&gt;&lt;svg aria-hidden=&quot;true&quot; focusable=&quot;false&quot; height=&quot;16&quot; version=&quot;1.1&quot; viewBox=&quot;0 0 16 16&quot; width=&quot;16&quot;&gt;&lt;path fill-rule=&quot;evenodd&quot; d=&quot;M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z&quot;&gt;&lt;/path&gt;&lt;/svg&gt;&lt;/a&gt;대시보드로 본 결과&lt;/h3&gt;
 &lt;p&gt;실제로 &lt;code class=&quot;language-text&quot;&gt;/understand-dashboard&lt;/code&gt;로 띄운 화면이다. 노트(파란 카드)·토픽·엔티티가 한 그래프 안에서 색상별로 묶이고, 카테고리는 자동 레이어로 정렬된다.&lt;/p&gt;
 &lt;p&gt;&lt;span
@@ -321,29 +341,7 @@
 &lt;p&gt;&lt;a href=&quot;#%EB%A7%88%EB%AC%B4%EB%A6%AC&quot;&gt;마무리&lt;/a&gt;&lt;/p&gt;
 &lt;/li&gt;
 &lt;/ul&gt;
-&lt;/div&gt;</content:encoded></item><item><title><![CDATA[블로그에 Mermaid 다이어그램 지원 추가]]></title><description><![CDATA[이제 이 블로그에서 Mermaid…]]></description><link>https://smk692.github.io/2026-05-27-mermaid-support/</link><guid isPermaLink="false">https://smk692.github.io/2026-05-27-mermaid-support/</guid><pubDate>Wed, 27 May 2026 03:00:00 GMT</pubDate><content:encoded>&lt;p&gt;이제 이 블로그에서 &lt;strong&gt;Mermaid 다이어그램&lt;/strong&gt;을 사용할 수 있다. 마크다운 코드 블록에 &lt;code class=&quot;language-text&quot;&gt;mermaid&lt;/code&gt; 언어를 지정하면 브라우저에서 자동으로 다이어그램으로 렌더링된다. 다크/라이트 테마에도 연동된다.&lt;/p&gt;
-&lt;h2 id=&quot;플로우차트&quot; style=&quot;position:relative;&quot;&gt;&lt;a href=&quot;#%ED%94%8C%EB%A1%9C%EC%9A%B0%EC%B0%A8%ED%8A%B8&quot; aria-label=&quot;플로우차트 permalink&quot; class=&quot;anchor before&quot;&gt;&lt;svg aria-hidden=&quot;true&quot; focusable=&quot;false&quot; height=&quot;16&quot; version=&quot;1.1&quot; viewBox=&quot;0 0 16 16&quot; width=&quot;16&quot;&gt;&lt;path fill-rule=&quot;evenodd&quot; d=&quot;M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z&quot;&gt;&lt;/path&gt;&lt;/svg&gt;&lt;/a&gt;플로우차트&lt;/h2&gt;
-&lt;div class=&quot;gatsby-highlight&quot; data-language=&quot;mermaid&quot;&gt;&lt;pre class=&quot;language-mermaid&quot;&gt;&lt;code class=&quot;language-mermaid&quot;&gt;&lt;span class=&quot;token keyword&quot;&gt;flowchart&lt;/span&gt; TD
-    A&lt;span class=&quot;token text string&quot;&gt;[마크다운 작성]&lt;/span&gt; &lt;span class=&quot;token arrow operator&quot;&gt;--&gt;&lt;/span&gt; B&lt;span class=&quot;token text string&quot;&gt;{mermaid 코드 블록?}&lt;/span&gt;
-    B &lt;span class=&quot;token inter-arrow-label&quot;&gt;&lt;span class=&quot;token arrow-head arrow operator&quot;&gt;--&lt;/span&gt; &lt;span class=&quot;token label property&quot;&gt;예&lt;/span&gt; &lt;span class=&quot;token arrow operator&quot;&gt;--&gt;&lt;/span&gt;&lt;/span&gt; C&lt;span class=&quot;token text string&quot;&gt;[클라이언트에서 SVG 렌더링]&lt;/span&gt;
-    B &lt;span class=&quot;token inter-arrow-label&quot;&gt;&lt;span class=&quot;token arrow-head arrow operator&quot;&gt;--&lt;/span&gt; &lt;span class=&quot;token label property&quot;&gt;아니오&lt;/span&gt; &lt;span class=&quot;token arrow operator&quot;&gt;--&gt;&lt;/span&gt;&lt;/span&gt; D&lt;span class=&quot;token text string&quot;&gt;[일반 코드 블록]&lt;/span&gt;
-    C &lt;span class=&quot;token arrow operator&quot;&gt;--&gt;&lt;/span&gt; E&lt;span class=&quot;token text string&quot;&gt;[다크/라이트 테마 연동]&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;h2 id=&quot;시퀀스-다이어그램&quot; style=&quot;position:relative;&quot;&gt;&lt;a href=&quot;#%EC%8B%9C%ED%80%80%EC%8A%A4-%EB%8B%A4%EC%9D%B4%EC%96%B4%EA%B7%B8%EB%9E%A8&quot; aria-label=&quot;시퀀스 다이어그램 permalink&quot; class=&quot;anchor before&quot;&gt;&lt;svg aria-hidden=&quot;true&quot; focusable=&quot;false&quot; height=&quot;16&quot; version=&quot;1.1&quot; viewBox=&quot;0 0 16 16&quot; width=&quot;16&quot;&gt;&lt;path fill-rule=&quot;evenodd&quot; d=&quot;M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z&quot;&gt;&lt;/path&gt;&lt;/svg&gt;&lt;/a&gt;시퀀스 다이어그램&lt;/h2&gt;
-&lt;div class=&quot;gatsby-highlight&quot; data-language=&quot;mermaid&quot;&gt;&lt;pre class=&quot;language-mermaid&quot;&gt;&lt;code class=&quot;language-mermaid&quot;&gt;&lt;span class=&quot;token keyword&quot;&gt;sequenceDiagram&lt;/span&gt;
-    &lt;span class=&quot;token keyword&quot;&gt;participant&lt;/span&gt; U as 사용자
-    &lt;span class=&quot;token keyword&quot;&gt;participant&lt;/span&gt; B as 브라우저
-    &lt;span class=&quot;token keyword&quot;&gt;participant&lt;/span&gt; M as Mermaid
-    U&lt;span class=&quot;token arrow operator&quot;&gt;-&gt;&gt;&lt;/span&gt;B&lt;span class=&quot;token operator&quot;&gt;:&lt;/span&gt; 포스트 열기
-    B&lt;span class=&quot;token arrow operator&quot;&gt;-&gt;&gt;&lt;/span&gt;M&lt;span class=&quot;token operator&quot;&gt;:&lt;/span&gt; mermaid 블록 전달
-    M&lt;span class=&quot;token arrow operator&quot;&gt;--&gt;&gt;&lt;/span&gt;B&lt;span class=&quot;token operator&quot;&gt;:&lt;/span&gt; SVG 반환
-    B&lt;span class=&quot;token arrow operator&quot;&gt;--&gt;&gt;&lt;/span&gt;U&lt;span class=&quot;token operator&quot;&gt;:&lt;/span&gt; 다이어그램 표시&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;h2 id=&quot;사용법&quot; style=&quot;position:relative;&quot;&gt;&lt;a href=&quot;#%EC%82%AC%EC%9A%A9%EB%B2%95&quot; aria-label=&quot;사용법 permalink&quot; class=&quot;anchor before&quot;&gt;&lt;svg aria-hidden=&quot;true&quot; focusable=&quot;false&quot; height=&quot;16&quot; version=&quot;1.1&quot; viewBox=&quot;0 0 16 16&quot; width=&quot;16&quot;&gt;&lt;path fill-rule=&quot;evenodd&quot; d=&quot;M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z&quot;&gt;&lt;/path&gt;&lt;/svg&gt;&lt;/a&gt;사용법&lt;/h2&gt;
-&lt;p&gt;마크다운에 아래처럼 작성하면 된다.&lt;/p&gt;
-&lt;div class=&quot;gatsby-highlight&quot; data-language=&quot;text&quot;&gt;&lt;pre class=&quot;language-text&quot;&gt;&lt;code class=&quot;language-text&quot;&gt;```mermaid
-flowchart LR
-    A --&gt; B --&gt; C
-```&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;문법은 &lt;a href=&quot;https://mermaid.js.org/&quot;&gt;Mermaid 공식 문서&lt;/a&gt;를 참고하면 된다.&lt;/p&gt;</content:encoded></item><item><title><![CDATA[Claude Skills 완벽 가이드: AI를 도메인 전문가로 만드는 방법]]></title><description><![CDATA[Claude가 단순한 챗봇이 아니라 도메인 전문가처럼 동작하게 만들 수 있다. Claude Skills를 사용하면 된다. Claude Skills란? Claude Skills는 Anthropic의 Claude AI…]]></description><link>https://smk692.github.io/2026-05-25-claude-skills-guide/</link><guid isPermaLink="false">https://smk692.github.io/2026-05-25-claude-skills-guide/</guid><pubDate>Mon, 25 May 2026 01:00:00 GMT</pubDate><content:encoded>&lt;p&gt;Claude가 단순한 챗봇이 아니라 &lt;strong&gt;도메인 전문가&lt;/strong&gt;처럼 동작하게 만들 수 있다. Claude Skills를 사용하면 된다.&lt;/p&gt;
+&lt;/div&gt;</content:encoded></item><item><title><![CDATA[Claude Skills 완벽 가이드: AI를 도메인 전문가로 만드는 방법]]></title><description><![CDATA[Claude가 단순한 챗봇이 아니라 도메인 전문가처럼 동작하게 만들 수 있다. Claude Skills를 사용하면 된다. Claude Skills란? Claude Skills는 Anthropic의 Claude AI…]]></description><link>https://smk692.github.io/2026-05-25-claude-skills-guide/</link><guid isPermaLink="false">https://smk692.github.io/2026-05-25-claude-skills-guide/</guid><pubDate>Mon, 25 May 2026 01:00:00 GMT</pubDate><content:encoded>&lt;p&gt;Claude가 단순한 챗봇이 아니라 &lt;strong&gt;도메인 전문가&lt;/strong&gt;처럼 동작하게 만들 수 있다. Claude Skills를 사용하면 된다.&lt;/p&gt;
 &lt;h2 id=&quot;claude-skills란&quot; style=&quot;position:relative;&quot;&gt;&lt;a href=&quot;#claude-skills%EB%9E%80&quot; aria-label=&quot;claude skills란 permalink&quot; class=&quot;anchor before&quot;&gt;&lt;svg aria-hidden=&quot;true&quot; focusable=&quot;false&quot; height=&quot;16&quot; version=&quot;1.1&quot; viewBox=&quot;0 0 16 16&quot; width=&quot;16&quot;&gt;&lt;path fill-rule=&quot;evenodd&quot; d=&quot;M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z&quot;&gt;&lt;/path&gt;&lt;/svg&gt;&lt;/a&gt;Claude Skills란?&lt;/h2&gt;
 &lt;p&gt;Claude Skills는 Anthropic의 Claude AI에 특정 능력을 부여하는 &lt;strong&gt;확장 모듈&lt;/strong&gt;이다. 각 스킬은 폴더 단위로 구성되며, 내부에는 다음이 포함된다:&lt;/p&gt;
 &lt;ul&gt;
