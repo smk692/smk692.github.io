@@ -1,4 +1,349 @@
-<?xml version="1.0" encoding="UTF-8"?><rss xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title><![CDATA[👋 손코딩의 끄적끄적 블로그 RSS Feed]]></title><description><![CDATA[손코딩의 끄적끄적 블로그]]></description><link>http://github.com/dylang/node-rss</link><generator>GatsbyJS</generator><lastBuildDate>Tue, 26 May 2026 15:05:38 GMT</lastBuildDate><item><title><![CDATA[Claude Skills 완벽 가이드: AI를 도메인 전문가로 만드는 방법]]></title><description><![CDATA[Claude가 단순한 챗봇이 아니라 도메인 전문가처럼 동작하게 만들 수 있다. Claude Skills를 사용하면 된다. Claude Skills란? Claude Skills는 Anthropic의 Claude AI…]]></description><link>https://smk692.github.io/2026-05-25-claude-skills-guide/</link><guid isPermaLink="false">https://smk692.github.io/2026-05-25-claude-skills-guide/</guid><pubDate>Mon, 25 May 2026 01:00:00 GMT</pubDate><content:encoded>&lt;p&gt;Claude가 단순한 챗봇이 아니라 &lt;strong&gt;도메인 전문가&lt;/strong&gt;처럼 동작하게 만들 수 있다. Claude Skills를 사용하면 된다.&lt;/p&gt;
+<?xml version="1.0" encoding="UTF-8"?><rss xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title><![CDATA[👋 손코딩의 끄적끄적 블로그 RSS Feed]]></title><description><![CDATA[손코딩의 끄적끄적 블로그]]></description><link>http://github.com/dylang/node-rss</link><generator>GatsbyJS</generator><lastBuildDate>Tue, 26 May 2026 15:44:13 GMT</lastBuildDate><item><title><![CDATA[Obsidian 볼트를 지식 그래프로: Understand-Anything으로 내 노트 연결 구조 보기]]></title><description><![CDATA[지난 글에서 Understand-Anything…]]></description><link>https://smk692.github.io/2026-05-27-understand-anything-obsidian/</link><guid isPermaLink="false">https://smk692.github.io/2026-05-27-understand-anything-obsidian/</guid><pubDate>Wed, 27 May 2026 12:00:00 GMT</pubDate><content:encoded>&lt;p&gt;&lt;a href=&quot;/2026-05-24-understand-anything&quot;&gt;지난 글&lt;/a&gt;에서 &lt;strong&gt;Understand-Anything&lt;/strong&gt;으로 코드베이스를 지식 그래프로 시각화하는 방법을 다뤘다. 그런데 이 도구에는 코드 분석 말고도 흥미로운 기능이 하나 더 있다. 바로 &lt;code class=&quot;language-text&quot;&gt;/understand-knowledge&lt;/code&gt;다.&lt;/p&gt;
+&lt;p&gt;이 명령어는 &lt;strong&gt;마크다운 위키(지식 베이스)를 분석&lt;/strong&gt;한다. 그리고 그 감지 조건이 사실상 &lt;strong&gt;Obsidian 볼트 구조와 동일&lt;/strong&gt;하다. 즉, 내가 몇 년간 쌓아온 Obsidian 노트를 그대로 지식 그래프로 만들 수 있다는 뜻이다.&lt;/p&gt;
+&lt;h2 id=&quot;obsidian-그래프-뷰의-한계&quot; style=&quot;position:relative;&quot;&gt;&lt;a href=&quot;#obsidian-%EA%B7%B8%EB%9E%98%ED%94%84-%EB%B7%B0%EC%9D%98-%ED%95%9C%EA%B3%84&quot; aria-label=&quot;obsidian 그래프 뷰의 한계 permalink&quot; class=&quot;anchor before&quot;&gt;&lt;svg aria-hidden=&quot;true&quot; focusable=&quot;false&quot; height=&quot;16&quot; version=&quot;1.1&quot; viewBox=&quot;0 0 16 16&quot; width=&quot;16&quot;&gt;&lt;path fill-rule=&quot;evenodd&quot; d=&quot;M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z&quot;&gt;&lt;/path&gt;&lt;/svg&gt;&lt;/a&gt;Obsidian 그래프 뷰의 한계&lt;/h2&gt;
+&lt;p&gt;Obsidian에는 이미 그래프 뷰가 있다. 노트들이 점으로 표시되고 &lt;code class=&quot;language-text&quot;&gt;[[링크]]&lt;/code&gt;로 연결된다. 처음 보면 멋있다. 그런데 노트가 수백 개 쌓이면 이렇게 된다.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;점이 너무 많아 **그냥 털뭉치(hairball)**가 된다&lt;/li&gt;
+&lt;li&gt;노드를 클릭해도 보이는 건 &lt;strong&gt;파일명뿐&lt;/strong&gt;&lt;/li&gt;
+&lt;li&gt;명시적으로 &lt;code class=&quot;language-text&quot;&gt;[[링크]]&lt;/code&gt;를 건 연결만 보인다 — 내용상 관련 있지만 링크를 안 단 노트는 따로 논다&lt;/li&gt;
+&lt;li&gt;“이 주제 노트들이 실제로 어떤 흐름으로 연결되는가”는 알 수 없다&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;결국 그래프 뷰는 “예쁜 시각화”에 머무는 경우가 많다. 정작 &lt;strong&gt;내 지식이 어떻게 연결돼 있는지 가르쳐주지는 못한다.&lt;/strong&gt;&lt;/p&gt;
+&lt;h2 id=&quot;understand-anything이-다른-점&quot; style=&quot;position:relative;&quot;&gt;&lt;a href=&quot;#understand-anything%EC%9D%B4-%EB%8B%A4%EB%A5%B8-%EC%A0%90&quot; aria-label=&quot;understand anything이 다른 점 permalink&quot; class=&quot;anchor before&quot;&gt;&lt;svg aria-hidden=&quot;true&quot; focusable=&quot;false&quot; height=&quot;16&quot; version=&quot;1.1&quot; viewBox=&quot;0 0 16 16&quot; width=&quot;16&quot;&gt;&lt;path fill-rule=&quot;evenodd&quot; d=&quot;M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z&quot;&gt;&lt;/path&gt;&lt;/svg&gt;&lt;/a&gt;Understand-Anything이 다른 점&lt;/h2&gt;
+&lt;p&gt;&lt;code class=&quot;language-text&quot;&gt;/understand-knowledge&lt;/code&gt;는 &lt;a href=&quot;https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f&quot;&gt;Karpathy의 LLM 위키 패턴&lt;/a&gt;을 분석하도록 만들어졌다. 핵심은 &lt;strong&gt;단순 링크 시각화가 아니라 LLM이 노트 내용을 읽고 관계를 추론&lt;/strong&gt;한다는 점이다.&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;&lt;/th&gt;
+&lt;th&gt;Obsidian 그래프 뷰&lt;/th&gt;
+&lt;th&gt;Understand-Anything&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;연결 기준&lt;/td&gt;
+&lt;td&gt;명시적 &lt;code class=&quot;language-text&quot;&gt;[[링크]]&lt;/code&gt;만&lt;/td&gt;
+&lt;td&gt;링크 &lt;strong&gt;+ LLM이 찾은 암묵적 관계&lt;/strong&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;노드 정보&lt;/td&gt;
+&lt;td&gt;파일명&lt;/td&gt;
+&lt;td&gt;요약·핵심 엔티티·주장(claim)·복잡도&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;탐색 방식&lt;/td&gt;
+&lt;td&gt;시각적 점들&lt;/td&gt;
+&lt;td&gt;가이드 투어 + 의미 기반 검색 + 채팅 질의&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;그룹핑&lt;/td&gt;
+&lt;td&gt;색상 그룹&lt;/td&gt;
+&lt;td&gt;&lt;code class=&quot;language-text&quot;&gt;index.md&lt;/code&gt; 카테고리 기반 자동 레이어링&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;쉽게 말해, Obsidian 그래프 뷰가 “누가 누구랑 선으로 이어졌나”를 보여준다면, Understand-Anything은 “이 노트들이 &lt;strong&gt;무슨 이야기를 하고 어떻게 맞물리는가&lt;/strong&gt;“를 보여준다.&lt;/p&gt;
+&lt;h2 id=&quot;어떻게-동작하는가&quot; style=&quot;position:relative;&quot;&gt;&lt;a href=&quot;#%EC%96%B4%EB%96%BB%EA%B2%8C-%EB%8F%99%EC%9E%91%ED%95%98%EB%8A%94%EA%B0%80&quot; aria-label=&quot;어떻게 동작하는가 permalink&quot; class=&quot;anchor before&quot;&gt;&lt;svg aria-hidden=&quot;true&quot; focusable=&quot;false&quot; height=&quot;16&quot; version=&quot;1.1&quot; viewBox=&quot;0 0 16 16&quot; width=&quot;16&quot;&gt;&lt;path fill-rule=&quot;evenodd&quot; d=&quot;M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z&quot;&gt;&lt;/path&gt;&lt;/svg&gt;&lt;/a&gt;어떻게 동작하는가&lt;/h2&gt;
+&lt;p&gt;플러그인의 감지 로직을 직접 뜯어봤다. &lt;code class=&quot;language-text&quot;&gt;parse-knowledge-base.py&lt;/code&gt;의 핵심은 이렇다.&lt;/p&gt;
+&lt;div class=&quot;gatsby-highlight&quot; data-language=&quot;python&quot;&gt;&lt;pre class=&quot;language-python&quot;&gt;&lt;code class=&quot;language-python&quot;&gt;&lt;span class=&quot;token comment&quot;&gt;# index.md가 있고 + 마크다운 파일이 3개 이상이면 위키로 인식&lt;/span&gt;
+&lt;span class=&quot;token keyword&quot;&gt;if&lt;/span&gt; signals&lt;span class=&quot;token punctuation&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;token string&quot;&gt;&quot;has_index&quot;&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;token keyword&quot;&gt;and&lt;/span&gt; signals&lt;span class=&quot;token punctuation&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;token string&quot;&gt;&quot;md_count&quot;&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;token operator&quot;&gt;&gt;=&lt;/span&gt; &lt;span class=&quot;token number&quot;&gt;3&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt;
+    signals&lt;span class=&quot;token punctuation&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;token string&quot;&gt;&quot;detected&quot;&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;token boolean&quot;&gt;True&lt;/span&gt;
+    signals&lt;span class=&quot;token punctuation&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;token string&quot;&gt;&quot;format&quot;&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;token string&quot;&gt;&quot;karpathy&quot;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;조건이 놀랍도록 단순하다.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;✅ &lt;code class=&quot;language-text&quot;&gt;index.md&lt;/code&gt; 파일이 존재하고&lt;/li&gt;
+&lt;li&gt;✅ &lt;code class=&quot;language-text&quot;&gt;.md&lt;/code&gt; 파일이 3개 이상이며&lt;/li&gt;
+&lt;li&gt;✅ &lt;code class=&quot;language-text&quot;&gt;[[wikilink]]&lt;/code&gt; 문법을 사용한다 → &lt;strong&gt;이게 정확히 Obsidian 위키링크&lt;/strong&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;대부분의 Obsidian 볼트는 이미 2·3번 조건을 만족한다. &lt;strong&gt;&lt;code class=&quot;language-text&quot;&gt;index.md&lt;/code&gt;(일종의 MOC, Map of Content) 하나만 만들어주면&lt;/strong&gt; 곧바로 분석 대상이 된다.&lt;/p&gt;
+&lt;p&gt;전체 파이프라인은 5단계다.&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;&lt;strong&gt;DETECT / SCAN&lt;/strong&gt; — 결정론적 파서가 &lt;code class=&quot;language-text&quot;&gt;[[wikilink]]&lt;/code&gt;, 헤딩, frontmatter, &lt;code class=&quot;language-text&quot;&gt;index.md&lt;/code&gt;의 카테고리(&lt;code class=&quot;language-text&quot;&gt;##&lt;/code&gt; 섹션)를 추출&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;ANALYZE&lt;/strong&gt; — &lt;code class=&quot;language-text&quot;&gt;article-analyzer&lt;/code&gt; 서브에이전트가 노트를 10~15개씩 배치로 읽으며 &lt;em&gt;암묵적&lt;/em&gt; 관계·엔티티·주장을 발굴 (최대 3배치 동시 실행)&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;MERGE&lt;/strong&gt; — 엔티티 중복 제거, 카테고리 기반 레이어 구성, &lt;code class=&quot;language-text&quot;&gt;index.md&lt;/code&gt; 순서대로 가이드 투어 생성&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;SAVE&lt;/strong&gt; — &lt;code class=&quot;language-text&quot;&gt;.understand-anything/knowledge-graph.json&lt;/code&gt;으로 저장&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;DASHBOARD&lt;/strong&gt; — &lt;code class=&quot;language-text&quot;&gt;/understand-dashboard&lt;/code&gt;로 force-directed 그래프 + 커뮤니티 클러스터링 + 의미 검색 제공&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;흐름으로 그리면 이렇다. &lt;strong&gt;결정론적 파서&lt;/strong&gt;가 뼈대를 만들고, &lt;strong&gt;LLM&lt;/strong&gt;이 살을 붙이는 구조다.&lt;/p&gt;
+&lt;div class=&quot;gatsby-highlight&quot; data-language=&quot;text&quot;&gt;&lt;pre class=&quot;language-text&quot;&gt;&lt;code class=&quot;language-text&quot;&gt;  Obsidian 볼트 (.md + [[링크]] + index.md)
+              │
+              ▼
+┌──────────────────────────────┐
+│  ① PARSE  (결정론적, LLM 0)   │   index.md·wikilink·헤딩 추출
+│  parse-knowledge-base.py      │ → scan-manifest.json
+└──────────────┬───────────────┘
+               │  article·topic 노드 + related/categorized 엣지
+               ▼
+┌──────────────────────────────┐
+│  ② ANALYZE  (LLM, 병렬 3배치) │   본문을 읽고 &quot;숨은 관계&quot; 발굴
+│  article-analyzer ×N          │ → analysis-batch-*.json
+└──────────────┬───────────────┘
+               │  entity·claim 노드 + builds_on/cites/exemplifies 엣지
+               ▼
+┌──────────────────────────────┐
+│  ③ MERGE  (결정론적)          │   중복 제거·레이어·투어 생성
+│  merge-knowledge-graph.py     │ → assembled-graph.json
+└──────────────┬───────────────┘
+               ▼
+┌──────────────────────────────┐
+│  ④ SAVE → ⑤ DASHBOARD         │   검증 후 저장 + 시각화
+└──────────────┬───────────────┘
+               ▼
+   knowledge-graph.json ──► 인터랙티브 그래프 대시보드&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;blockquote&gt;
+&lt;p&gt;&lt;strong&gt;핵심&lt;/strong&gt;: ①③은 &lt;strong&gt;공짜이고 빠른&lt;/strong&gt; 결정론적 단계, ②만 &lt;strong&gt;LLM 비용&lt;/strong&gt;이 드는 단계다. 그래서 노트 양이 많아질수록 ②를 주제 폴더 단위로 쪼개는 게 비용·품질 모두 유리하다.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h2 id=&quot;직접-해보기&quot; style=&quot;position:relative;&quot;&gt;&lt;a href=&quot;#%EC%A7%81%EC%A0%91-%ED%95%B4%EB%B3%B4%EA%B8%B0&quot; aria-label=&quot;직접 해보기 permalink&quot; class=&quot;anchor before&quot;&gt;&lt;svg aria-hidden=&quot;true&quot; focusable=&quot;false&quot; height=&quot;16&quot; version=&quot;1.1&quot; viewBox=&quot;0 0 16 16&quot; width=&quot;16&quot;&gt;&lt;path fill-rule=&quot;evenodd&quot; d=&quot;M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z&quot;&gt;&lt;/path&gt;&lt;/svg&gt;&lt;/a&gt;직접 해보기&lt;/h2&gt;
+&lt;h3 id=&quot;1-플러그인-설치&quot; style=&quot;position:relative;&quot;&gt;&lt;a href=&quot;#1-%ED%94%8C%EB%9F%AC%EA%B7%B8%EC%9D%B8-%EC%84%A4%EC%B9%98&quot; aria-label=&quot;1 플러그인 설치 permalink&quot; class=&quot;anchor before&quot;&gt;&lt;svg aria-hidden=&quot;true&quot; focusable=&quot;false&quot; height=&quot;16&quot; version=&quot;1.1&quot; viewBox=&quot;0 0 16 16&quot; width=&quot;16&quot;&gt;&lt;path fill-rule=&quot;evenodd&quot; d=&quot;M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z&quot;&gt;&lt;/path&gt;&lt;/svg&gt;&lt;/a&gt;1. 플러그인 설치&lt;/h3&gt;
+&lt;div class=&quot;gatsby-highlight&quot; data-language=&quot;bash&quot;&gt;&lt;pre class=&quot;language-bash&quot;&gt;&lt;code class=&quot;language-bash&quot;&gt;/plugin marketplace &lt;span class=&quot;token function&quot;&gt;add&lt;/span&gt; Lum1104/Understand-Anything
+/plugin &lt;span class=&quot;token function&quot;&gt;install&lt;/span&gt; understand-anything&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;h3 id=&quot;2-볼트-폴더에-code-classlanguage-textindexmdcode-만들기&quot; style=&quot;position:relative;&quot;&gt;&lt;a href=&quot;#2-%EB%B3%BC%ED%8A%B8-%ED%8F%B4%EB%8D%94%EC%97%90-code-classlanguage-textindexmdcode-%EB%A7%8C%EB%93%A4%EA%B8%B0&quot; aria-label=&quot;2 볼트 폴더에 code classlanguage textindexmdcode 만들기 permalink&quot; class=&quot;anchor before&quot;&gt;&lt;svg aria-hidden=&quot;true&quot; focusable=&quot;false&quot; height=&quot;16&quot; version=&quot;1.1&quot; viewBox=&quot;0 0 16 16&quot; width=&quot;16&quot;&gt;&lt;path fill-rule=&quot;evenodd&quot; d=&quot;M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z&quot;&gt;&lt;/path&gt;&lt;/svg&gt;&lt;/a&gt;2. 볼트 폴더에 &lt;code class=&quot;language-text&quot;&gt;index.md&lt;/code&gt; 만들기&lt;/h3&gt;
+&lt;p&gt;볼트 전체보다 &lt;strong&gt;특정 주제 폴더 단위&lt;/strong&gt;로 돌리는 게 분석 품질이 좋다. 같은 배치 안에서 노트끼리 상호 참조를 찾기 때문이다.&lt;/p&gt;
+&lt;p&gt;내가 실제로 분석한 폴더 구조는 이랬다. &lt;strong&gt;&lt;code class=&quot;language-text&quot;&gt;index.md&lt;/code&gt; 하나 + 서로 &lt;code class=&quot;language-text&quot;&gt;[[링크]]&lt;/code&gt;로 엮인 노트들&lt;/strong&gt;, 이게 전부다.&lt;/p&gt;
+&lt;div class=&quot;gatsby-highlight&quot; data-language=&quot;text&quot;&gt;&lt;pre class=&quot;language-text&quot;&gt;&lt;code class=&quot;language-text&quot;&gt;AI/Best-Practices/
+├── index.md                       ← MOC (카테고리 정의, 必)
+├── Software 3.0 프레임워크.md       ┐
+├── LLM 코딩 4원칙.md                │  서로 [[wikilink]]로
+├── Context Engineering 실무 가이드.md │  연결된 노트들
+├── CLAUDE.md 설계 원칙.md           │
+└── 팀 도입 안티패턴.md              ┘
+
+# 분석 후 자동 생성
+└── .understand-anything/
+    ├── knowledge-graph.json        ← 최종 그래프 데이터
+    └── meta.json                   ← 분석 메타데이터&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;&lt;code class=&quot;language-text&quot;&gt;index.md&lt;/code&gt;는 이렇게 &lt;code class=&quot;language-text&quot;&gt;##&lt;/code&gt; 섹션으로 카테고리를 나눠 쓴다. &lt;strong&gt;이 섹션이 그대로 그래프의 레이어&lt;/strong&gt;가 된다.&lt;/p&gt;
+&lt;div class=&quot;gatsby-highlight&quot; data-language=&quot;markdown&quot;&gt;&lt;pre class=&quot;language-markdown&quot;&gt;&lt;code class=&quot;language-markdown&quot;&gt;&lt;span class=&quot;token title important&quot;&gt;&lt;span class=&quot;token punctuation&quot;&gt;#&lt;/span&gt; AI 코딩 베스트 프랙티스&lt;/span&gt;
+
+&lt;span class=&quot;token title important&quot;&gt;&lt;span class=&quot;token punctuation&quot;&gt;##&lt;/span&gt; 프레임워크&lt;/span&gt;
+&lt;span class=&quot;token list punctuation&quot;&gt;-&lt;/span&gt; [[Software 3.0 프레임워크]]
+&lt;span class=&quot;token list punctuation&quot;&gt;-&lt;/span&gt; [[LLM 코딩 4원칙]]
+
+&lt;span class=&quot;token title important&quot;&gt;&lt;span class=&quot;token punctuation&quot;&gt;##&lt;/span&gt; 실무 가이드&lt;/span&gt;
+&lt;span class=&quot;token list punctuation&quot;&gt;-&lt;/span&gt; [[Context Engineering 실무 가이드]]
+&lt;span class=&quot;token list punctuation&quot;&gt;-&lt;/span&gt; [[CLAUDE.md 설계 원칙]]
+
+&lt;span class=&quot;token title important&quot;&gt;&lt;span class=&quot;token punctuation&quot;&gt;##&lt;/span&gt; 팀 적용&lt;/span&gt;
+&lt;span class=&quot;token list punctuation&quot;&gt;-&lt;/span&gt; [[팀 도입 안티패턴]]&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;blockquote&gt;
+&lt;p&gt;&lt;strong&gt;Obsidian 사용자라면 거의 다 됐다.&lt;/strong&gt; 이미 &lt;code class=&quot;language-text&quot;&gt;[[링크]]&lt;/code&gt;로 노트를 엮고 있다면, 주제 폴더에 &lt;strong&gt;&lt;code class=&quot;language-text&quot;&gt;index.md&lt;/code&gt; 한 장만 추가&lt;/strong&gt;하면 끝이다. 새 문법을 배울 필요가 없다.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h3 id=&quot;3-분석-실행&quot; style=&quot;position:relative;&quot;&gt;&lt;a href=&quot;#3-%EB%B6%84%EC%84%9D-%EC%8B%A4%ED%96%89&quot; aria-label=&quot;3 분석 실행 permalink&quot; class=&quot;anchor before&quot;&gt;&lt;svg aria-hidden=&quot;true&quot; focusable=&quot;false&quot; height=&quot;16&quot; version=&quot;1.1&quot; viewBox=&quot;0 0 16 16&quot; width=&quot;16&quot;&gt;&lt;path fill-rule=&quot;evenodd&quot; d=&quot;M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z&quot;&gt;&lt;/path&gt;&lt;/svg&gt;&lt;/a&gt;3. 분석 실행&lt;/h3&gt;
+&lt;div class=&quot;gatsby-highlight&quot; data-language=&quot;bash&quot;&gt;&lt;pre class=&quot;language-bash&quot;&gt;&lt;code class=&quot;language-bash&quot;&gt;/understand-knowledge &lt;span class=&quot;token string&quot;&gt;&quot;30.areas/backend&quot;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;h3 id=&quot;4-대시보드-열기&quot; style=&quot;position:relative;&quot;&gt;&lt;a href=&quot;#4-%EB%8C%80%EC%8B%9C%EB%B3%B4%EB%93%9C-%EC%97%B4%EA%B8%B0&quot; aria-label=&quot;4 대시보드 열기 permalink&quot; class=&quot;anchor before&quot;&gt;&lt;svg aria-hidden=&quot;true&quot; focusable=&quot;false&quot; height=&quot;16&quot; version=&quot;1.1&quot; viewBox=&quot;0 0 16 16&quot; width=&quot;16&quot;&gt;&lt;path fill-rule=&quot;evenodd&quot; d=&quot;M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z&quot;&gt;&lt;/path&gt;&lt;/svg&gt;&lt;/a&gt;4. 대시보드 열기&lt;/h3&gt;
+&lt;div class=&quot;gatsby-highlight&quot; data-language=&quot;bash&quot;&gt;&lt;pre class=&quot;language-bash&quot;&gt;&lt;code class=&quot;language-bash&quot;&gt;/understand-dashboard&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;내 노트가 색상별 레이어로 묶인 그래프로 나타난다. 노드를 클릭하면 요약과 관련 노트, 그리고 LLM이 찾아낸 연결 이유가 표시된다.&lt;/p&gt;
+&lt;h2 id=&quot;실제로-적용해본-결과&quot; style=&quot;position:relative;&quot;&gt;&lt;a href=&quot;#%EC%8B%A4%EC%A0%9C%EB%A1%9C-%EC%A0%81%EC%9A%A9%ED%95%B4%EB%B3%B8-%EA%B2%B0%EA%B3%BC&quot; aria-label=&quot;실제로 적용해본 결과 permalink&quot; class=&quot;anchor before&quot;&gt;&lt;svg aria-hidden=&quot;true&quot; focusable=&quot;false&quot; height=&quot;16&quot; version=&quot;1.1&quot; viewBox=&quot;0 0 16 16&quot; width=&quot;16&quot;&gt;&lt;path fill-rule=&quot;evenodd&quot; d=&quot;M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z&quot;&gt;&lt;/path&gt;&lt;/svg&gt;&lt;/a&gt;실제로 적용해본 결과&lt;/h2&gt;
+&lt;p&gt;내 볼트의 &lt;code class=&quot;language-text&quot;&gt;AI/Best-Practices&lt;/code&gt; 폴더(LLM 코딩 원칙 노트 5개)로 직접 검증해봤다. 플러그인의 감지 파서를 그대로 돌린 결과다.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;먼저 &lt;code class=&quot;language-text&quot;&gt;index.md&lt;/code&gt; 없이 실행&lt;/strong&gt;하면 이렇게 거절당한다.&lt;/p&gt;
+&lt;div class=&quot;gatsby-highlight&quot; data-language=&quot;json&quot;&gt;&lt;pre class=&quot;language-json&quot;&gt;&lt;code class=&quot;language-json&quot;&gt;&lt;span class=&quot;token punctuation&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;token property&quot;&gt;&quot;error&quot;&lt;/span&gt;&lt;span class=&quot;token operator&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;token string&quot;&gt;&quot;Not a Karpathy-pattern wiki&quot;&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt;
+ &lt;span class=&quot;token property&quot;&gt;&quot;detection&quot;&lt;/span&gt;&lt;span class=&quot;token operator&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;token punctuation&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;token property&quot;&gt;&quot;has_index&quot;&lt;/span&gt;&lt;span class=&quot;token operator&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;token boolean&quot;&gt;false&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;token property&quot;&gt;&quot;md_count&quot;&lt;/span&gt;&lt;span class=&quot;token operator&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;token number&quot;&gt;5&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;token property&quot;&gt;&quot;detected&quot;&lt;/span&gt;&lt;span class=&quot;token operator&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;token boolean&quot;&gt;false&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;}&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;노트 5개가 서로 &lt;code class=&quot;language-text&quot;&gt;[[링크]]&lt;/code&gt;로 연결돼 있어도, &lt;strong&gt;&lt;code class=&quot;language-text&quot;&gt;index.md&lt;/code&gt;가 없으면 인식 자체를 안 한다.&lt;/strong&gt; 그래서 아래와 같은 MOC를 만들었다.&lt;/p&gt;
+&lt;div class=&quot;gatsby-highlight&quot; data-language=&quot;markdown&quot;&gt;&lt;pre class=&quot;language-markdown&quot;&gt;&lt;code class=&quot;language-markdown&quot;&gt;&lt;span class=&quot;token title important&quot;&gt;&lt;span class=&quot;token punctuation&quot;&gt;#&lt;/span&gt; AI 코딩 베스트 프랙티스&lt;/span&gt;
+
+&lt;span class=&quot;token title important&quot;&gt;&lt;span class=&quot;token punctuation&quot;&gt;##&lt;/span&gt; 프레임워크&lt;/span&gt;
+&lt;span class=&quot;token list punctuation&quot;&gt;-&lt;/span&gt; [[Software 3.0 프레임워크]]
+&lt;span class=&quot;token list punctuation&quot;&gt;-&lt;/span&gt; [[LLM 코딩 4원칙]]
+
+&lt;span class=&quot;token title important&quot;&gt;&lt;span class=&quot;token punctuation&quot;&gt;##&lt;/span&gt; 실무 가이드&lt;/span&gt;
+&lt;span class=&quot;token list punctuation&quot;&gt;-&lt;/span&gt; [[Context Engineering 실무 가이드]]
+&lt;span class=&quot;token list punctuation&quot;&gt;-&lt;/span&gt; [[CLAUDE.md 설계 원칙]]
+
+&lt;span class=&quot;token title important&quot;&gt;&lt;span class=&quot;token punctuation&quot;&gt;##&lt;/span&gt; 팀 적용&lt;/span&gt;
+&lt;span class=&quot;token list punctuation&quot;&gt;-&lt;/span&gt; [[팀 도입 안티패턴]]&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;&lt;strong&gt;다시 실행하니 곧바로 인식&lt;/strong&gt;됐다.&lt;/p&gt;
+&lt;div class=&quot;gatsby-highlight&quot; data-language=&quot;text&quot;&gt;&lt;pre class=&quot;language-text&quot;&gt;&lt;code class=&quot;language-text&quot;&gt;[parse] Karpathy wiki: 5 articles, 0 sources, 3 topics, 15 wikilinks (0 unresolved)&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;결정론적 스캔만으로 나온 1차 구조는 이렇다.&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;항목&lt;/th&gt;
+&lt;th&gt;결과&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;노드&lt;/td&gt;
+&lt;td&gt;8개 (노트 5 + 토픽 3)&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;엣지&lt;/td&gt;
+&lt;td&gt;20개 (위키링크 15 + 카테고리 5)&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;토픽(레이어)&lt;/td&gt;
+&lt;td&gt;&lt;code class=&quot;language-text&quot;&gt;프레임워크&lt;/code&gt;, &lt;code class=&quot;language-text&quot;&gt;실무 가이드&lt;/code&gt;, &lt;code class=&quot;language-text&quot;&gt;팀 적용&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;미해결 링크&lt;/td&gt;
+&lt;td&gt;0개&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;주목할 점은 &lt;strong&gt;토픽(레이어)이 내가 &lt;code class=&quot;language-text&quot;&gt;index.md&lt;/code&gt;에 적은 &lt;code class=&quot;language-text&quot;&gt;##&lt;/code&gt; 섹션 그대로&lt;/strong&gt; 잡혔다는 것이다. MOC를 정성껏 쓸수록 그래프의 분류 품질이 좋아진다.&lt;/p&gt;
+&lt;h3 id=&quot;llm-분석-단계--여기서-진짜-차이가-난다&quot; style=&quot;position:relative;&quot;&gt;&lt;a href=&quot;#llm-%EB%B6%84%EC%84%9D-%EB%8B%A8%EA%B3%84--%EC%97%AC%EA%B8%B0%EC%84%9C-%EC%A7%84%EC%A7%9C-%EC%B0%A8%EC%9D%B4%EA%B0%80-%EB%82%9C%EB%8B%A4&quot; aria-label=&quot;llm 분석 단계  여기서 진짜 차이가 난다 permalink&quot; class=&quot;anchor before&quot;&gt;&lt;svg aria-hidden=&quot;true&quot; focusable=&quot;false&quot; height=&quot;16&quot; version=&quot;1.1&quot; viewBox=&quot;0 0 16 16&quot; width=&quot;16&quot;&gt;&lt;path fill-rule=&quot;evenodd&quot; d=&quot;M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z&quot;&gt;&lt;/path&gt;&lt;/svg&gt;&lt;/a&gt;LLM 분석 단계 — 여기서 진짜 차이가 난다&lt;/h3&gt;
+&lt;p&gt;핵심은 그다음이다. &lt;code class=&quot;language-text&quot;&gt;article-analyzer&lt;/code&gt;가 5개 노트의 &lt;strong&gt;본문을 읽고&lt;/strong&gt;, 위키링크에 없던 &lt;strong&gt;암묵적 관계&lt;/strong&gt;를 뽑아냈다. 최종 그래프는 이렇게 불어났다.&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;항목&lt;/th&gt;
+&lt;th&gt;스캔만&lt;/th&gt;
+&lt;th&gt;LLM 분석 후&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;노드&lt;/td&gt;
+&lt;td&gt;8개&lt;/td&gt;
+&lt;td&gt;&lt;strong&gt;15개&lt;/strong&gt; (+엔티티 7)&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;엣지&lt;/td&gt;
+&lt;td&gt;20개&lt;/td&gt;
+&lt;td&gt;&lt;strong&gt;33개&lt;/strong&gt; (+암묵 관계 13)&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;추가된 엔티티는 노트에 &lt;strong&gt;위키링크 페이지로 존재하지 않지만 본문에 등장한 핵심 개념&lt;/strong&gt;들이다 — &lt;code class=&quot;language-text&quot;&gt;Andrej Karpathy&lt;/code&gt;, &lt;code class=&quot;language-text&quot;&gt;Phil Schmid&lt;/code&gt;, &lt;code class=&quot;language-text&quot;&gt;Anthropic&lt;/code&gt;, &lt;code class=&quot;language-text&quot;&gt;LangChain&lt;/code&gt;, &lt;code class=&quot;language-text&quot;&gt;Claude Code Hooks&lt;/code&gt;, &lt;code class=&quot;language-text&quot;&gt;tiktoken&lt;/code&gt;, &lt;code class=&quot;language-text&quot;&gt;MenuGen&lt;/code&gt;. 그리고 LLM이 찾아낸 관계의 종류가 흥미롭다.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;&lt;code class=&quot;language-text&quot;&gt;builds_on&lt;/code&gt; 5개&lt;/strong&gt; — 예: “CLAUDE.md 설계 원칙”이 “LLM 코딩 4원칙”을 &lt;em&gt;실제 파일 구조로 발전시킴&lt;/em&gt;. 단순 &lt;code class=&quot;language-text&quot;&gt;[[링크]]&lt;/code&gt;로는 안 보이던 &lt;strong&gt;방향성 있는 발전 관계&lt;/strong&gt;다.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;&lt;code class=&quot;language-text&quot;&gt;authored_by&lt;/code&gt; 3개&lt;/strong&gt; — Software 3.0과 4원칙이 모두 &lt;em&gt;Karpathy&lt;/em&gt;에게 귀속됨을 추론&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;&lt;code class=&quot;language-text&quot;&gt;exemplifies&lt;/code&gt; 3개&lt;/strong&gt; — MenuGen이 “소프트웨어 소멸” 논지의 &lt;em&gt;구체 사례&lt;/em&gt;임을 연결&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;&lt;code class=&quot;language-text&quot;&gt;cites&lt;/code&gt; 2개&lt;/strong&gt; — CLAUDE.md 200줄 한계의 근거로 &lt;em&gt;Anthropic 연구&lt;/em&gt;를 인용했음을 포착&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Obsidian 그래프 뷰였다면 5개 노트가 그냥 서로 연결된 점 5개로만 보였을 것이다. 반면 여기서는 “이 노트들이 &lt;strong&gt;Karpathy의 Software 3.0이라는 뿌리에서 출발해, 4원칙 → CLAUDE.md 설계 → 팀 거버넌스로 점점 구체화되는 한 줄기의 사고 흐름&lt;/strong&gt;“이라는 게 드러난다.&lt;/p&gt;
+&lt;h3 id=&quot;대시보드로-본-결과&quot; style=&quot;position:relative;&quot;&gt;&lt;a href=&quot;#%EB%8C%80%EC%8B%9C%EB%B3%B4%EB%93%9C%EB%A1%9C-%EB%B3%B8-%EA%B2%B0%EA%B3%BC&quot; aria-label=&quot;대시보드로 본 결과 permalink&quot; class=&quot;anchor before&quot;&gt;&lt;svg aria-hidden=&quot;true&quot; focusable=&quot;false&quot; height=&quot;16&quot; version=&quot;1.1&quot; viewBox=&quot;0 0 16 16&quot; width=&quot;16&quot;&gt;&lt;path fill-rule=&quot;evenodd&quot; d=&quot;M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z&quot;&gt;&lt;/path&gt;&lt;/svg&gt;&lt;/a&gt;대시보드로 본 결과&lt;/h3&gt;
+&lt;p&gt;실제로 &lt;code class=&quot;language-text&quot;&gt;/understand-dashboard&lt;/code&gt;로 띄운 화면이다. 노트(파란 카드)·토픽·엔티티가 한 그래프 안에서 색상별로 묶이고, 카테고리는 자동 레이어로 정렬된다.&lt;/p&gt;
+&lt;p&gt;&lt;span
+      class=&quot;gatsby-resp-image-wrapper&quot;
+      style=&quot;position: relative; display: block; margin-left: auto; margin-right: auto; max-width: 720px; &quot;
+    &gt;
+      &lt;span
+    class=&quot;gatsby-resp-image-background-image&quot;
+    style=&quot;padding-bottom: 62.77777777777778%; position: relative; bottom: 0; left: 0; background-image: url(&apos;data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAANCAIAAAAmMtkJAAAACXBIWXMAAAsTAAALEwEAmpwYAAABb0lEQVR42nVSi07DQAzr//8eQoixQdetr3vlce0kYEg4V1o2JDTrlPbm2HFanerD6fjq+jbFMDrPFFJw0Y992wBD1wztyfXn6AemKBSVEyXfNvXQNtWUJStnIZyXKV8mLWe+zCsmnVQAVXbOD6On6Pu+9WNXZUnApEk5lEa0vCmIBVbgDxB/enx4O+yG9ji29dhBWWmBtRAUbI/ZHplR8HI7Z07R7V92+D0/7w77/elY/5KNz1E4QVxNjVBvV3MmTr7vOg/r3sXgEcstGco/homCClFCr9/WynHK+eP9/fr5+XW9IoVq86yyxCawKhyymrjNsjoXCtgCpyAl9hTGjQyTODFmEIGgnzJCRrs0W9o2s9k+1xsQm5HVfKbiSrK59XmZYhvHIjSy5dw1G6p1npITW4GPIQvdBmkrgKv/yLiBbaayHuW7FUgS8gBFd8u827PFYIHdac6rWyCM3V/yvOpIWfK925/30fUAmvwhfwPYb9TllNxonAAAAABJRU5ErkJggg==&apos;); background-size: cover; display: block;&quot;
+  &gt;&lt;/span&gt;
+  &lt;img
+        class=&quot;gatsby-resp-image-image&quot;
+        alt=&quot;지식 그래프 전체 뷰&quot;
+        title=&quot;&quot;
+        src=&quot;/static/7424316d122596188ec3fb1a399912a8/37523/knowledge-graph-overview.png&quot;
+        srcset=&quot;/static/7424316d122596188ec3fb1a399912a8/e9ff0/knowledge-graph-overview.png 180w,
+/static/7424316d122596188ec3fb1a399912a8/f21e7/knowledge-graph-overview.png 360w,
+/static/7424316d122596188ec3fb1a399912a8/37523/knowledge-graph-overview.png 720w,
+/static/7424316d122596188ec3fb1a399912a8/302a4/knowledge-graph-overview.png 1080w,
+/static/7424316d122596188ec3fb1a399912a8/07a9c/knowledge-graph-overview.png 1440w&quot;
+        sizes=&quot;(max-width: 720px) 100vw, 720px&quot;
+        style=&quot;width:100%;height:100%;margin:0;vertical-align:middle;position:absolute;top:0;left:0;&quot;
+        loading=&quot;lazy&quot;
+        decoding=&quot;async&quot;
+      /&gt;
+    &lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;노드를 클릭하면 우측에 &lt;strong&gt;요약과 관계 목록&lt;/strong&gt;이 펼쳐진다. “Software 3.0 프레임워크” 노드를 누르니, LLM이 찾아낸 연결(Context Engineering·LLM 코딩 4원칙으로의 발전, MenuGen 사례, Karpathy 귀속)이 한눈에 보인다.&lt;/p&gt;
+&lt;p&gt;&lt;span
+      class=&quot;gatsby-resp-image-wrapper&quot;
+      style=&quot;position: relative; display: block; margin-left: auto; margin-right: auto; max-width: 720px; &quot;
+    &gt;
+      &lt;span
+    class=&quot;gatsby-resp-image-background-image&quot;
+    style=&quot;padding-bottom: 62.77777777777778%; position: relative; bottom: 0; left: 0; background-image: url(&apos;data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAANCAIAAAAmMtkJAAAACXBIWXMAAAsTAAALEwEAmpwYAAABhUlEQVR42m1SiW6sMAzk/7+v7R4UyrEhIcHOxdH32kqdsLuUrSqNIkM88YztrK2Kti61FExDr42zAw+aTC9FA6iuUaLV8kJGOUveUnBsyYimUqLJxuhjcNHb6N08hhUxYYrLlE78GYMHQnB4HbA8SClM32XR8x20i1c4SlivxsBsVHF+PucH0bwZ2VZvRTYGuwF5UAUViBEwU7xfTRGq+/z4lJ+ey/wo6jLPzw/kYAfLdOUHb+E/eN6RdZG/FOeXIj+8np5Ox8MD+Vo8KeREo8EgiHeyI722sFXdRStRljvZSe0qGNnOGu8oJBe0JTgejFaYBQCBVVU9ksON7EFO/Wco9/4um00n2j4Nr9JdXV8bFm9lee0T0aA3q3t4tFsKzNwoAQfyUmdb2XgLCPLib7ID8K53dpnnj///vr4+IX5HXnXinOLvFiYX1jg2qyiLvZqnMS3JPmmzPe7GC44StbxU2FAMIMbwvqTi+MymJOmn+B9W0QUjYZJTWbfM0zKP78ukVfcNIC/VVNlSsCwAAAAASUVORK5CYII=&apos;); background-size: cover; display: block;&quot;
+  &gt;&lt;/span&gt;
+  &lt;img
+        class=&quot;gatsby-resp-image-image&quot;
+        alt=&quot;노드 상세 패널&quot;
+        title=&quot;&quot;
+        src=&quot;/static/8b801b41890e57bb68092de030262a95/37523/node-detail.png&quot;
+        srcset=&quot;/static/8b801b41890e57bb68092de030262a95/e9ff0/node-detail.png 180w,
+/static/8b801b41890e57bb68092de030262a95/f21e7/node-detail.png 360w,
+/static/8b801b41890e57bb68092de030262a95/37523/node-detail.png 720w,
+/static/8b801b41890e57bb68092de030262a95/302a4/node-detail.png 1080w,
+/static/8b801b41890e57bb68092de030262a95/07a9c/node-detail.png 1440w&quot;
+        sizes=&quot;(max-width: 720px) 100vw, 720px&quot;
+        style=&quot;width:100%;height:100%;margin:0;vertical-align:middle;position:absolute;top:0;left:0;&quot;
+        loading=&quot;lazy&quot;
+        decoding=&quot;async&quot;
+      /&gt;
+    &lt;/span&gt;&lt;/p&gt;
+&lt;h2 id=&quot;어떤-사람에게-유용한가&quot; style=&quot;position:relative;&quot;&gt;&lt;a href=&quot;#%EC%96%B4%EB%96%A4-%EC%82%AC%EB%9E%8C%EC%97%90%EA%B2%8C-%EC%9C%A0%EC%9A%A9%ED%95%9C%EA%B0%80&quot; aria-label=&quot;어떤 사람에게 유용한가 permalink&quot; class=&quot;anchor before&quot;&gt;&lt;svg aria-hidden=&quot;true&quot; focusable=&quot;false&quot; height=&quot;16&quot; version=&quot;1.1&quot; viewBox=&quot;0 0 16 16&quot; width=&quot;16&quot;&gt;&lt;path fill-rule=&quot;evenodd&quot; d=&quot;M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z&quot;&gt;&lt;/path&gt;&lt;/svg&gt;&lt;/a&gt;어떤 사람에게 유용한가&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;세컨드 브레인을 운영하는 사람&lt;/strong&gt; — 노트가 쌓일수록 전체 구조가 안 보일 때, 흩어진 지식의 큰 그림을 다시 그릴 수 있다&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;학습 노트를 정리하는 사람&lt;/strong&gt; — 특정 주제 폴더를 분석해 “내가 이 분야를 얼마나, 어떻게 이해하고 있는가”를 객관적으로 점검&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;글쓰기 소재를 찾는 사람&lt;/strong&gt; — LLM이 찾은 암묵적 연결에서 미처 몰랐던 노트 간 접점을 발견&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id=&quot;한계와-주의점&quot; style=&quot;position:relative;&quot;&gt;&lt;a href=&quot;#%ED%95%9C%EA%B3%84%EC%99%80-%EC%A3%BC%EC%9D%98%EC%A0%90&quot; aria-label=&quot;한계와 주의점 permalink&quot; class=&quot;anchor before&quot;&gt;&lt;svg aria-hidden=&quot;true&quot; focusable=&quot;false&quot; height=&quot;16&quot; version=&quot;1.1&quot; viewBox=&quot;0 0 16 16&quot; width=&quot;16&quot;&gt;&lt;path fill-rule=&quot;evenodd&quot; d=&quot;M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z&quot;&gt;&lt;/path&gt;&lt;/svg&gt;&lt;/a&gt;한계와 주의점&lt;/h2&gt;
+&lt;p&gt;솔직하게 짚자면 이런 점은 감안해야 한다.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;결과물은 &lt;strong&gt;Obsidian 내부가 아니라 별도 웹 대시보드&lt;/strong&gt;다. 볼트에는 &lt;code class=&quot;language-text&quot;&gt;.understand-anything/&lt;/code&gt; 폴더에 JSON만 생긴다&lt;/li&gt;
+&lt;li&gt;&lt;code class=&quot;language-text&quot;&gt;index.md&lt;/code&gt;가 &lt;strong&gt;필수&lt;/strong&gt;다. 폴더 구조만 쓰는 볼트라면 MOC 성격의 파일을 따로 만들어야 한다&lt;/li&gt;
+&lt;li&gt;LLM 분석 단계가 있어 노트 수에 비례해 &lt;strong&gt;API 토큰·시간 비용&lt;/strong&gt;이 든다&lt;/li&gt;
+&lt;li&gt;볼트 전체를 한 번에 돌리기보다 &lt;strong&gt;주제 폴더 단위&lt;/strong&gt;로 쪼개는 편이 품질·비용 모두 낫다&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id=&quot;마무리&quot; style=&quot;position:relative;&quot;&gt;&lt;a href=&quot;#%EB%A7%88%EB%AC%B4%EB%A6%AC&quot; aria-label=&quot;마무리 permalink&quot; class=&quot;anchor before&quot;&gt;&lt;svg aria-hidden=&quot;true&quot; focusable=&quot;false&quot; height=&quot;16&quot; version=&quot;1.1&quot; viewBox=&quot;0 0 16 16&quot; width=&quot;16&quot;&gt;&lt;path fill-rule=&quot;evenodd&quot; d=&quot;M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z&quot;&gt;&lt;/path&gt;&lt;/svg&gt;&lt;/a&gt;마무리&lt;/h2&gt;
+&lt;p&gt;Obsidian의 그래프 뷰가 “내 노트가 얼마나 복잡한지”를 보여준다면, Understand-Anything은 “내 노트가 &lt;strong&gt;어떻게 연결돼 하나의 지식이 되는지&lt;/strong&gt;“를 보여준다. 코드베이스뿐 아니라 **내 머릿속(을 옮겨놓은 볼트)**도 지식 그래프로 만들 수 있다는 점이 이 도구의 진짜 매력이다.&lt;/p&gt;
+&lt;p&gt;세컨드 브레인을 진지하게 운영하고 있다면, 주제 폴더 하나에 &lt;code class=&quot;language-text&quot;&gt;index.md&lt;/code&gt;를 만들고 &lt;code class=&quot;language-text&quot;&gt;/understand-knowledge&lt;/code&gt;를 한 번 돌려보길 권한다.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;저장소: &lt;a href=&quot;https://github.com/Lum1104/Understand-Anything&quot;&gt;Lum1104/Understand-Anything&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;라이브 데모: &lt;a href=&quot;https://understand-anything.com/demo/&quot;&gt;understand-anything.com/demo&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;div class=&quot;table-of-contents&quot;&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;a href=&quot;#obsidian-%EA%B7%B8%EB%9E%98%ED%94%84-%EB%B7%B0%EC%9D%98-%ED%95%9C%EA%B3%84&quot;&gt;Obsidian 그래프 뷰의 한계&lt;/a&gt;&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;a href=&quot;#understand-anything%EC%9D%B4-%EB%8B%A4%EB%A5%B8-%EC%A0%90&quot;&gt;Understand-Anything이 다른 점&lt;/a&gt;&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;a href=&quot;#%EC%96%B4%EB%96%BB%EA%B2%8C-%EB%8F%99%EC%9E%91%ED%95%98%EB%8A%94%EA%B0%80&quot;&gt;어떻게 동작하는가&lt;/a&gt;&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;a href=&quot;#%EC%A7%81%EC%A0%91-%ED%95%B4%EB%B3%B4%EA%B8%B0&quot;&gt;직접 해보기&lt;/a&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&quot;#1-%ED%94%8C%EB%9F%AC%EA%B7%B8%EC%9D%B8-%EC%84%A4%EC%B9%98&quot;&gt;1. 플러그인 설치&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;#2-%EB%B3%BC%ED%8A%B8-%ED%8F%B4%EB%8D%94%EC%97%90-indexmd-%EB%A7%8C%EB%93%A4%EA%B8%B0&quot;&gt;2. 볼트 폴더에 &lt;code class=&quot;language-text&quot;&gt;index.md&lt;/code&gt; 만들기&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;#3-%EB%B6%84%EC%84%9D-%EC%8B%A4%ED%96%89&quot;&gt;3. 분석 실행&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;#4-%EB%8C%80%EC%8B%9C%EB%B3%B4%EB%93%9C-%EC%97%B4%EA%B8%B0&quot;&gt;4. 대시보드 열기&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;a href=&quot;#%EC%8B%A4%EC%A0%9C%EB%A1%9C-%EC%A0%81%EC%9A%A9%ED%95%B4%EB%B3%B8-%EA%B2%B0%EA%B3%BC&quot;&gt;실제로 적용해본 결과&lt;/a&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&quot;#llm-%EB%B6%84%EC%84%9D-%EB%8B%A8%EA%B3%84--%EC%97%AC%EA%B8%B0%EC%84%9C-%EC%A7%84%EC%A7%9C-%EC%B0%A8%EC%9D%B4%EA%B0%80-%EB%82%9C%EB%8B%A4&quot;&gt;LLM 분석 단계 — 여기서 진짜 차이가 난다&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;#%EB%8C%80%EC%8B%9C%EB%B3%B4%EB%93%9C%EB%A1%9C-%EB%B3%B8-%EA%B2%B0%EA%B3%BC&quot;&gt;대시보드로 본 결과&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;a href=&quot;#%EC%96%B4%EB%96%A4-%EC%82%AC%EB%9E%8C%EC%97%90%EA%B2%8C-%EC%9C%A0%EC%9A%A9%ED%95%9C%EA%B0%80&quot;&gt;어떤 사람에게 유용한가&lt;/a&gt;&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;a href=&quot;#%ED%95%9C%EA%B3%84%EC%99%80-%EC%A3%BC%EC%9D%98%EC%A0%90&quot;&gt;한계와 주의점&lt;/a&gt;&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;a href=&quot;#%EB%A7%88%EB%AC%B4%EB%A6%AC&quot;&gt;마무리&lt;/a&gt;&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/div&gt;</content:encoded></item><item><title><![CDATA[블로그에 Mermaid 다이어그램 지원 추가]]></title><description><![CDATA[이제 이 블로그에서 Mermaid…]]></description><link>https://smk692.github.io/2026-05-27-mermaid-support/</link><guid isPermaLink="false">https://smk692.github.io/2026-05-27-mermaid-support/</guid><pubDate>Wed, 27 May 2026 03:00:00 GMT</pubDate><content:encoded>&lt;p&gt;이제 이 블로그에서 &lt;strong&gt;Mermaid 다이어그램&lt;/strong&gt;을 사용할 수 있다. 마크다운 코드 블록에 &lt;code class=&quot;language-text&quot;&gt;mermaid&lt;/code&gt; 언어를 지정하면 브라우저에서 자동으로 다이어그램으로 렌더링된다. 다크/라이트 테마에도 연동된다.&lt;/p&gt;
+&lt;h2 id=&quot;플로우차트&quot; style=&quot;position:relative;&quot;&gt;&lt;a href=&quot;#%ED%94%8C%EB%A1%9C%EC%9A%B0%EC%B0%A8%ED%8A%B8&quot; aria-label=&quot;플로우차트 permalink&quot; class=&quot;anchor before&quot;&gt;&lt;svg aria-hidden=&quot;true&quot; focusable=&quot;false&quot; height=&quot;16&quot; version=&quot;1.1&quot; viewBox=&quot;0 0 16 16&quot; width=&quot;16&quot;&gt;&lt;path fill-rule=&quot;evenodd&quot; d=&quot;M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z&quot;&gt;&lt;/path&gt;&lt;/svg&gt;&lt;/a&gt;플로우차트&lt;/h2&gt;
+&lt;div class=&quot;gatsby-highlight&quot; data-language=&quot;mermaid&quot;&gt;&lt;pre class=&quot;language-mermaid&quot;&gt;&lt;code class=&quot;language-mermaid&quot;&gt;&lt;span class=&quot;token keyword&quot;&gt;flowchart&lt;/span&gt; TD
+    A&lt;span class=&quot;token text string&quot;&gt;[마크다운 작성]&lt;/span&gt; &lt;span class=&quot;token arrow operator&quot;&gt;--&gt;&lt;/span&gt; B&lt;span class=&quot;token text string&quot;&gt;{mermaid 코드 블록?}&lt;/span&gt;
+    B &lt;span class=&quot;token inter-arrow-label&quot;&gt;&lt;span class=&quot;token arrow-head arrow operator&quot;&gt;--&lt;/span&gt; &lt;span class=&quot;token label property&quot;&gt;예&lt;/span&gt; &lt;span class=&quot;token arrow operator&quot;&gt;--&gt;&lt;/span&gt;&lt;/span&gt; C&lt;span class=&quot;token text string&quot;&gt;[클라이언트에서 SVG 렌더링]&lt;/span&gt;
+    B &lt;span class=&quot;token inter-arrow-label&quot;&gt;&lt;span class=&quot;token arrow-head arrow operator&quot;&gt;--&lt;/span&gt; &lt;span class=&quot;token label property&quot;&gt;아니오&lt;/span&gt; &lt;span class=&quot;token arrow operator&quot;&gt;--&gt;&lt;/span&gt;&lt;/span&gt; D&lt;span class=&quot;token text string&quot;&gt;[일반 코드 블록]&lt;/span&gt;
+    C &lt;span class=&quot;token arrow operator&quot;&gt;--&gt;&lt;/span&gt; E&lt;span class=&quot;token text string&quot;&gt;[다크/라이트 테마 연동]&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;h2 id=&quot;시퀀스-다이어그램&quot; style=&quot;position:relative;&quot;&gt;&lt;a href=&quot;#%EC%8B%9C%ED%80%80%EC%8A%A4-%EB%8B%A4%EC%9D%B4%EC%96%B4%EA%B7%B8%EB%9E%A8&quot; aria-label=&quot;시퀀스 다이어그램 permalink&quot; class=&quot;anchor before&quot;&gt;&lt;svg aria-hidden=&quot;true&quot; focusable=&quot;false&quot; height=&quot;16&quot; version=&quot;1.1&quot; viewBox=&quot;0 0 16 16&quot; width=&quot;16&quot;&gt;&lt;path fill-rule=&quot;evenodd&quot; d=&quot;M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z&quot;&gt;&lt;/path&gt;&lt;/svg&gt;&lt;/a&gt;시퀀스 다이어그램&lt;/h2&gt;
+&lt;div class=&quot;gatsby-highlight&quot; data-language=&quot;mermaid&quot;&gt;&lt;pre class=&quot;language-mermaid&quot;&gt;&lt;code class=&quot;language-mermaid&quot;&gt;&lt;span class=&quot;token keyword&quot;&gt;sequenceDiagram&lt;/span&gt;
+    &lt;span class=&quot;token keyword&quot;&gt;participant&lt;/span&gt; U as 사용자
+    &lt;span class=&quot;token keyword&quot;&gt;participant&lt;/span&gt; B as 브라우저
+    &lt;span class=&quot;token keyword&quot;&gt;participant&lt;/span&gt; M as Mermaid
+    U&lt;span class=&quot;token arrow operator&quot;&gt;-&gt;&gt;&lt;/span&gt;B&lt;span class=&quot;token operator&quot;&gt;:&lt;/span&gt; 포스트 열기
+    B&lt;span class=&quot;token arrow operator&quot;&gt;-&gt;&gt;&lt;/span&gt;M&lt;span class=&quot;token operator&quot;&gt;:&lt;/span&gt; mermaid 블록 전달
+    M&lt;span class=&quot;token arrow operator&quot;&gt;--&gt;&gt;&lt;/span&gt;B&lt;span class=&quot;token operator&quot;&gt;:&lt;/span&gt; SVG 반환
+    B&lt;span class=&quot;token arrow operator&quot;&gt;--&gt;&gt;&lt;/span&gt;U&lt;span class=&quot;token operator&quot;&gt;:&lt;/span&gt; 다이어그램 표시&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;h2 id=&quot;사용법&quot; style=&quot;position:relative;&quot;&gt;&lt;a href=&quot;#%EC%82%AC%EC%9A%A9%EB%B2%95&quot; aria-label=&quot;사용법 permalink&quot; class=&quot;anchor before&quot;&gt;&lt;svg aria-hidden=&quot;true&quot; focusable=&quot;false&quot; height=&quot;16&quot; version=&quot;1.1&quot; viewBox=&quot;0 0 16 16&quot; width=&quot;16&quot;&gt;&lt;path fill-rule=&quot;evenodd&quot; d=&quot;M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z&quot;&gt;&lt;/path&gt;&lt;/svg&gt;&lt;/a&gt;사용법&lt;/h2&gt;
+&lt;p&gt;마크다운에 아래처럼 작성하면 된다.&lt;/p&gt;
+&lt;div class=&quot;gatsby-highlight&quot; data-language=&quot;text&quot;&gt;&lt;pre class=&quot;language-text&quot;&gt;&lt;code class=&quot;language-text&quot;&gt;```mermaid
+flowchart LR
+    A --&gt; B --&gt; C
+```&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;문법은 &lt;a href=&quot;https://mermaid.js.org/&quot;&gt;Mermaid 공식 문서&lt;/a&gt;를 참고하면 된다.&lt;/p&gt;</content:encoded></item><item><title><![CDATA[Claude Skills 완벽 가이드: AI를 도메인 전문가로 만드는 방법]]></title><description><![CDATA[Claude가 단순한 챗봇이 아니라 도메인 전문가처럼 동작하게 만들 수 있다. Claude Skills를 사용하면 된다. Claude Skills란? Claude Skills는 Anthropic의 Claude AI…]]></description><link>https://smk692.github.io/2026-05-25-claude-skills-guide/</link><guid isPermaLink="false">https://smk692.github.io/2026-05-25-claude-skills-guide/</guid><pubDate>Mon, 25 May 2026 01:00:00 GMT</pubDate><content:encoded>&lt;p&gt;Claude가 단순한 챗봇이 아니라 &lt;strong&gt;도메인 전문가&lt;/strong&gt;처럼 동작하게 만들 수 있다. Claude Skills를 사용하면 된다.&lt;/p&gt;
 &lt;h2 id=&quot;claude-skills란&quot; style=&quot;position:relative;&quot;&gt;&lt;a href=&quot;#claude-skills%EB%9E%80&quot; aria-label=&quot;claude skills란 permalink&quot; class=&quot;anchor before&quot;&gt;&lt;svg aria-hidden=&quot;true&quot; focusable=&quot;false&quot; height=&quot;16&quot; version=&quot;1.1&quot; viewBox=&quot;0 0 16 16&quot; width=&quot;16&quot;&gt;&lt;path fill-rule=&quot;evenodd&quot; d=&quot;M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z&quot;&gt;&lt;/path&gt;&lt;/svg&gt;&lt;/a&gt;Claude Skills란?&lt;/h2&gt;
 &lt;p&gt;Claude Skills는 Anthropic의 Claude AI에 특정 능력을 부여하는 &lt;strong&gt;확장 모듈&lt;/strong&gt;이다. 각 스킬은 폴더 단위로 구성되며, 내부에는 다음이 포함된다:&lt;/p&gt;
 &lt;ul&gt;
