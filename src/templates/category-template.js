@@ -26,7 +26,6 @@ function CategoryTemplate({ pageContext }) {
 
   return (
     <Layout>
-      <Seo title="Posts" />
       <CategoryPageHeader title={categories[currentTabIndex]} subtitle={`${posts.length} posts`} />
       <PostTabs
         tabIndex={currentTabIndex}
@@ -39,3 +38,7 @@ function CategoryTemplate({ pageContext }) {
 }
 
 export default CategoryTemplate;
+
+export const Head = ({ pageContext }) => (
+  <Seo title={`Posts - ${pageContext.currentCategory}`} />
+);

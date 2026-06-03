@@ -107,4 +107,34 @@
       display: block;
     }
   }
+
+  .resume-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 24px;
+    padding: 14px 28px;
+    background: var(--primary-color, #2563eb);
+    color: #fff;
+    font-size: 16px;
+    font-weight: 600;
+    text-decoration: none;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(37, 99, 235, 0.3);
+    transition: all 0.3s ease;
+
+    &:hover {
+      background: var(--primary-dark-color, #1e40af);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 15px rgba(37, 99, 235, 0.4);
+    }
+
+    &:active {
+      transform: translateY(0);
+    }
+
+    .resume-icon {
+      font-size: 20px;
+    }
+  }
 }

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
 AI 기술 블로그 포스트 자동 생성기 v2.1
-- GPT-4o 기반 고품질 콘텐츠 생성
+- GPT-5.5 기반 고품질 콘텐츠 생성 (OAuth), GPT-4o (API 키)
 - ChatGPT Plus 구독으로 OAuth 인증 (API 키 불필요)
 - 품질 체크리스트 적용
 - E-E-A-T 프레임워크 준수
@@ -36,7 +36,7 @@ import requests
 # ============================================
 # 설정
 # ============================================
-DEFAULT_MODEL = "gpt-4o"
+DEFAULT_MODEL = "gpt-4o"  # API 키 모드용 (OAuth는 gpt-5.5 사용)
 IMAGE_MODEL = "dall-e-3"
 MAX_TOKENS = 4096
 
@@ -150,7 +150,7 @@ class BlogPostGenerator:
         self.now = datetime.datetime.now()
 
     def generate_content(self, topic: str, model: str = DEFAULT_MODEL) -> str:
-        """GPT-4o로 블로그 콘텐츠 생성"""
+        """GPT-5.5 (OAuth) 또는 GPT-4o (API 키)로 블로그 콘텐츠 생성"""
         prompt = BLOG_PROMPT_TEMPLATE.format(topic=topic)
         system_msg = "당신은 실무 경험이 풍부한 시니어 백엔드 개발자입니다. 명확하고 실용적인 기술 블로그를 작성합니다."
 

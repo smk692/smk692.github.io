@@ -7,6 +7,10 @@ import './style.scss';
 function Bio({ author, language = 'ko' }) {
   if (!author) return null;
   const { bio, social, name } = author;
+
+  // 이력서 링크를 제외한 소셜 링크
+  const { resume, ...socialWithoutResume } = social;
+
   return (
     <div className="bio">
       {language === 'ko' ? (
@@ -20,8 +24,14 @@ function Bio({ author, language = 'ko' }) {
             <br />
           </p>
           <div className="social-links">
-            <IconButtonBar links={social} />
+            <IconButtonBar links={socialWithoutResume} />
           </div>
+          {resume && (
+            <a href={resume} className="resume-button" target="_blank" rel="noopener noreferrer">
+              <span className="resume-icon">📄</span>
+              이력서 보기
+            </a>
+          )}
         </div>
       ) : (
         <div className="introduction english">
@@ -38,8 +48,14 @@ function Bio({ author, language = 'ko' }) {
             <br />
           </p>
           <div className="social-links">
-            <IconButtonBar links={social} />
+            <IconButtonBar links={socialWithoutResume} />
           </div>
+          {resume && (
+            <a href={resume} className="resume-button" target="_blank" rel="noopener noreferrer">
+              <span className="resume-icon">📄</span>
+              View Resume
+            </a>
+          )}
         </div>
       )}
       <div className="thumbnail-wrapper">

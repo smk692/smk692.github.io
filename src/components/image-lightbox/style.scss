@@ -1,0 +1,69 @@
+.lightbox-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  cursor: zoom-out;
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.lightbox-close {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  width: 40px;
+  height: 40px;
+  font-size: 20px;
+  color: white;
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: background 0.2s;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.2);
+  }
+}
+
+.lightbox-image {
+  max-width: 90%;
+  max-height: 90%;
+  object-fit: contain;
+  cursor: default;
+  animation: zoomIn 0.2s ease;
+}
+
+@keyframes zoomIn {
+  from {
+    transform: scale(0.9);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+
+// Make images in markdown clickable
+.markdown img {
+  cursor: zoom-in;
+  transition: transform 0.2s;
+
+  &:hover {
+    transform: scale(1.02);
+  }
+}

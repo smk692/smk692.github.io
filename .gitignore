@@ -31,3 +31,9 @@ public
 __pycache__/
 *.pyc
 *.pyo
+
+# Work artifacts
+.omc/
+.playwright-mcp/
+/blog-*.png
+scripts/deploy_result.json

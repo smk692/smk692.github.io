@@ -1,0 +1,47 @@
+.tag-cloud {
+  margin: 32px 0;
+  padding: 24px;
+  background-color: var(--button-background-color);
+  border-radius: 12px;
+  border: 1px solid var(--post-card-border-color);
+}
+
+.tag-cloud-title {
+  margin: 0 0 16px;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--primary-text-color);
+}
+
+.tag-cloud-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+}
+
+.tag-cloud-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 12px;
+  background-color: var(--background-color);
+  border-radius: 20px;
+  text-decoration: none;
+  color: var(--link-text-color);
+  transition: all 0.2s;
+
+  &:hover {
+    background-color: var(--link-text-color);
+    color: white;
+    transform: translateY(-2px);
+  }
+}
+
+.tag-count {
+  font-size: 0.75em;
+  padding: 2px 6px;
+  background-color: var(--post-card-border-color);
+  border-radius: 10px;
+  color: var(--secondary-text-color);
+}

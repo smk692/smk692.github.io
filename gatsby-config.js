@@ -42,11 +42,15 @@ module.exports = {
       },
     },
     {
-      resolve: `gatsby-plugin-google-analytics`,
+      resolve: `gatsby-plugin-google-gtag`,
       options: {
-        trackingId: metaConfig.ga,
-        head: true,
-        anonymize: true,
+        trackingIds: [metaConfig.ga],
+        gtagConfig: {
+          anonymize_ip: true,
+        },
+        pluginConfig: {
+          head: true,
+        },
       },
     },
     {
@@ -120,13 +124,64 @@ module.exports = {
         ],
       },
     },
-    `gatsby-theme-material-ui`,
     `gatsby-transformer-sharp`,
-    `gatsby-plugin-advanced-sitemap`,
+    `gatsby-plugin-sitemap`,
     `gatsby-plugin-sharp`,
     `gatsby-plugin-image`,
     `gatsby-plugin-offline`,
-    `gatsby-plugin-react-helmet`,
     `gatsby-plugin-sass`,
+    {
+      resolve: `gatsby-plugin-feed`,
+      options: {
+        query: `
+          {
+            site {
+              siteMetadata {
+                title
+                description
+                siteUrl
+              }
+            }
+          }
+        `,
+        feeds: [
+          {
+            serialize: ({ query: { site, allMarkdownRemark } }) => {
+              return allMarkdownRemark.edges.map(({ node }) => {
+                return {
+                  title: node.frontmatter.title,
+                  description: node.excerpt,
+                  date: node.frontmatter.date,
+                  url: site.siteMetadata.siteUrl + node.fields.slug,
+                  guid: site.siteMetadata.siteUrl + node.fields.slug,
+                  custom_elements: [{ 'content:encoded': node.html }],
+                };
+              });
+            },
+            query: `
+              {
+                allMarkdownRemark(sort: { frontmatter: { date: DESC } }) {
+                  edges {
+                    node {
+                      excerpt
+                      html
+                      fields {
+                        slug
+                      }
+                      frontmatter {
+                        title
+                        date
+                      }
+                    }
+                  }
+                }
+              }
+            `,
+            output: '/rss.xml',
+            title: metaConfig.title + ' RSS Feed',
+          },
+        ],
+      },
+    },
   ],
 };

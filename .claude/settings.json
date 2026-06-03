@@ -7,6 +7,10 @@
           {
             "type": "command",
             "command": "if echo \"$TOOL_INPUT\" | grep -q 'generate_blog_post.py'; then echo '\\n[BLOG_POST_GENERATED] 포스트 생성 완료. 품질 점검 후 배포를 진행합니다.'; fi"
+          },
+          {
+            "type": "command",
+            "command": "if echo \"$TOOL_OUTPUT\" | grep -q 'Published'; then echo '\\n[DEPLOY_SUCCESS] 배포 완료! 백그라운드에서 배포 확인 중...'; nohup python3 \"/Users/sonmingi/Documents/Obsidian Vault/blog/smk692.github.io/scripts/verify_deploy.py\" > /tmp/deploy_verify.log 2>&1 & fi"
           }
         ]
       }

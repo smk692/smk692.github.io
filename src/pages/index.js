@@ -18,7 +18,6 @@ function HomePage({ data }) {
 
   return (
     <Layout>
-      <Seo title="손코딩 blog (손민기/Son)" />
       <Bio author={author} language={language} />
       <PostTabs
         posts={posts}
@@ -33,9 +32,11 @@ function HomePage({ data }) {
 
 export default HomePage;
 
+export const Head = () => <Seo title="손코딩 blog (손민기/Son)" />;
+
 export const pageQuery = graphql`
   query {
-    allMarkdownRemark(sort: { fields: frontmatter___date, order: DESC }) {
+    allMarkdownRemark(sort: { frontmatter: { date: DESC } }) {
       edges {
         node {
           id

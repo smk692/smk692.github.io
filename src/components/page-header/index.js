@@ -9,7 +9,7 @@ function PageHeader({ siteTitle }) {
     <StaticQuery
       query={graphql`
         query SearchIndexQuery {
-          allMarkdownRemark(sort: { fields: frontmatter___date, order: DESC }) {
+          allMarkdownRemark(sort: { frontmatter: { date: DESC } }) {
             edges {
               node {
                 frontmatter {
@@ -38,6 +38,9 @@ function PageHeader({ siteTitle }) {
               </Link>
               <Link className="link" to="/posts">
                 posts
+              </Link>
+              <Link className="link" to="/archive">
+                archive
               </Link>
               <PostSearch
                 posts={data.allMarkdownRemark.edges.map(({ node }) => new Post(node, true))}

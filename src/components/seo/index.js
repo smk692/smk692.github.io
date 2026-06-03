@@ -1,8 +1,7 @@
 import { useStaticQuery, graphql } from 'gatsby';
 import React from 'react';
-import { Helmet } from 'react-helmet';
 
-function Seo({ description, title }) {
+export function useSiteMetadata() {
   const { site } = useStaticQuery(
     graphql`
       query {
@@ -19,45 +18,27 @@ function Seo({ description, title }) {
       }
     `,
   );
+  return site.siteMetadata;
+}
 
-  const metaDescription = description || site.siteMetadata.description;
+function Seo({ description, title, children }) {
+  const siteMetadata = useSiteMetadata();
+  const metaDescription = description || siteMetadata.description;
+  const defaultTitle = siteMetadata.title;
+
   return (
-    <Helmet
-      htmlAttributes={{ lang: 'en' }}
-      title={title}
-      defaultTitle={site.siteMetadata.title}
-      meta={[
-        {
-          property: `og:title`,
-          content: title,
-        },
-        {
-          property: `og:site_title`,
-          content: title,
-        },
-        {
-          name: `description`,
-          content: metaDescription,
-        },
-        {
-          property: `og:description`,
-          content: metaDescription,
-        },
-        {
-          property: 'og:author',
-          content: site.siteMetadata.author.name,
-        },
-        {
-          property: 'og:image',
-          content: site.siteMetadata.ogImage,
-        },
-
-        {
-          property: `og:type`,
-          content: `website`,
-        },
-      ]}
-    />
+    <>
+      <html lang="ko" />
+      <title>{title ? `${title} | ${defaultTitle}` : defaultTitle}</title>
+      <meta name="description" content={metaDescription} />
+      <meta property="og:title" content={title || defaultTitle} />
+      <meta property="og:site_name" content={defaultTitle} />
+      <meta property="og:description" content={metaDescription} />
+      <meta property="og:author" content={siteMetadata.author.name} />
+      <meta property="og:image" content={siteMetadata.ogImage} />
+      <meta property="og:type" content="website" />
+      {children}
+    </>
   );
 }
 
