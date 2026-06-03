@@ -115,7 +115,7 @@ module.exports = {
         description:
           'Gatsby v5 기반 기술 블로그. 스크롤 진행률, TOC 하이라이트, 코드 복사, 이미지 라이트박스, 키보드 단축키 등 다양한 기능 구현.',
         techStack: ['Gatsby', 'React', 'GraphQL', 'GitHub Pages'],
-        thumbnailUrl: 'blog.png',
+        thumbnailUrl: '',
         links: {
           post: '/gatsby-starter-soncoding-introduction',
           github: 'https://github.com/smk692/smk692.github.io',

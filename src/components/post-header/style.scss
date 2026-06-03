@@ -1,4 +1,5 @@
 @use '../../styles/mixins'as *;
+@use '../../styles/variables'as *;
 
 .post-header {
   display: flex;
@@ -33,11 +34,12 @@
   }
 
   .title {
-    font-weight: 600;
-    font-size: 32px;
+    font-family: $font-family-heading;
+    font-weight: 700;
+    font-size: 38px;
     color: var(--primary-text-color);
     margin-bottom: 6px;
-    line-height: 1.3;
+    line-height: 1.35;
   }
 
   .info {

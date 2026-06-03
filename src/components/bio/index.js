@@ -59,7 +59,13 @@ function Bio({ author, language = 'ko' }) {
         </div>
       )}
       <div className="thumbnail-wrapper">
-        <Image className="profile-photo" style={{ width: 320 }} src={bio.thumbnail} alt="thumbnail" />
+        <Image
+          className="profile-photo"
+          style={{ width: 320 }}
+          src={bio.thumbnail}
+          alt="thumbnail"
+          loading="eager"
+        />
       </div>
     </div>
   );

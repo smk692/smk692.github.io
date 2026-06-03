@@ -48,33 +48,34 @@
       // 히어로 인사말 전체를 손글씨로 통일
       font-family: $font-family-heading;
       font-weight: 400;
-      font-size: 34px;
-      line-height: 1.3;
+      font-size: 32px;
+      line-height: 1.75; // 여유로운 줄간격
 
       .greeting {
-        color: var(--primary-color);
-        font-weight: 700;
+        // 색 이펙트 제거 — 나머지 인사말과 톤을 통일
+        color: inherit;
+        font-weight: 400;
       }
 
       .title {
+        margin: 0;
+
         .react-rotating-text-cursor {
-          font-size: 35px;
-          line-height: 35px;
+          font-size: 32px;
+          line-height: 32px;
         }
       }
 
       @include md {
-        font-size: 40px;
+        font-size: 38px;
 
         .title {
           .react-rotating-text-cursor {
-            font-size: 45px;
-            line-height: 45px;
+            font-size: 38px;
+            line-height: 38px;
           }
         }
       }
-
-
     }
 
     &.english {
@@ -128,12 +129,14 @@
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    margin-top: 24px;
-    padding: 14px 28px;
+    margin-top: 28px;
+    padding: 12px 26px;
     background: var(--primary-color, #2563eb);
     color: #fff;
-    font-size: 16px;
-    font-weight: 600;
+    font-family: $font-family-heading; // 손글씨 통일
+    font-size: 19px;
+    font-weight: 700;
+    line-height: 1; // 부모(.korean) line-height 상속 차단
     text-decoration: none;
     border-radius: 8px;
     box-shadow: 0 2px 10px rgba(37, 99, 235, 0.3);
