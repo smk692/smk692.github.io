@@ -13,8 +13,11 @@ function loadMermaid() {
 }
 
 function currentMermaidTheme() {
-  const theme = document.documentElement.getAttribute('data-theme');
-  return theme === 'dark' ? 'dark' : 'default';
+  // 다크모드에서도 'default'(밝은) 테마로 렌더한다.
+  // 다이어그램 소스가 style로 밝은 fill(크림/파랑/연두)을 고정 지정하는데,
+  // dark 테마는 노드 텍스트를 밝게 그려 "밝은 배경 + 밝은 글씨"로 안 보이는 문제 때문.
+  // default 테마는 텍스트를 어둡게 유지해 어떤 모드에서도 가독성이 확보된다.
+  return 'default';
 }
 
 async function renderOne(mermaid, source, target) {
