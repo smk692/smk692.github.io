@@ -65,7 +65,6 @@ function Bio({ author, language = 'ko' }) {
       <div className="thumbnail-wrapper">
         <Image
           className="profile-photo"
-          style={{ width: 300 }}
           src={bio.thumbnail}
           alt="thumbnail"
           loading="eager"

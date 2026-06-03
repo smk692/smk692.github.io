@@ -25,7 +25,7 @@
 
   @include md {
     flex-direction: row;
-    align-items: center;
+    align-items: stretch; // 텍스트 블록과 사진 높이를 동일하게
     justify-content: space-between;
     gap: 56px;
   }
@@ -136,16 +136,24 @@
 
     @include md {
       display: block;
+      width: 340px;
     }
 
     flex-shrink: 0;
 
     // 일기장에 붙인 사진처럼 둥근 모서리 + 부드러운 그림자
-    .gatsby-image-wrapper,
-    img {
+    // 텍스트 블록 높이에 맞춰 사진을 cover로 채움
+    .gatsby-image-wrapper {
+      width: 100%;
+      height: 100%;
       border-radius: 12px;
       overflow: hidden;
       box-shadow: 0 6px 20px rgba(61, 58, 54, 0.18);
+
+      img {
+        object-fit: cover;
+        object-position: center;
+      }
     }
   }
 
