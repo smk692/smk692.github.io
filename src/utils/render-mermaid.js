@@ -58,6 +58,11 @@ export async function renderMermaid() {
     theme: currentMermaidTheme(),
     securityLevel: 'loose',
     fontFamily: "'Nanum Gothic', 'Pretendard', sans-serif",
+    flowchart: {
+      htmlLabels: true,
+      // subgraph 제목이 cluster 상단 테두리에 겹치지 않도록 위아래 여백 부여
+      subGraphTitleMargin: { top: 8, bottom: 12 },
+    },
   });
 
   // 신규 블록 변환

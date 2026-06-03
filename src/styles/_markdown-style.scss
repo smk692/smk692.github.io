@@ -1114,6 +1114,15 @@
     max-width: 100%;
     height: auto;
 
+    // 다이어그램은 항상 'default'(밝은) 테마로 렌더된다.
+    // 다크모드에선 페이지 배경이 어두워 cluster 밖 화살표(검은색)가 묻히므로,
+    // SVG 자체에 밝은 카드 배경을 부여해 어떤 모드에서도 화살표·텍스트가
+    // 밝은 바탕 위에 오도록 한다.
+    background: #fdfdff;
+    border-radius: 12px;
+    padding: 20px 18px;
+    box-shadow: 0 2px 14px rgba(61, 58, 54, 0.12);
+
     // 노드 라벨(htmlLabels = foreignObject HTML)
     foreignObject {
       overflow: visible;
@@ -1124,7 +1133,9 @@
     foreignObject p,
     .nodeLabel,
     .edgeLabel,
-    span.nodeLabel {
+    span.nodeLabel,
+    .cluster-label,
+    .cluster-label .nodeLabel {
       line-height: 1.4 !important;
       white-space: normal !important;
     }
