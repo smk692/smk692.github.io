@@ -1106,10 +1106,28 @@
   display: flex;
   justify-content: center;
   margin: 1.5rem 0;
+  // 본문 line-height(1.8)·font-size가 Mermaid 노드 텍스트에 상속되어
+  // 노드 박스 높이 계산과 어긋나 텍스트가 짤리던 문제 방지
+  line-height: normal;
 
   svg {
     max-width: 100%;
     height: auto;
+
+    // 노드 라벨(htmlLabels = foreignObject HTML)
+    foreignObject {
+      overflow: visible;
+    }
+
+    foreignObject div,
+    foreignObject span,
+    foreignObject p,
+    .nodeLabel,
+    .edgeLabel,
+    span.nodeLabel {
+      line-height: 1.4 !important;
+      white-space: normal !important;
+    }
   }
 }
 
