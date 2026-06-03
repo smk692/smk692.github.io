@@ -34,9 +34,9 @@
   }
 
   .title {
-    font-family: $font-family-heading;
+    font-family: $font-family; // 본문 폰트 (archive와 통일)
     font-weight: 700;
-    font-size: 38px;
+    font-size: 2rem;
     color: var(--primary-text-color);
     margin-bottom: 6px;
     line-height: 1.35;
