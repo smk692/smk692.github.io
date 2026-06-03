@@ -6,6 +6,7 @@ date: "2026-05-28 21:00:00"
 author: 손(Son/손민기)
 tags: "UnderstandAnything Redux 미들웨어 코드분석 아키텍처 ClaudeCode 리버스엔지니어링"
 categories: Tech
+series: "Understand-Anything"
 readingTime: 11
 ---
 

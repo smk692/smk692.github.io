@@ -1,0 +1,45 @@
+@use '../../styles/mixins'as *;
+@use '../../styles/variables'as *;
+
+.series-nav {
+  @include content-max-width;
+  margin: 36px auto;
+  padding: 20px 24px;
+  background: var(--summary-box-color);
+  border: 1px solid var(--post-card-border-color);
+  border-left: 4px solid var(--primary-color);
+  border-radius: 8px;
+
+  &__title {
+    font-family: $font-family-heading;
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 12px;
+    color: var(--primary-text-color);
+  }
+
+  &__list {
+    margin: 0;
+    padding-left: 22px;
+
+    li {
+      margin-bottom: 6px;
+      line-height: 1.6;
+      color: var(--content-text-color);
+
+      a {
+        color: var(--link-text-color);
+        text-decoration: none;
+
+        &:hover {
+          text-decoration: underline;
+        }
+      }
+
+      &.current span {
+        font-weight: 700;
+        color: var(--primary-text-color);
+      }
+    }
+  }
+}

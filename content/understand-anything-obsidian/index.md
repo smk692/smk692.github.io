@@ -6,6 +6,7 @@ date: "2026-05-27 21:00:00"
 author: 손(Son/손민기)
 tags: "UnderstandAnything Obsidian 지식그래프 세컨드브레인 ClaudeCode 노트정리 PKM"
 categories: Tech
+series: "Understand-Anything"
 readingTime: 8
 ---
 

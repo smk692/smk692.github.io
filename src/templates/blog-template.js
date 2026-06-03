@@ -14,8 +14,9 @@ import TocHighlight from '../components/toc-highlight';
 import ImageLightbox from '../components/image-lightbox';
 import KeyboardShortcuts from '../components/keyboard-shortcuts';
 import RelatedPosts from '../components/related-posts';
+import SeriesNav from '../components/series-nav';
 
-function BlogTemplate({ data }) {
+function BlogTemplate({ data, pageContext }) {
   const [viewCount, setViewCount] = useState(null);
 
   const curPost = new Post(data.cur);
@@ -67,6 +68,13 @@ function BlogTemplate({ data }) {
       <CodeCopyButton />
       <TocHighlight />
       <ImageLightbox />
+      {pageContext?.series && (
+        <SeriesNav
+          seriesName={pageContext.series}
+          posts={pageContext.seriesPosts}
+          currentSlug={curPost.slug}
+        />
+      )}
       <ShareButtons title={curPost.title} url={postUrl} />
       {relatedPosts.length > 0 && (
         <RelatedPosts posts={relatedPosts} currentSlug={curPost.slug} />

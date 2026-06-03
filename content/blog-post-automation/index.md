@@ -12,32 +12,26 @@ categories: Featured
 
 또한, 블로그를 운영함으로써 자신의 프로젝트나 포트폴리오를 보다 쉽게 공유하고, 개인 브랜딩에도 도움이 됩니다.
 
-<br/>
 
 > 솔직하게 광고로 얼마를 벌 수 있는지 한번 심심해서 시작했습니다. ㅎㅎㅎ...
 > 
 > 개발에 대해 살짝이라도 알고 계시면 추천 합니다!
 
-<br/>
 
 ## 🔨 준비물이 무엇이 필요한지?!
 자동화된 Git Blog를 운영하기 위해 필요한 준비물은 다음과 같습니다.
 
 - Git 계정 및 블로그 호스팅 플랫폼 (e.g. GitHub, GitLab, Bitbucket, Gitea 등)
 
-<br>
 
 - 정적 사이트 생성기 (e.g. Jekyll, Hugo, Pelican 등)
 
-<br>
 
 - 마크다운 에디터 (e.g. Typora, Visual Studio Code 등)
   
-<br>
   
 - 자동화 스크립트 (e.g. GitHub Actions, Travis CI 등)
 
-<br/>
     
     
     제가 세웠던 아키텍처는 GitHub Actions를 사용하여 Jekyll 기반의 정적 블로그를 자동화하는 방법입니다.
@@ -251,7 +245,6 @@ categories: Featured
         create_blog_post(topic, tags, categories, contents)
     ```
 
-<br/>
 
 ## ✅ 완성된 결과에 대한 스크린샷!
 
@@ -267,7 +260,6 @@ categories: Featured
     
     ![blog4.png](blog4.png)
 
-<br/>
 
  # 소감
  이상으로 블로그 자동화에 대해 알아보았습니다.

@@ -1180,3 +1180,26 @@
   color: var(--primary-color);
   border-bottom-color: var(--primary-color);
 }
+
+// 코드블록 언어 라벨 (좌상단 — 복사 버튼은 우상단)
+.gatsby-highlight {
+  position: relative;
+}
+
+.gatsby-highlight pre[class*='language-'] {
+  padding-top: 2.2em;
+}
+
+.gatsby-highlight[data-language]:not([data-language='text'])::before {
+  content: attr(data-language);
+  position: absolute;
+  top: 7px;
+  left: 16px;
+  font-size: 11px;
+  font-family: SFMono-Regular, Consolas, Menlo, monospace;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.45);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  pointer-events: none;
+}

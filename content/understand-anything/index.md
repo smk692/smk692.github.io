@@ -6,6 +6,7 @@ date: "2026-05-24 21:10:00"
 author: 손(Son/손민기)
 tags: "UnderstandAnything ClaudeCode 코드분석 온보딩 레거시코드 아키텍처 시각화"
 categories: Tech
+series: "Understand-Anything"
 readingTime: 7
 ---
 
