@@ -44,6 +44,7 @@ export const pageQuery = graphql`
           frontmatter {
             categories
             title
+            emoji
             date(formatString: "MMMM DD, YYYY")
           }
           fields {

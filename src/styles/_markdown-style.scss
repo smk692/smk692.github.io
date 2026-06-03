@@ -220,11 +220,18 @@
 }
 
 .markdown h2 {
-  font-size: 24px;
+  font-family: $font-family-heading;
+  font-size: 28px;
+  padding-bottom: 6px;
+  border-bottom: 2px solid var(--primary-color);
+  color: var(--primary-text-color);
 }
 
 .markdown h3 {
   font-size: 20px;
+  padding-left: 12px;
+  border-left: 4px solid var(--primary-color);
+  color: var(--primary-dark-color);
 }
 
 .markdown h3,
