@@ -128,7 +128,10 @@ module.exports = {
     `gatsby-plugin-sitemap`,
     `gatsby-plugin-sharp`,
     `gatsby-plugin-image`,
-    `gatsby-plugin-offline`,
+    // 기존 gatsby-plugin-offline이 설치한 Service Worker가 옛 JS 청크를 캐싱해
+    // 새 배포 후 ChunkLoadError(빈 화면)를 유발하던 문제를 해결하기 위해 교체.
+    // 이 플러그인은 기존 SW를 unregister하고 캐시를 비운다.
+    `gatsby-plugin-remove-serviceworker`,
     `gatsby-plugin-sass`,
     {
       resolve: `gatsby-plugin-feed`,

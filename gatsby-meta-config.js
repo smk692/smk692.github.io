@@ -15,10 +15,10 @@ module.exports = {
     bio: {
       role: 'Backend Developer & Tech Lead',
       description: [
-        '익숙함에 머무르기보다 더 나은 방향을 만드는',
-        '새로운 도전과 변화를 즐기는',
-        '동료들과 치열하게 토론하는',
-        'ADR과 구축 사례로 새로운 기술을 스며들게 하는',
+        '더 나은 방향을 고민하는',
+        '새로운 도전을 즐기는',
+        '치열하게 토론하는',
+        '기술로 문제를 푸는',
       ],
       thumbnail: 'sample.png', // Path to the image in the 'asset' folder
     },

@@ -157,7 +157,7 @@ exports.createPages = async ({ actions, graphql, reporter }) => {
         edges {
           node {
             id
-            excerpt(pruneLength: 500, truncate: true)
+            excerpt(pruneLength: 120, truncate: true)
             rawMarkdownBody
             fields {
               slug
