@@ -1128,6 +1128,14 @@
       overflow: visible;
     }
 
+    // cluster 제목: JS DOM 재정렬(bringClusterLabelsToFront)로 z-order를 올리지만,
+    // 화살표 선이 제목 영역을 통과하더라도 배경색으로 가리도록 CSS도 함께 적용.
+    // padding 없이 background만 설정 — padding은 foreignObject 텍스트 줄바꿈 유발.
+    .cluster-label foreignObject > div,
+    .cluster-label foreignObject > span {
+      background: #fdfdff;
+    }
+
     foreignObject div,
     foreignObject span,
     foreignObject p,
