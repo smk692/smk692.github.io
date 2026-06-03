@@ -1112,3 +1112,71 @@
     height: auto;
   }
 }
+
+/* ===== 일기장 본문 가독성 (DESIGN.md) — 파일 끝이라 기존 규칙보다 우선 ===== */
+.markdown {
+  font-size: 16.5px;
+  line-height: 1.85;
+  color: var(--content-text-color);
+  word-break: keep-all; // 한국어 단어 단위 줄바꿈
+  overflow-wrap: break-word;
+}
+
+.markdown p {
+  margin: 0 0 20px;
+  line-height: 1.85;
+}
+
+.markdown li {
+  margin-bottom: 6px;
+  line-height: 1.8;
+}
+
+.markdown ul,
+.markdown ol {
+  padding-left: 1.5em;
+  margin-bottom: 20px;
+}
+
+.markdown h2 {
+  font-size: 28px;
+  line-height: 1.4;
+}
+
+.markdown h3 {
+  font-size: 20px;
+  line-height: 1.4;
+}
+
+// 인용구 — 일기장 메모지 느낌
+.markdown blockquote {
+  margin: 0 0 20px;
+  padding: 14px 18px;
+  color: var(--secondary-text-color);
+  background: var(--summary-box-color);
+  border-left: 4px solid var(--primary-color);
+  border-radius: 0 8px 8px 0;
+
+  > :last-child {
+    margin-bottom: 0;
+  }
+}
+
+// 코드 블록 — 살짝 키우고 둥글게
+.markdown pre {
+  font-size: 13.5px;
+  line-height: 1.6;
+  border-radius: 10px;
+}
+
+// 본문 이미지 — 일기장에 붙인 사진처럼
+.markdown img {
+  border-radius: 10px;
+  box-shadow: 0 2px 14px rgba(61, 58, 54, 0.12);
+}
+
+// 본문 링크 — 잉크블루
+.markdown a {
+  color: var(--primary-color);
+  border-bottom-color: var(--primary-color);
+}

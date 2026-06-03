@@ -37,15 +37,19 @@ function BlogTemplate({ data }) {
 
   useEffect(() => {
     if (!siteUrl) return;
-    const namespace = siteUrl.replace(/(^\w+:|^)\/\//, '');
-    const key = curPost.slug.replace(/\//g, '');
+    // 도메인의 점을 하이픈으로 치환해 카운터 네임스페이스로 사용
+    const namespace = siteUrl
+      .replace(/(^\w+:|^)\/\//, '')
+      .replace(/\./g, '-');
+    const key = curPost.slug.replace(/\//g, '') || 'home';
+    // Abacus(countapi.xyz 대체): dev=get(증가X), prod=hit(증가)
     fetch(
-      `https://api.countapi.xyz/${
+      `https://abacus.jasoncameron.dev/${
         process.env.NODE_ENV === 'development' ? 'get' : 'hit'
       }/${namespace}/${key}`,
     ).then(async (result) => {
       const data = await result.json();
-      setViewCount(data.value);
+      if (typeof data.value === 'number') setViewCount(data.value);
     }).catch(() => {});
   }, [siteUrl, curPost.slug]);
 
