@@ -12,6 +12,32 @@ function loadMermaid() {
   return mermaidPromise;
 }
 
+// translate(x, y) 또는 translate(x) 형태의 transform 값에서 [x, y] 추출
+function parseTranslate(transformStr) {
+  if (!transformStr) return [0, 0];
+  const m = transformStr.match(/translate\(\s*([+-]?\d*\.?\d+)\s*[, ]\s*([+-]?\d*\.?\d+)\s*\)/);
+  if (m) return [parseFloat(m[1]), parseFloat(m[2])];
+  const m1 = transformStr.match(/translate\(\s*([+-]?\d*\.?\d+)\s*\)/);
+  if (m1) return [parseFloat(m1[1]), 0];
+  return [0, 0];
+}
+
+// SVG 렌더 후 cluster 제목(.cluster-label)이 화살표(edgePaths) 뒤로 묻히는 문제 수정.
+// SVG는 문서 순서대로 페인팅되어 clusters(제목 포함) → edges 순이므로 제목이 화살표에 가린다.
+// 렌더 후 .cluster-label 요소를 루트 g 맨 끝으로 이동해 가장 나중에 페인팅되게 한다.
+function bringClusterLabelsToFront(svgEl) {
+  const rootG = svgEl.querySelector(':scope > g') || svgEl;
+  const labels = Array.from(svgEl.querySelectorAll('.cluster > .cluster-label'));
+  labels.forEach((label) => {
+    const cluster = label.closest('.cluster');
+    if (!cluster) return;
+    const [cx, cy] = parseTranslate(cluster.getAttribute('transform'));
+    const [lx, ly] = parseTranslate(label.getAttribute('transform'));
+    label.setAttribute('transform', `translate(${cx + lx}, ${cy + ly})`);
+    rootG.appendChild(label); // 맨 끝으로 이동 → 가장 나중에 페인팅(화살표 위)
+  });
+}
+
 function currentMermaidTheme() {
   // 다크모드에서도 'default'(밝은) 테마로 렌더한다.
   // 다이어그램 소스가 style로 밝은 fill(크림/파랑/연두)을 고정 지정하는데,
@@ -28,6 +54,8 @@ async function renderOne(mermaid, source, target) {
     if (typeof bindFunctions === 'function') {
       bindFunctions(target);
     }
+    const svgEl = target.querySelector('svg');
+    if (svgEl) bringClusterLabelsToFront(svgEl);
   } catch (err) {
     // 문법 오류 등: 원본 소스를 코드 블록으로 노출
     target.innerHTML = '';
