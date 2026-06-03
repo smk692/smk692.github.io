@@ -1,95 +1,98 @@
-// light mode colors - DESIGN.md 색상 팔레트 적용
+// 손글씨 일기장 테마 — DESIGN.md 색상 토큰 적용
+// Light = 크림 종이 + 만년필 잉크블루 / Dark = 밤의 가죽 노트
+
+// light mode colors (낮의 일기장)
 html {
-  // Primary Colors
-  --primary-color: #2563eb;
-  --primary-dark-color: #1e40af;
+  // Primary Colors — 만년필 잉크블루
+  --primary-color: #4a6fa5;
+  --primary-dark-color: #3a5687;
 
-  // Background Colors
-  --background-color: #f5f5f5;
-  --container-color: #ffffff;
-  --summary-box-color: #f8fafc;
+  // Background Colors — 크림/아이보리 종이
+  --background-color: #faf7f0;
+  --container-color: #fffffb;
+  --summary-box-color: #f4f0e6;
 
-  // Text Colors
-  --primary-text-color: #1e293b;        // Heading
-  --secondary-text-color: #64748b;      // Muted
-  --content-text-color: #475569;        // Body
-  --subheading-color: #334155;
-  --footer-text-color: #94a3b8;
+  // Text Colors — 잉크 차콜
+  --primary-text-color: #3d3a36;        // Heading
+  --secondary-text-color: #8c8579;      // Muted
+  --content-text-color: #4d4842;        // Body
+  --subheading-color: #2f2c28;
+  --footer-text-color: #a9a294;
 
   // UI Elements
-  --button-background-color: #f8fafc;
-  --button-text-color: #475569;
+  --button-background-color: #f4f0e6;
+  --button-text-color: #4d4842;
 
-  --tab-text-color: #64748b;
-  --tab-hover-text-color: #1e293b;
-  --tab-selected-background-color: #f8fafc;
+  --tab-text-color: #8c8579;
+  --tab-hover-text-color: #3d3a36;
+  --tab-selected-background-color: #efe9dc;
 
-  --bio-link-icon-color: #64748b;
-  --about-link-icon-color: #64748b;
+  --bio-link-icon-color: #6b6456;
+  --about-link-icon-color: #8c8579;
 
-  // Tags
-  --chip-background-color: #e0e7ff;
-  --chip-text-color: #3730a3;
+  // Tags — 연한 잉크블루
+  --chip-background-color: #e3e9f2;
+  --chip-text-color: #3a5687;
 
   // Links & Cards
-  --link-text-color: #2563eb;
-  --post-card-border-color: #e2e8f0;
+  --link-text-color: #4a6fa5;
+  --post-card-border-color: #e8e1d3;
 
-  // Dividers
-  --divider-color: #e2e8f0;
-  --light-divider-color: #f1f5f9;
+  // Dividers — 종이 괘선 톤
+  --divider-color: #e8e1d3;
+  --light-divider-color: #f0eadc;
 
   // Markdown
-  --markdown-table-even-cell-background-color: #f8fafc;
-  --markdown-table-border-color: #e2e8f0;
-  --markdown-blockquote-border-color: #2563eb;
-  --markdown-border-color: #e2e8f0;
+  --markdown-table-even-cell-background-color: #f4f0e6;
+  --markdown-table-border-color: #e8e1d3;
+  --markdown-blockquote-border-color: #4a6fa5;
+  --markdown-border-color: #e8e1d3;
 }
 
-// dark mode colors
+// dark mode colors (밤의 가죽 노트)
 html[data-theme='dark'] {
-  // Primary Colors
-  --primary-color: #60a5fa;
-  --primary-dark-color: #3b82f6;
+  // Primary Colors — 밝은 잉크블루
+  --primary-color: #7b9cc4;
+  --primary-dark-color: #5a7da8;
 
-  // Background Colors
-  --background-color: #1e1e1e;
-  --container-color: #232326;
-  --summary-box-color: #2d333b;
+  // Background Colors — 짙은 세피아/가죽
+  --background-color: #1f1b16;
+  --container-color: #2a251e;
+  --summary-box-color: #322c24;
 
-  // Text Colors
-  --primary-text-color: #e6e6e6;
-  --secondary-text-color: #768390;
-  --content-text-color: #d1d5db;
-  --subheading-color: #acbac7;
-  --footer-text-color: #6b7280;
+  // Text Colors — 크림 잉크
+  --primary-text-color: #ede6d6;
+  --secondary-text-color: #a89f8c;
+  --content-text-color: #d8d0bf;
+  --subheading-color: #c9c0ad;
+  --footer-text-color: #8a8270;
 
   // UI Elements
-  --button-background-color: #444c56;
-  --button-text-color: #e6e6e6;
+  --button-background-color: #38322a;
+  --button-text-color: #ede6d6;
 
-  --tab-text-color: #768390;
-  --tab-hover-text-color: #acbac7;
-  --tab-selected-background-color: #373e47;
+  --tab-text-color: #a89f8c;
+  --tab-hover-text-color: #ede6d6;
+  --tab-selected-background-color: #38322a;
 
-  --bio-link-icon-color: #e6e6e6;
-  --about-link-icon-color: #a8a8a8;
+  --bio-link-icon-color: #d8d0bf;
+  --about-link-icon-color: #a89f8c;
 
-  // Tags
-  --chip-background-color: #3730a3;
-  --chip-text-color: #e0e7ff;
+  // Tags — 깊은 잉크블루
+  --chip-background-color: #34425a;
+  --chip-text-color: #c7d5ea;
 
   // Links & Cards
-  --link-text-color: #60a5fa;
-  --post-card-border-color: #363f47;
+  --link-text-color: #7b9cc4;
+  --post-card-border-color: #3a3329;
 
   // Dividers
-  --divider-color: #444c56;
-  --light-divider-color: #373e47;
+  --divider-color: #3a3329;
+  --light-divider-color: #322c24;
 
   // Markdown
-  --markdown-table-even-cell-background-color: #2d333b;
-  --markdown-table-border-color: #444c56;
-  --markdown-blockquote-border-color: #60a5fa;
-  --markdown-border-color: #444c56;
+  --markdown-table-even-cell-background-color: #322c24;
+  --markdown-table-border-color: #3a3329;
+  --markdown-blockquote-border-color: #7b9cc4;
+  --markdown-border-color: #3a3329;
 }

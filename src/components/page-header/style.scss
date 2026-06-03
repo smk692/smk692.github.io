@@ -1,4 +1,5 @@
 @use '../../styles/mixins'as *;
+@use '../../styles/variables'as *;
 
 .page-header-wrapper {
   display: flex;
@@ -14,13 +15,14 @@
     @include content-max-width;
 
     .link {
+      font-family: $font-family-heading;
       font-weight: 700;
-      font-size: 17px;
+      font-size: 21px;
       color: var(--primary-text-color);
 
       @include md {
         font-weight: 700;
-        font-size: 20px;
+        font-size: 25px;
       }
     }
 

@@ -1,6 +1,8 @@
 const React = require('react');
 
-// 전역 웹폰트(나눔고딕) 주입
+// 전역 웹폰트 주입
+// - Gaegu(개구체): 메뉴/제목용 귀여운 손글씨
+// - Gowun Dodum(고운돋움): 본문용 가독성 폰트
 exports.onRenderBody = ({ setHeadComponents }) => {
   setHeadComponents([
     <link
@@ -15,9 +17,9 @@ exports.onRenderBody = ({ setHeadComponents }) => {
       crossOrigin="anonymous"
     />,
     <link
-      key="gf-nanum-gothic"
+      key="gf-diary-fonts"
       rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=Nanum+Gothic:wght@400;700;800&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Gaegu:wght@300;400;700&family=Gowun+Dodum&display=swap"
     />,
   ]);
 };

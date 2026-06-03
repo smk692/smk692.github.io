@@ -1,5 +1,9 @@
-$font-family: 'Nanum Gothic', 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif,
+// 본문용 — 가독성 우선 (고운돋움)
+$font-family: 'Gowun Dodum', 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif,
   Apple Color Emoji, Segoe UI Emoji;
+
+// 메뉴·제목용 — 귀여운 손글씨 (개구체)
+$font-family-heading: 'Gaegu', 'Gowun Dodum', cursive, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 
 $content-max-width: 720px;
 $content-horizontal-padding: 15px;
