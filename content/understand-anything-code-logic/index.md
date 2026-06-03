@@ -9,7 +9,7 @@ categories: Tech
 readingTime: 11
 ---
 
-[지난 글](/2026-05-24-understand-anything)에서 **Understand-Anything**으로 코드베이스를 지식 그래프로 만드는 걸 소개했다. 그런데 한 가지 짚고 넘어갈 게 있다.
+[지난 글](/understand-anything)에서 **Understand-Anything**으로 코드베이스를 지식 그래프로 만드는 걸 소개했다. 그런데 한 가지 짚고 넘어갈 게 있다.
 
 > **"모듈 의존성 그래프? 그건 그냥 디렉토리 열면 보이잖아."**
 
@@ -222,7 +222,7 @@ throw: Reducers may not dispatch actions.
 
 - 저장소: [Lum1104/Understand-Anything](https://github.com/Lum1104/Understand-Anything)
 - 예제 코드: [reduxjs/redux](https://github.com/reduxjs/redux)
-- 이전 글: [Understand-Anything 소개](/2026-05-24-understand-anything) · [Obsidian에 적용하기](/2026-05-27-understand-anything-obsidian)
+- 이전 글: [Understand-Anything 소개](/understand-anything) · [Obsidian에 적용하기](/understand-anything-obsidian)
 
 ```toc
 ```

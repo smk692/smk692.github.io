@@ -9,7 +9,7 @@ categories: Tech
 readingTime: 8
 ---
 
-[지난 글](/2026-05-24-understand-anything)에서 **Understand-Anything**으로 코드베이스를 지식 그래프로 시각화하는 방법을 다뤘다. 그런데 이 도구에는 코드 분석 말고도 숨은 기능이 하나 더 있다. 바로 `/understand-knowledge`다.
+[지난 글](/understand-anything)에서 **Understand-Anything**으로 코드베이스를 지식 그래프로 시각화하는 방법을 다뤘다. 그런데 이 도구에는 코드 분석 말고도 숨은 기능이 하나 더 있다. 바로 `/understand-knowledge`다.
 
 이 명령어는 **마크다운 위키(지식 베이스)를 분석**한다. 그리고 그 감지 조건이 사실상 **Obsidian 볼트 구조와 동일**하다. 즉, 내가 몇 년간 쌓아온 Obsidian 노트를 그대로 지식 그래프로 만들 수 있다는 뜻이다.
 
