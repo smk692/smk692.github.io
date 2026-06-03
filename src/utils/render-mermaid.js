@@ -25,16 +25,27 @@ function parseTranslate(transformStr) {
 // SVG 렌더 후 cluster 제목(.cluster-label)이 화살표(edgePaths) 뒤로 묻히는 문제 수정.
 // SVG는 문서 순서대로 페인팅되어 clusters(제목 포함) → edges 순이므로 제목이 화살표에 가린다.
 // 렌더 후 .cluster-label 요소를 루트 g 맨 끝으로 이동해 가장 나중에 페인팅되게 한다.
+// label에서 rootG까지 경로 상 모든 translate 를 누적해 절대 좌표로 변환한다.
 function bringClusterLabelsToFront(svgEl) {
   const rootG = svgEl.querySelector(':scope > g') || svgEl;
-  const labels = Array.from(svgEl.querySelectorAll('.cluster > .cluster-label'));
+  // .cluster > .cluster-label 직계 관계뿐 아니라 중간 wrapper가 있을 경우도 포함
+  const labels = Array.from(svgEl.querySelectorAll('.cluster-label'));
   labels.forEach((label) => {
-    const cluster = label.closest('.cluster');
-    if (!cluster) return;
-    const [cx, cy] = parseTranslate(cluster.getAttribute('transform'));
-    const [lx, ly] = parseTranslate(label.getAttribute('transform'));
-    label.setAttribute('transform', `translate(${cx + lx}, ${cy + ly})`);
-    rootG.appendChild(label); // 맨 끝으로 이동 → 가장 나중에 페인팅(화살표 위)
+    // label → rootG 까지 경로를 올라가며 모든 translate 합산
+    let totalX = 0;
+    let totalY = 0;
+    let el = label;
+    while (el && el !== rootG) {
+      const t = el.getAttribute('transform');
+      if (t) {
+        const [tx, ty] = parseTranslate(t);
+        totalX += tx;
+        totalY += ty;
+      }
+      el = el.parentElement;
+    }
+    label.setAttribute('transform', `translate(${totalX}, ${totalY})`);
+    rootG.appendChild(label); // 맨 끝 자식 → 가장 나중에 페인팅(화살표 위)
   });
 }
 
