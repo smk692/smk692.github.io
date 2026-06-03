@@ -11,9 +11,9 @@ module.exports = {
   },
   ga: 'UA-265647540-1', // Google Analytics Tracking ID
   author: {
-    name: `손민기`,
+    name: `손(Son/손민기)`,
     bio: {
-      role: 'Backend Developer & Tech Lead',
+      role: 'Backend Developer',
       description: [
         '더 나은 방향을 고민하는',
         '새로운 도전을 즐기는',

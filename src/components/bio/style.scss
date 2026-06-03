@@ -46,8 +46,15 @@
       font-weight: 600;
     }
 
-    .social-links {
+    // 소셜 아이콘 + 이력서 버튼을 한 줄에
+    .social-row {
+      display: flex;
+      align-items: center;
+      gap: 16px;
       margin-top: 24px;
+    }
+
+    .social-links {
       display: flex;
     }
 
@@ -56,12 +63,20 @@
       font-family: $font-family-heading;
       font-weight: 400;
       font-size: 32px;
-      line-height: 1.75; // 여유로운 줄간격
+      line-height: 1.5; // 마진 축소
 
       .greeting {
         // 색 이펙트 제거 — 나머지 인사말과 톤을 통일
         color: inherit;
         font-weight: 400;
+      }
+
+      // 동적으로 바뀌는 문구에 잉크블루 밑줄
+      .rotating {
+        text-decoration: underline;
+        text-decoration-color: var(--primary-color);
+        text-decoration-thickness: 2px;
+        text-underline-offset: 6px;
       }
 
       .title {
@@ -74,12 +89,12 @@
       }
 
       @include md {
-        font-size: 38px;
+        font-size: 33px;
 
         .title {
           .react-rotating-text-cursor {
-            font-size: 38px;
-            line-height: 38px;
+            font-size: 33px;
+            line-height: 33px;
           }
         }
       }
@@ -135,16 +150,14 @@
   }
 
   .resume-button {
-    align-self: flex-start; // 내용폭으로 — 전체폭 stretch 방지
     display: inline-flex;
     align-items: center;
-    gap: 8px;
-    margin-top: 28px;
-    padding: 12px 26px;
+    gap: 6px;
+    padding: 9px 18px;
     background: var(--primary-color, #2563eb);
     color: #fff;
     font-family: $font-family-heading; // 손글씨 통일
-    font-size: 19px;
+    font-size: 17px;
     font-weight: 700;
     line-height: 1; // 부모(.korean) line-height 상속 차단
     text-decoration: none;
@@ -163,7 +176,7 @@
     }
 
     .resume-icon {
-      font-size: 20px;
+      font-size: 16px;
     }
   }
 }

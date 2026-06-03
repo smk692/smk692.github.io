@@ -18,20 +18,24 @@ function Bio({ author, language = 'ko' }) {
           <p className="title">
             <span className="greeting">안녕하세요.</span>
             <br />
-            <ReactRotatingText items={bio.description} />
+            <span className="rotating">
+              <ReactRotatingText items={bio.description} />
+            </span>
             <br />
             {bio.role} <strong>{name}</strong>입니다.
             <br />
           </p>
-          <div className="social-links">
-            <IconButtonBar links={socialWithoutResume} />
+          <div className="social-row">
+            <div className="social-links">
+              <IconButtonBar links={socialWithoutResume} />
+            </div>
+            {resume && (
+              <a href={resume} className="resume-button" target="_blank" rel="noopener noreferrer">
+                <span className="resume-icon">📄</span>
+                이력서 보기
+              </a>
+            )}
           </div>
-          {resume && (
-            <a href={resume} className="resume-button" target="_blank" rel="noopener noreferrer">
-              <span className="resume-icon">📄</span>
-              이력서 보기
-            </a>
-          )}
         </div>
       ) : (
         <div className="introduction english">
@@ -61,7 +65,7 @@ function Bio({ author, language = 'ko' }) {
       <div className="thumbnail-wrapper">
         <Image
           className="profile-photo"
-          style={{ width: 320 }}
+          style={{ width: 300 }}
           src={bio.thumbnail}
           alt="thumbnail"
           loading="eager"
