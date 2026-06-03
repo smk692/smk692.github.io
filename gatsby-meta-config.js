@@ -1,5 +1,5 @@
 module.exports = {
-  title: '👋 손코딩의 끄적끄적 블로그',
+  title: '👋 손코딩의 끄적끄적',
   description: '손코딩의 끄적끄적 블로그',
   language: `ko`, // `ko`, `en` => currently support versions for Korean and English
   siteUrl: 'https://smk692.github.io',
@@ -15,7 +15,6 @@ module.exports = {
     bio: {
       role: 'Backend Developer',
       description: [
-        '더 나은 방향을 고민하는',
         '새로운 도전을 즐기는',
         '치열하게 토론하는',
         '기술로 문제를 푸는',

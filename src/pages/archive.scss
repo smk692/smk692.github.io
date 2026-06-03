@@ -63,10 +63,9 @@
 }
 
 .archive-date {
-  font-size: 0.875rem;
+  font-size: 0.95rem;
   color: var(--secondary-text-color);
-  font-family: monospace;
-  min-width: 50px;
+  min-width: 56px;
 }
 
 .archive-emoji {
@@ -80,7 +79,9 @@
   flex: 1;
   color: var(--primary-text-color);
   text-decoration: none;
-  font-weight: 500;
+  font-size: 1.0625rem;
+  font-weight: 600;
+  line-height: 1.5;
 
   &:hover {
     color: var(--link-text-color);
