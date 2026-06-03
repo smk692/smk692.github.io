@@ -20,7 +20,7 @@ module.exports = {
         '치열하게 토론하는',
         '기술로 문제를 푸는',
       ],
-      thumbnail: 'sample.png', // Path to the image in the 'asset' folder
+      thumbnail: 'profile.jpg', // Path to the image in the 'asset' folder
     },
     social: {
       github: 'https://github.com/smk692',

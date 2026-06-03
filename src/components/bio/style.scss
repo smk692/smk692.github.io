@@ -45,12 +45,13 @@
     }
 
     &.korean {
-      font-weight: 100;
-      font-size: 32px;
-      line-height: 1.2;
+      // 히어로 인사말 전체를 손글씨로 통일
+      font-family: $font-family-heading;
+      font-weight: 400;
+      font-size: 34px;
+      line-height: 1.3;
 
       .greeting {
-        font-family: $font-family-heading;
         color: var(--primary-color);
         font-weight: 700;
       }
@@ -112,6 +113,14 @@
 
     @include md {
       display: block;
+    }
+
+    // 일기장에 붙인 사진처럼 둥근 모서리 + 부드러운 그림자
+    .gatsby-image-wrapper,
+    img {
+      border-radius: 14px;
+      overflow: hidden;
+      box-shadow: 0 6px 20px rgba(61, 58, 54, 0.18);
     }
   }
 
