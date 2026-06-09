@@ -89,6 +89,15 @@ mTLS ON (zero-copy 우회):
 
 전송만 하면 sendfile, 일부 가공이 필요하면 mmap.
 
+<details>
+<summary>📋 <b>사례</b></summary>
+
+<br/>
+
+nginx 정적 자산 서빙에 sendfile 활성화 → CPU 35% → 12%. 동영상 변환 서비스는 mmap으로 부분 가공. **교훈: *순수 전송*이면 sendfile, *부분 가공*이면 mmap.**
+
+</details>
+
 ### 🔄 꼬리질문 2: Kafka는 어떻게 zero-copy를 활용하나요?
 
 **기대 답변:**
@@ -96,12 +105,30 @@ mTLS ON (zero-copy 우회):
 - 단, **TLS**가 켜지면 페이로드 암호화 때문에 zero-copy 불가 → 성능 저하
 - 운영에서는 mTLS 강제 시 네트워크 처리량 30%+ 감소를 미리 예측
 
+<details>
+<summary>📋 <b>사례</b></summary>
+
+<br/>
+
+mTLS 도입 사전 부하 테스트 — 컨슈머 throughput 30% 감소 예측, 인스턴스 1단계 업그레이드 사전 결정. *기습 다운 사고 0건*. **교훈: 보안 강화 변경은 *항상 성능 사전 측정*.**
+
+</details>
+
 ### 🔄 꼬리질문 3: 운영에서 zero-copy 효과를 어떻게 측정하나요?
 
 **기대 답변:**
 - CPU 사용률 vs 네트워크 처리량 비율
 - `perf` system call profile (`read`/`write` 호출 비중)
 - 컨테이너 memory cgroup의 page cache 활용도
+
+<details>
+<summary>📋 <b>사례</b></summary>
+
+<br/>
+
+`perf stat -e syscalls:sys_enter_sendfile`로 sendfile 호출 수 측정. mTLS 도입 후 0으로 떨어진 것 확인. **교훈: zero-copy 효과는 *syscall 카운트*로 직접 검증 가능.**
+
+</details>
 
 ---
 
@@ -209,6 +236,15 @@ probes:
 - 의존성 그래프(같은 리소스 종류 반복) 분석
 - 80% 룰 → 85% 가능했던 이유: helper template과 includes로 미세 변형 흡수
 
+<details>
+<summary>📋 <b>사례</b></summary>
+
+<br/>
+
+23개 차트 텍스트 diff 자동화 스크립트로 *공통 블록 80%* 식별. 나머지 5%는 helper template로 흡수. **교훈: 공통화 비율은 *측정 후 결정*, 감으로 추정 금지.**
+
+</details>
+
 ### 🔄 꼬리질문 2: 표준 차트 버전 업 시 하위 호환성은?
 
 **기대 답변:**
@@ -216,6 +252,15 @@ probes:
 - `values.schema.json`로 입력 검증
 - Deprecate 정책: 한 MAJOR 동안 alias 유지
 - CI 단계에서 `helm template` 결과를 이전 버전과 diff
+
+<details>
+<summary>📋 <b>사례</b></summary>
+
+<br/>
+
+base chart MAJOR 변경 시 *이전 버전 alias 1분기 유지* + CI에서 `helm template` diff 자동 비교. 사고 0건. **교훈: 표준 차트는 *애플리케이션 의존성*과 동일한 호환성 정책 필요.**
+
+</details>
 
 ### 🔄 꼬리질문 3: 왜 Kustomize가 아니라 Helm base chart인가요?
 
@@ -225,6 +270,15 @@ probes:
 - 사내 GitOps가 ArgoCD Application(Helm 친화)이라면 Helm 우선
 
 둘은 혼합 가능 (Helm + Kustomize Post-render).
+
+<details>
+<summary>📋 <b>사례</b></summary>
+
+<br/>
+
+base chart는 Helm (releases·rollback·history 추적), 환경별 오버라이드는 Kustomize post-render — 둘의 장점만 결합. **교훈: 도구는 *대립이 아니라 조합*.**
+
+</details>
 
 ---
 
@@ -321,6 +375,15 @@ overlays/
 - 또는 Git revert PR을 봇이 자동 머지 (`/rollback` 명령)
 - 사후에 정식 Git 흐름으로 정합성 회복
 
+<details>
+<summary>📋 <b>사례</b></summary>
+
+<br/>
+
+Slack `/rollback v1.2.3` 명령 → 봇이 Git revert PR 자동 생성·머지·ArgoCD sync. 30초 안에 롤백, Git 이력도 보존. **교훈: 긴급 우회는 *Git 흐름 안에서* 자동화.**
+
+</details>
+
 ### 🔄 꼬리질문 2: Self-Heal이 위험할 수 있나요?
 
 **기대 답변:**
@@ -329,12 +392,30 @@ overlays/
 - 변경 사항은 즉시 Git에 반영하는 원칙
 - 알람: Drift 발생 시 알림(Self-Heal 전에 검토)
 
+<details>
+<summary>📋 <b>사례</b></summary>
+
+<br/>
+
+야간 운영자가 replicas 20으로 올린 *수동 변경*을 Self-Heal이 5로 복구 → 다시 다운. 야간 시간대 Sync window로 Self-Heal off. **교훈: Self-Heal은 *시간대·상황별* 정책 필요.**
+
+</details>
+
 ### 🔄 꼬리질문 3: Secret 관리는 어떻게 하나요?
 
 **기대 답변:**
 - **SealedSecret**: 클러스터 공개키로 암호화한 secret을 Git에
 - **External Secrets Operator**: AWS Secrets Manager/Vault 동기화
 - 절대 plain secret을 Git에 두지 않음 — pre-commit hook으로 검증
+
+<details>
+<summary>📋 <b>사례</b></summary>
+
+<br/>
+
+External Secrets Operator + AWS Secrets Manager — 회전 시 자동 동기화, Git엔 reference만. pre-commit hook으로 plain secret 자동 차단. **교훈: secret은 *Git 밖*에서 관리하고 *Git엔 reference만*.**
+
+</details>
 
 ---
 
@@ -426,12 +507,30 @@ kubectl debug -it pod/my-service-xxx \
 - Audit log에 누가·언제·어떤 이미지로 붙였는지 기록
 - 디버그 이미지는 사내 허용 목록만 사용
 
+<details>
+<summary>📋 <b>사례</b></summary>
+
+<br/>
+
+OPA Gatekeeper로 *허용된 디버그 이미지 화이트리스트* 강제. audit log를 SIEM으로 전송. 임의 이미지 사용 시도 자동 차단. **교훈: 디버깅 권한은 *추적 가능성*과 묶여야 안전.**
+
+</details>
+
 ### 🔄 꼬리질문 2: 정적 분석으로 CVE를 어떻게 관리하나요?
 
 **기대 답변:**
 - Trivy/Grype를 CI에 통합, CRITICAL은 머지 차단
 - SBOM(Software Bill of Materials) 자동 생성
 - 베이스 이미지 갱신 PR을 봇이 주기적으로 올림
+
+<details>
+<summary>📋 <b>사례</b></summary>
+
+<br/>
+
+Renovate 봇이 *베이스 이미지 새 버전 PR을 매주* 자동 생성. Trivy 통과해야 머지. CVE 노출 시간 90일 → 7일. **교훈: 패치 자동화는 *기본 의식주*.**
+
+</details>
 
 ### 🔄 꼬리질문 3: Distroless로 못 가는 케이스는?
 
@@ -441,6 +540,15 @@ kubectl debug -it pod/my-service-xxx \
 - 빌드 도구(JDK toolchain 등)가 런타임에 필요한 경우
 
 → 빌드 스테이지는 fat 이미지, 런타임 스테이지만 distroless가 일반적.
+
+<details>
+<summary>📋 <b>사례</b></summary>
+
+<br/>
+
+레거시 결제 모듈이 *bash 기반 entrypoint* + 라이브러리 musl 비호환 → alpine 유지. 다른 50개는 distroless. **교훈: *전부 distroless*가 정답 아님, 서비스별 트레이드오프.**
+
+</details>
 
 ---
 
@@ -554,6 +662,15 @@ spec:
 - 스키마 마이그레이션은 PR 생성 시 자동 적용 (`flyway migrate`)
 - 마이그레이션 실패는 PR check 실패로 노출
 
+<details>
+<summary>📋 <b>사례</b></summary>
+
+<br/>
+
+PR마다 `CREATE DATABASE pr_${PR_NUM}` + flyway 자동 마이그레이션. 마이그레이션 실패 시 PR check fail. 스키마 회귀 0건. **교훈: 스키마 변경은 *PR 격리 DB*에서 검증.**
+
+</details>
+
 ### 🔄 꼬리질문 2: 트래픽은 어떻게 라우팅하나요?
 
 **기대 답변:**
@@ -561,12 +678,30 @@ spec:
 - Ingress controller가 호스트 헤더로 namespace 라우팅
 - 인증은 사내 SSO + IP 화이트리스트
 
+<details>
+<summary>📋 <b>사례</b></summary>
+
+<br/>
+
+`*.preview.example.com` 와일드카드 DNS + nginx Ingress가 호스트 헤더로 namespace 라우팅. 사내 SSO + IP 화이트리스트로 외부 차단. **교훈: 와일드카드 DNS는 *PR Preview의 인프라 필수품*.**
+
+</details>
+
 ### 🔄 꼬리질문 3: 외부 의존성(결제·메일)은?
 
 **기대 답변:**
 - 외부 호출은 sandbox 또는 mock으로 자동 전환 (env 변수)
 - Webhook은 ngrok 같은 터널 또는 사내 stub 서버로 받음
 - 실제 결제는 절대 호출 안 되도록 정책 + 코드 가드
+
+<details>
+<summary>📋 <b>사례</b></summary>
+
+<br/>
+
+env 변수 `ENV=preview` 시 PG sandbox 자동 사용. *실제 결제 URL이 코드에 하드코딩*된 사고 1회 — pre-commit hook + OPA로 검증 추가. **교훈: PR 환경에선 *외부 호출 가드*가 다층.**
+
+</details>
 
 ---
 

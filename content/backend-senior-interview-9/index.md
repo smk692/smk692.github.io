@@ -94,6 +94,15 @@ series: "시니어 백엔드 면접 질문"
 - DNS 변경해도 사용자 화면에서 즉시 반영 안 됨
 - → 장애 대응은 DNS만 의존하지 말고 **L4/L7 로드밸런서 레벨**에서 전환
 
+<details>
+<summary>📋 <b>사례</b></summary>
+
+<br/>
+
+DNS 변경 후 30분간 Chrome 사용자 일부 잔존 → BGP Anycast로 *DNS 의존도 자체 제거*. **교훈: 브라우저 캐시 회피는 *프로토콜 레벨 변경*이 답.**
+
+</details>
+
 ### 🔄 꼬리질문 2: 네거티브 캐시는 뭔가요?
 
 **기대 답변:**
@@ -101,12 +110,30 @@ series: "시니어 백엔드 면접 질문"
 - 새 도메인 추가 직후 일정 시간 못 찾는 현상이 여기서 나옴
 - 회피: SOA TTL을 미리 짧게 설정
 
+<details>
+<summary>📋 <b>사례</b></summary>
+
+<br/>
+
+신규 도메인 추가 직후 *일부 사용자만 못 접속* — SOA minimum TTL이 1시간이라 NXDOMAIN 캐시됨. SOA TTL을 미리 60초로 낮춰두는 정책. **교훈: 네거티브 캐시도 *DNS 운영 비용*의 일부.**
+
+</details>
+
 ### 🔄 꼬리질문 3: 운영에서 어떤 지표를 보나요?
 
 **기대 답변:**
 - DNS 쿼리 QPS와 캐시 hit ratio
 - Resolver 응답 시간 p99
 - 변경 후 새 IP로의 트래픽 비율 (CDN/LB 로그로 추적)
+
+<details>
+<summary>📋 <b>사례</b></summary>
+
+<br/>
+
+Route 53 query log + CloudWatch로 *변경 후 신규 IP 트래픽 비율* 실시간 추적. 30분 후 95% 도달 확인. **교훈: DNS 변경 효과는 *실측 트래픽 비율*로만 검증.**
+
+</details>
 
 ---
 
@@ -207,6 +234,15 @@ fun invalidateFamily(familyId: String) {
 - 어느 쪽이 정상인지 알 수 없으므로 **양쪽 모두 무효화**가 안전
 - 디바이스 fingerprint(브라우저·IP·OS)로 보조 판단 가능하지만 결정적 증거 아님
 
+<details>
+<summary>📋 <b>사례</b></summary>
+
+<br/>
+
+탈취 의심 12건 — 누가 정상인지 판단 불가, *양쪽 모두 강제 로그아웃 + 알림*. 정상 사용자는 다시 로그인하면 끝, 공격자는 새 인증 못 함. **교훈: 보안은 *모호하면 보수적 선택*.**
+
+</details>
+
 ### 🔄 꼬리질문 2: Rotation 도입 후 UX 영향은?
 
 **기대 답변:**
@@ -214,12 +250,30 @@ fun invalidateFamily(familyId: String) {
 - 완화: 갱신 후 짧은 grace 윈도우 동안 구 토큰 허용
 - 동일 토큰 동시 요청은 첫 응답을 다른 탭에 공유(BroadcastChannel)
 
+<details>
+<summary>📋 <b>사례</b></summary>
+
+<br/>
+
+여러 탭 동시 갱신으로 *정상 사용자 강제 로그아웃* 일 30건 → grace window 5s + BroadcastChannel 공유 → 0건. **교훈: 보안 강화는 *UX false positive*까지 챙겨야 정착.**
+
+</details>
+
 ### 🔄 꼬리질문 3: Refresh Token을 어디에 저장하나요?
 
 **기대 답변:**
 - 브라우저: **HttpOnly + Secure + SameSite=Strict** 쿠키
 - 모바일: Keychain(iOS) / EncryptedSharedPreferences(Android)
 - LocalStorage는 XSS에 노출되므로 금지
+
+<details>
+<summary>📋 <b>사례</b></summary>
+
+<br/>
+
+LocalStorage에 RT 저장한 레거시 클라이언트 → XSS 한 번에 토큰 탈취 사고. HttpOnly 쿠키로 전환. **교훈: LocalStorage 토큰은 *XSS에 무방비*.**
+
+</details>
 
 ---
 
@@ -325,6 +379,15 @@ fun banUser(userId: Long) {
 
 → 즉각 회수가 핵심이면 Session이 더 적합합니다.
 
+<details>
+<summary>📋 <b>사례</b></summary>
+
+<br/>
+
+JWT blacklist 도입 — 모든 API에서 Redis 조회로 *stateless 이점 거의 사라짐*. 결국 Session으로 회귀. **교훈: JWT에 *대규모 blacklist*가 들어가면 *Session보다 나을 게 없음*.**
+
+</details>
+
 ### 🔄 꼬리질문 2: JWT 페이로드에 뭘 넣어도 되나요?
 
 **기대 답변:**
@@ -332,12 +395,30 @@ fun banUser(userId: Long) {
 - 권한·역할 같은 정적 정보만
 - 자주 변하는 정보는 매 갱신 시 다시 발급되도록
 
+<details>
+<summary>📋 <b>사례</b></summary>
+
+<br/>
+
+이메일·전화번호를 JWT에 포함 → 토큰 디코드만으로 PII 노출. 즉시 제거, 권한 역할만 유지. **교훈: JWT는 *signed*지 *encrypted* 아님 — 누구나 본다.**
+
+</details>
+
 ### 🔄 꼬리질문 3: 분산 환경에서 세션 일관성은?
 
 **기대 답변:**
 - **Sticky Session**: LB가 같은 서버로 라우팅 — 확장성 저하
 - **Redis 클러스터 세션**: 일반적인 선택. p99 지연·만료 정책 관리
 - **세션 복제**: 인스턴스 간 복제 — 노드 늘면 비용 폭증, 권장 안 함
+
+<details>
+<summary>📋 <b>사례</b></summary>
+
+<br/>
+
+Tomcat 세션 복제로 시작 → 노드 10대 넘어가자 *복제 트래픽이 서비스 트래픽 초과*. Redis Cluster 세션으로 전환, 노드 무관 일관. **교훈: Session 복제는 *작은 규모에서만*, 그 외엔 외부 저장소.**
+
+</details>
 
 ---
 
@@ -424,6 +505,15 @@ fun banUser(userId: Long) {
 - 서버 측: session cache vs session ticket
 - 대규모 환경에선 ticket이 확장성 유리 (서버 간 상태 공유 불필요)
 
+<details>
+<summary>📋 <b>사례</b></summary>
+
+<br/>
+
+Session ticket 도입 후 재방문 핸드셰이크 *80ms로 단축* — CDN edge에서 ticket key rotation 1일 주기. 서버 CPU 25% 감소. **교훈: ticket은 *서버 상태 공유 없이 확장성 보장*.**
+
+</details>
+
 ### 🔄 꼬리질문 2: OCSP Stapling이 뭔가요?
 
 **기대 답변:**
@@ -431,12 +521,30 @@ fun banUser(userId: Long) {
 - 사용자 지연 감소 + CA OCSP 서버 부하 감소
 - nginx `ssl_stapling on` 같은 옵션으로 활성화
 
+<details>
+<summary>📋 <b>사례</b></summary>
+
+<br/>
+
+OCSP Stapling 활성화 — 모바일 사용자 핸드셰이크 200ms 절감. CA OCSP 서버 의존도 감소로 *그쪽 장애와 무관*. **교훈: Stapling은 *low-hanging fruit*, 활성화 안 하면 손해.**
+
+</details>
+
 ### 🔄 꼬리질문 3: mTLS는 언제 도입하나요?
 
 **기대 답변:**
 - 서비스 간 통신에서 서로 신뢰가 필요할 때 (예: 사내 zero-trust)
 - 결제·인증 같은 고신뢰 경계
 - Service Mesh(Istio, Linkerd)가 자동 mTLS 제공 — 운영 비용 크게 절감
+
+<details>
+<summary>📋 <b>사례</b></summary>
+
+<br/>
+
+Linkerd 자동 mTLS 도입 — *모든 서비스 간 인증·암호화* 코드 변경 없이 자동. 인증서 회전도 자동. **교훈: Service Mesh는 *mTLS 운영 비용을 거의 0으로* 낮춤.**
+
+</details>
 
 ---
 
@@ -557,12 +665,30 @@ allow {
 - TTL은 짧게 (1~5분)
 - 강한 일관성이 필요한 권한은 매번 PDP 조회 (캐시 미사용)
 
+<details>
+<summary>📋 <b>사례</b></summary>
+
+<br/>
+
+정책 변경 Kafka publish → 모든 인스턴스 5초 내 캐시 무효화. 결제 권한은 *캐시 우회*로 강한 일관성. **교훈: 권한 캐시는 *도메인별 일관성 요구*에 맞춰 다르게.**
+
+</details>
+
 ### 🔄 꼬리질문 2: RBAC vs ABAC, 언제 어느 쪽?
 
 **기대 답변:**
 - **RBAC**: 역할 수가 적고 안정적일 때 (관리자/일반/게스트)
 - **ABAC**: 리소스 상태나 컨텍스트가 권한에 영향 (소유자 본인만 수정 등)
 - 실무에선 보통 RBAC + 일부 ABAC 정책 혼용
+
+<details>
+<summary>📋 <b>사례</b></summary>
+
+<br/>
+
+기본은 RBAC (3개 역할), *소유자 본인 수정* 같은 컨텍스트 권한만 ABAC. 복잡도 낮으면서 표현력 충분. **교훈: 처음부터 ABAC 전면 도입은 *과한 복잡도*, 혼용이 답.**
+
+</details>
 
 ### 🔄 꼬리질문 3: 정책 엔진 도구는 뭐가 있나요?
 
@@ -572,6 +698,15 @@ allow {
 - **Casbin**: 가벼운 RBAC/ABAC 라이브러리
 
 도입 시 *정책 변경 빈도*와 *팀 학습 비용*을 같이 평가.
+
+<details>
+<summary>📋 <b>사례</b></summary>
+
+<br/>
+
+작은 SaaS는 Casbin (가볍게 시작), 규모 커지자 OPA Rego로 마이그레이션. Cedar는 *AWS 환경 한정*. **교훈: 정책 엔진도 *팀 규모와 함께 진화*.**
+
+</details>
 
 ---
 

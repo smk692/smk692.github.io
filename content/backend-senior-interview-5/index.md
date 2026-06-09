@@ -91,6 +91,15 @@ SagaOrchestrator
 
 핵심은 **eventual consistency 윈도우를 명시적으로 정의**하는 것입니다.
 
+<details>
+<summary>📋 <b>사례</b></summary>
+
+<br/>
+
+PG사 일시 장애로 환불 보상 실패 → DLQ에 격리, 운영 콘솔에서 사가 ID 조회 + 멱등키로 수동 재실행. 평균 회복 15분. **교훈: 보상 실패까지 가정한 *운영 콘솔*이 SAGA의 절반.**
+
+</details>
+
 ### 🔄 꼬리질문 2: Choreography의 단점은?
 
 **기대 답변:**
@@ -100,6 +109,15 @@ SagaOrchestrator
 
 → 흐름이 5단계 넘으면 Orchestration으로 전환 권장.
 
+<details>
+<summary>📋 <b>사례</b></summary>
+
+<br/>
+
+Choreography 7단계 흐름 디버깅에 *어디서 멈췄는지* 추적만 1시간. Orchestration으로 전환 + 사가 ID 기반 대시보드 → 1분 내 진단. **교훈: 흐름 5단계 넘으면 *반드시* Orchestration.**
+
+</details>
+
 ### 🔄 꼬리질문 3: SAGA vs Outbox 패턴 차이는?
 
 **기대 답변:**
@@ -107,6 +125,15 @@ SagaOrchestrator
 - **Outbox**: 로컬 트랜잭션과 이벤트 발행을 *원자적*으로 묶는 패턴
 
 둘은 보완 관계입니다. SAGA 각 단계에서 이벤트 발행의 신뢰성을 Outbox로 보장.
+
+<details>
+<summary>📋 <b>사례</b></summary>
+
+<br/>
+
+SAGA 도입 직후 *이벤트 유실*로 보상 안 됨 — Outbox 추가해 단계별 이벤트 원자성 보장. 유실 0건. **교훈: SAGA의 신뢰성은 *Outbox로 받침*해야 완전.**
+
+</details>
 
 ---
 
@@ -186,6 +213,15 @@ Order Service (PG)
 - 외부 알림에는 프로젝션 완료 후 전송
 - 운영 메트릭으로 lag(p99) 지표화
 
+<details>
+<summary>📋 <b>사례</b></summary>
+
+<br/>
+
+상품 등록 직후 셀러 화면이 ClickHouse 프로젝션 lag 5초로 *빈 화면* 표시 → 본인 행동 직후는 OLTP fallback. 사용자 혼란 사라짐. **교훈: Read Your Writes는 *본인 행동만 즉시 반영*하는 패턴.**
+
+</details>
+
 ### 🔄 꼬리질문 2: Event Sourcing과 같이 가야 하나요?
 
 **기대 답변:**
@@ -195,12 +231,30 @@ Order Service (PG)
 
 대부분은 CQRS만 도입해도 효과가 충분합니다.
 
+<details>
+<summary>📋 <b>사례</b></summary>
+
+<br/>
+
+CQRS는 도입했지만 ES는 *명시적으로 거부* — 결제 외 도메인은 감사 요구 없음. 운영 단순성 유지. **교훈: ES는 *진짜 감사 요구사항*이 있을 때만, 멋있어 보여서 도입은 안티패턴.**
+
+</details>
+
 ### 🔄 꼬리질문 3: 프로젝션 갱신은 어떻게 안정화하나요?
 
 **기대 답변:**
 - CDC(Debezium 등)로 카프카에 변경 흘리고 컨슈머가 read DB 갱신
 - 멱등 처리 + 순서 보장(파티션 키 = aggregate id)
 - 실패 시 재처리 가능하도록 오프셋·DLQ 관리
+
+<details>
+<summary>📋 <b>사례</b></summary>
+
+<br/>
+
+Debezium + Kafka로 CDC 파이프라인. 컨슈머 재시작 시에도 *오프셋 기반 재처리*로 데이터 정합성 보장. lag p99는 Datadog 알람. **교훈: CDC는 *재처리 시나리오*까지 설계해야 운영 안정.**
+
+</details>
 
 ---
 
@@ -266,12 +320,30 @@ Order Service (PG)
 - 게이트웨이 자체에 서킷 브레이커
 - 인증 캐시(JWT 검증 결과)로 ID provider 의존도 축소
 
+<details>
+<summary>📋 <b>사례</b></summary>
+
+<br/>
+
+게이트웨이 2대 → 6대로 확장 + 무상태로 유지. 한 대 다운에도 트래픽 영향 0. JWT 검증 결과 Redis 5분 캐시로 ID provider 부하 90% 감소. **교훈: 게이트웨이도 *마이크로서비스처럼* 다중화 + 캐시.**
+
+</details>
+
 ### 🔄 꼬리질문 2: 게이트웨이가 병목이 될 때 어떤 신호를 보나요?
 
 **기대 답변:**
 - 게이트웨이 p99 vs 백엔드 p99 격차
 - 커넥션 풀 사용률, keep-alive 재사용률
 - TLS 핸드셰이크 비율(0-RTT/session resumption 적용 효과)
+
+<details>
+<summary>📋 <b>사례</b></summary>
+
+<br/>
+
+백엔드 p99 100ms인데 게이트웨이 p99 800ms → reactor netty 이벤트 루프 100% → 라우트별 Bulkhead로 자원 격리. p99 동일화. **교훈: *게이트웨이 vs 백엔드 격차*가 가장 명확한 병목 신호.**
+
+</details>
 
 ### 🔄 꼬리질문 3: 게이트웨이 vs Service Mesh, 어떻게 나누나요?
 
@@ -280,6 +352,15 @@ Order Service (PG)
 - **Service Mesh**: 내부 서비스 간 (east-west) — mTLS, 재시도, 트래픽 분할
 
 둘은 보완. 작은 조직은 게이트웨이만으로 시작, 서비스 50+ 넘으면 Mesh 검토.
+
+<details>
+<summary>📋 <b>사례</b></summary>
+
+<br/>
+
+서비스 60개 도달 시점에 Linkerd 도입 — 자동 mTLS + 재시도 + 트래픽 분할. 게이트웨이는 north-south만 담당. **교훈: 50+ 서비스는 *Mesh가 운영 비용*보다 절감 효과가 큼.**
+
+</details>
 
 ---
 
@@ -348,12 +429,30 @@ Order Service (PG)
 - 동기 호출은 *오픈 호스트 서비스* 형태의 명시적 계약
 - 직접 DB 조회는 금지 (Anti-Corruption Layer로 격리)
 
+<details>
+<summary>📋 <b>사례</b></summary>
+
+<br/>
+
+결제 → 정산 통신을 *결제 도메인 이벤트* (`PaymentCompleted`)로 전환. 정산 모듈은 이벤트만 구독, 결제 내부 변경에 영향 없음. **교훈: 이벤트는 *컨텍스트 간 결합도를 결정적으로 낮춤*.**
+
+</details>
+
 ### 🔄 꼬리질문 2: 도메인 모델과 ORM 엔티티가 같아야 하나요?
 
 **기대 답변:**
 규모에 따라 다릅니다.
 - 작은 도메인: 같아도 OK (`@Entity` = 도메인 객체)
 - 복잡 도메인: 분리 (도메인 객체 + 영속 엔티티 + 매핑). 운영 부담은 늘지만 도메인 규칙이 ORM에 오염되지 않음
+
+<details>
+<summary>📋 <b>사례</b></summary>
+
+<br/>
+
+결제 도메인은 분리(`Payment` 도메인 + `PaymentEntity` ORM + Mapper), 단순한 알림 도메인은 `@Entity`만. 둘 다 정답. **교훈: *도메인 복잡도에 비례한* 추상화가 비용 효율.**
+
+</details>
 
 ### 🔄 꼬리질문 3: 마이크로서비스로 분리하는 기준은?
 
@@ -364,6 +463,15 @@ Order Service (PG)
 - 장애 격리 SLO가 다름
 
 코드 모듈로 시작해 문제가 보일 때 분리하는 *모듈러 모놀리스 → MSA* 흐름이 안전합니다.
+
+<details>
+<summary>📋 <b>사례</b></summary>
+
+<br/>
+
+모듈러 모놀리스 1년 운영 후 결제만 MSA로 분리 — 배포 주기·스케일·장애 SLO 모두 다름. 다른 모듈은 모놀리스 유지. **교훈: *전부 MSA*가 아니라 *진짜 필요한 도메인만* 분리.**
+
+</details>
 
 ---
 
@@ -471,6 +579,15 @@ fun onOrderCreated(event: OrderCreatedEvent) {
 
 `AFTER_COMMIT`이 기본, 단 커밋 후 발행 실패는 별도로 잡아 outbox로 보완.
 
+<details>
+<summary>📋 <b>사례</b></summary>
+
+<br/>
+
+커밋 전 발행 코드 → 트랜잭션 롤백 후 *알림은 발송된* 사고. 사용자에게 "주문 생성됨" SMS만 가고 실제 주문은 없음. AFTER_COMMIT으로 즉시 교체. **교훈: 커밋 전 발행은 *데이터 정합성의 적*.**
+
+</details>
+
 ### 🔄 꼬리질문 2: Outbox 폴링의 DB 부하는 어떻게 제어하나요?
 
 **기대 답변:**
@@ -478,12 +595,30 @@ fun onOrderCreated(event: OrderCreatedEvent) {
 - 발행 후 즉시 삭제 또는 status 업데이트
 - 규모가 커지면 CDC(Debezium)로 전환해 폴링 자체를 제거
 
+<details>
+<summary>📋 <b>사례</b></summary>
+
+<br/>
+
+Outbox 폴링 1초마다 → DB QPS 10% 추가. Debezium CDC로 전환해 폴링 제거, lag 1s → 50ms. **교훈: Outbox는 *시작*이고 CDC는 *규모의 답*.**
+
+</details>
+
 ### 🔄 꼬리질문 3: 컨슈머 측 멱등성은 어떻게 보장하나요?
 
 **기대 답변:**
 - 이벤트 ID를 유니크 키로 두고 처리 이력 테이블에 insert
 - 처리 완료 후 ack
 - 멱등 키 보존 기간을 비즈니스 윈도우보다 길게
+
+<details>
+<summary>📋 <b>사례</b></summary>
+
+<br/>
+
+알림 컨슈머에 `processed_events(event_id PK, processed_at)` 테이블 추가, INSERT 실패면 skip. Kafka rebalance로 중복 메시지가 와도 알림 중복 0건. **교훈: 멱등성은 *공급자*보다 *소비자*가 책임지는 게 안전.**
+
+</details>
 
 ---
 

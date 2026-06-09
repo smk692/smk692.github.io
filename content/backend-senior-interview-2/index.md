@@ -66,6 +66,15 @@ series: "시니어 백엔드 면접 질문"
 
 Resilience4j, Hystrix(deprecated) 등으로 구현합니다.
 
+<details>
+<summary>📋 <b>사례</b></summary>
+
+<br/>
+
+추천 시스템 외부 호출에 Resilience4j 적용 — 슬로우 콜 비율 50%·p99 1s 초과 시 Open, 30s 후 Half-Open 5건 테스트. ML 모델 갱신 시 자동 차단 → 이전 추천 캐시 반환. **교훈: 에러뿐 아니라 *슬로우 콜*도 트리거해야 의미 있음.**
+
+</details>
+
 ### 🔄 꼬리질문 2: Fallback은 어떻게 설계하시겠어요?
 
 **기대 답변:**
@@ -74,6 +83,15 @@ Resilience4j, Hystrix(deprecated) 등으로 구현합니다.
 - **기능 제한** (추천 기능 비활성화 등)
 - **에러 메시지**와 함께 graceful degradation
 
+<details>
+<summary>📋 <b>사례</b></summary>
+
+<br/>
+
+추천 fallback: 1순위 Redis 캐시된 이전 추천(TTL 1h) → 2순위 카테고리 인기상품. 사용자 화면에 *fallback 표시 없이* 정상 추천처럼 보임. 이탈률 영향 0.3%로 제한. **교훈: Fallback은 *기능 비활성화*가 아니라 *그럴듯한 대체*.**
+
+</details>
+
 ### 🔄 꼬리질문 3: Timeout은 어떻게 설정하시나요?
 
 **기대 답변:**
@@ -81,6 +99,15 @@ Resilience4j, Hystrix(deprecated) 등으로 구현합니다.
 - Connection Timeout과 Read Timeout 분리
 - 너무 길면 스레드 점유, 너무 짧으면 정상 응답도 실패 처리
 - 실제 트래픽 기반으로 지속 튜닝
+
+<details>
+<summary>📋 <b>사례</b></summary>
+
+<br/>
+
+PG사 timeout 30s → 3s로 축소. 평소 p99 250ms × 3배 + 안전 마진 = 1s read, connection 500ms. 정상 응답 실패 0%, 장애 격리 즉시. **교훈: timeout은 *외부 p99 × 2~3*이 마지노선, 30s 같은 *모르겠으면 길게*는 안티패턴.**
+
+</details>
 
 ---
 
@@ -137,6 +164,15 @@ Resilience4j, Hystrix(deprecated) 등으로 구현합니다.
 - **Dead Letter Queue**: 재처리 불가 메시지 별도 보관
 - Consumer Group 리밸런싱 전략 설정
 
+<details>
+<summary>📋 <b>사례</b></summary>
+
+<br/>
+
+알림 컨슈머 OOM kill → auto commit이라 *처리 안 된 메시지를 commit*해서 유실 발생. 수동 commit + 컨슈머 시작 시 last offset 검증으로 전환. 이후 6개월 유실 0건. **교훈: Auto commit은 *유실 함정*, 시니어 코드에서 발견 즉시 교체.**
+
+</details>
+
 ### 🔄 꼬리질문 2: 메시지 순서 보장은 어떻게 하나요?
 
 **기대 답변:**
@@ -144,12 +180,30 @@ Kafka에서 **같은 파티션** 내에서만 순서 보장됩니다.
 - 순서가 중요한 데이터는 같은 키(예: 사용자 ID)로 같은 파티션에 보냄
 - 파티션 수 늘리면 순서 보장 범위도 고려해야 함
 
+<details>
+<summary>📋 <b>사례</b></summary>
+
+<br/>
+
+주문 상태 변화(`CREATED → PAID → SHIPPED`)를 파티션 키 = `order_id`로 발행 → 같은 주문은 같은 파티션, 컨슈머 단일 스레드로 순서 보장. 컨슈머 수 늘려도 OK. **교훈: 순서는 *글로벌이 아닌 aggregate 단위*로 설계.**
+
+</details>
+
 ### 🔄 꼬리질문 3: 이벤트 소싱(Event Sourcing)과 CQRS를 설명해주세요.
 
 **기대 답변:**
 - **Event Sourcing**: 상태 대신 이벤트(변경 이력)를 저장. 현재 상태는 이벤트 리플레이로 복원.
 - **CQRS**: Command(쓰기)와 Query(읽기) 모델 분리. 각각 최적화 가능.
 - 복잡도가 높아 모든 상황에 적합하지 않음. 감사 로그 필수, 복잡한 도메인에서 고려.
+
+<details>
+<summary>📋 <b>사례</b></summary>
+
+<br/>
+
+거래 내역 도메인에 ES 도입 — 모든 잔액 변화를 이벤트로 저장, 현재 잔액은 projection. 감사 요구사항 만족 + 리플레이로 *과거 시점 잔액* 재현 가능. 단 운영 부담 큼. **교훈: ES는 *감사·이력 재현*이 본질적으로 필요한 도메인에만.**
+
+</details>
 
 ---
 
@@ -212,6 +266,15 @@ Kafka에서 **같은 파티션** 내에서만 순서 보장됩니다.
   3. 기존 컬럼 삭제 (완전히 전환 후)
 - Flyway, Liquibase로 마이그레이션 버전 관리
 
+<details>
+<summary>📋 <b>사례</b></summary>
+
+<br/>
+
+테이블 컬럼 rename을 *한 번에 시도*했다가 구 코드 5xx 발생, 30분간 부분 장애. 이후 모든 스키마 변경에 Expand-Contract 의무화 — `old_col` 유지 + `new_col` 추가 → 코드 전환 → 1주 후 drop. **교훈: rename·drop은 *3 배포 이상 분리* 필수.**
+
+</details>
+
 ### 🔄 꼬리질문 2: Feature Flag는 왜 쓰나요?
 
 **기대 답변:**
@@ -220,6 +283,15 @@ Kafka에서 **같은 파티션** 내에서만 순서 보장됩니다.
 - 장애 시 빠른 기능 비활성화
 - LaunchDarkly, Unleash 같은 도구 활용
 
+<details>
+<summary>📋 <b>사례</b></summary>
+
+<br/>
+
+신규 결제 흐름 도입 시 Unleash로 `new-checkout` 플래그 — VIP 사용자 5% → 30% → 100%로 점진. 0.1% 에러 발견 시 1초 만에 off 가능. **교훈: Feature Flag는 *배포 ≠ 릴리스* 원칙을 코드 수준에서 강제.**
+
+</details>
+
 ### 🔄 꼬리질문 3: 롤백 기준은 어떻게 정하시나요?
 
 **기대 답변:**
@@ -227,6 +299,15 @@ Kafka에서 **같은 파티션** 내에서만 순서 보장됩니다.
 - **Latency**: P99 응답시간 급증
 - **Business Metrics**: 전환율, 결제 성공률 등 핵심 지표 이상
 - 자동화된 롤백(Automated Rollback)과 알림 설정
+
+<details>
+<summary>📋 <b>사례</b></summary>
+
+<br/>
+
+카나리 배포에 *비즈니스 메트릭 게이트* 추가 — 5분간 결제 성공률 < 98%면 자동 롤백. 기술 메트릭(에러율)은 정상이지만 *결제 전환율 하락*이 새 버전 영향임을 자동 감지. **교훈: 기술 메트릭만 보면 *비즈니스 영향 놓침*, KPI 자동 게이트 필수.**
+
+</details>
 
 ---
 
@@ -277,6 +358,15 @@ Kafka에서 **같은 파티션** 내에서만 순서 보장됩니다.
 - **Metrics**: 집계된 수치. 트렌드 파악, 알림 설정.
 - **Traces**: 요청의 전체 흐름 추적. 분산 시스템 디버깅.
 
+<details>
+<summary>📋 <b>사례</b></summary>
+
+<br/>
+
+장애 RCA: Metrics(에러율 spike 인지) → Traces(어느 서비스에서 시작했는지) → Logs(해당 span의 stack trace) 흐름으로 5분 만에 원인 도달. 한 가지 축만 있었으면 *추정만* 가능. **교훈: 세 축은 *별도가 아니라 연결*되어야 가치.**
+
+</details>
+
 ### 🔄 꼬리질문 2: 분산 트레이싱을 어떻게 구현하나요?
 
 **기대 답변:**
@@ -285,6 +375,15 @@ Kafka에서 **같은 파티션** 내에서만 순서 보장됩니다.
 - 도구: Jaeger, Zipkin, OpenTelemetry
 - 로그에 Trace ID 포함하여 연관 검색 가능
 
+<details>
+<summary>📋 <b>사례</b></summary>
+
+<br/>
+
+15개 마이크로서비스에 OpenTelemetry SDK + Jaeger 백엔드. 게이트웨이가 trace ID 발급, 모든 서비스가 `traceparent` 헤더 propagate. 로그 포맷에 `trace_id` 필드 자동 추가. Kibana에서 trace_id로 *요청 전체 흐름* 즉시 추적. **교훈: 도입 비용 1주, ROI는 *첫 미스터리 장애*에서 즉시 회수.**
+
+</details>
+
 ### 🔄 꼬리질문 3: 알림 피로(Alert Fatigue)는 어떻게 방지하나요?
 
 **기대 답변:**
@@ -292,6 +391,15 @@ Kafka에서 **같은 파티션** 내에서만 순서 보장됩니다.
 - **그룹핑**: 동일 이슈 알림 묶기
 - **Runbook**: 알림별 대응 절차 문서화
 - **주기적 리뷰**: 의미 없는 알림 제거
+
+<details>
+<summary>📋 <b>사례</b></summary>
+
+<br/>
+
+야간 P1 알람 일평균 12회 → 운영팀 번아웃. 분기 알람 리뷰에서 *실제 대응 액션 없는* 7개 제거 + 5분 그룹핑 적용. 야간 알람 일평균 3회로 안정화. **교훈: 알람은 *적게 만드는 것*이 아니라 *대응 가능한 것만 남기는* 운영 작업.**
+
+</details>
 
 ---
 
@@ -352,12 +460,30 @@ Kafka에서 **같은 파티션** 내에서만 순서 보장됩니다.
 - **재발 방지**: 어떻게 막을 것인지 (액션 아이템)
 - **Blame-free**: 개인 탓 아닌 시스템 개선 관점
 
+<details>
+<summary>📋 <b>사례</b></summary>
+
+<br/>
+
+포스트모템 템플릿에 *액션 아이템 owner + 마감일* 필수화 → 90% 완료율 (이전 40%). 분기마다 미완료 액션 리뷰. 같은 패턴 장애 재발 60% 감소. **교훈: 포스트모템의 가치는 *문서가 아니라 액션 아이템 실행률*.**
+
+</details>
+
 ### 🔄 꼬리질문 2: RTO와 RPO가 뭔가요?
 
 **기대 답변:**
 - **RTO (Recovery Time Objective)**: 복구 목표 시간. 장애 후 얼마 안에 복구해야 하는가.
 - **RPO (Recovery Point Objective)**: 복구 목표 시점. 얼마만큼의 데이터 손실을 허용하는가.
 - 비즈니스 요구사항에 따라 백업 주기, 복제 전략 결정
+
+<details>
+<summary>📋 <b>사례</b></summary>
+
+<br/>
+
+결제 도메인 SLA — RTO 15분, RPO 0초. 동기 복제 + 멀티 AZ로 RPO 0 달성, 자동 페일오버 스크립트로 RTO 평균 4분. 정기 DR 훈련으로 검증. **교훈: RTO/RPO는 *비즈니스 손실 비용으로 환산*해 정함.**
+
+</details>
 
 ### 🔄 꼬리질문 3: Chaos Engineering 해보신 적 있나요?
 
@@ -366,6 +492,15 @@ Kafka에서 **같은 파티션** 내에서만 순서 보장됩니다.
 - **Netflix Chaos Monkey**: 랜덤 인스턴스 종료
 - **Gremlin**, **LitmusChaos** 등 도구 활용
 - 프로덕션 적용 전 스테이징에서 충분히 테스트
+
+<details>
+<summary>📋 <b>사례</b></summary>
+
+<br/>
+
+스테이징에서 LitmusChaos로 *DB 마스터 강제 종료* 실험 → 자동 페일오버가 *예상 30초가 아니라 2분* 걸림 발견. 페일오버 스크립트 개선해 운영 환경 적용 전 해결. **교훈: Chaos는 *훈련*이 아니라 *가정의 검증*.**
+
+</details>
 
 ---
 

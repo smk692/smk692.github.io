@@ -104,6 +104,15 @@ Retry-After: 32
 
 Redis 클러스터에선 같은 키가 같은 슬롯에 떨어지도록 hashtag 사용.
 
+<details>
+<summary>📋 <b>사례</b></summary>
+
+<br/>
+
+INCR + EXPIRE를 *2 호출로 분리*했더니 race condition으로 카운트 누락 발생 → Lua 스크립트 단일 호출로 원자화. 누락 0건. **교훈: Rate Limit의 *모든 read-modify-write*는 Lua로 묶기.**
+
+</details>
+
 ### 🔄 꼬리질문 2: Sliding Window의 메모리 비용은 어떻게 관리하나요?
 
 **기대 답변:**
@@ -111,12 +120,30 @@ Redis 클러스터에선 같은 키가 같은 슬롯에 떨어지도록 hashtag 
 - 운영에선 **Sliding Window Counter**(현재·이전 윈도우 가중 평균)로 절충
 - TTL을 짧게 둬 자동 정리
 
+<details>
+<summary>📋 <b>사례</b></summary>
+
+<br/>
+
+완전 sliding으로 시작 → 1억 사용자 × 평균 60건 = Redis 메모리 24GB. Sliding Window Counter로 전환 후 100MB. 정확도 98% 유지. **교훈: *완전 정확*보다 *비용 대비 충분*.**
+
+</details>
+
 ### 🔄 꼬리질문 3: 클라이언트가 한도 초과면 어떤 응답을 주나요?
 
 **기대 답변:**
 - `429 Too Many Requests` + `Retry-After` 헤더
 - `X-RateLimit-*` 헤더로 잔여량 노출
 - 큐 기반 비동기 백오프 권장 (지수 + jitter)
+
+<details>
+<summary>📋 <b>사례</b></summary>
+
+<br/>
+
+429 + Retry-After 헤더 도입 후 클라이언트 SDK가 자동 백오프 → API 폭주 패턴 70% 감소. 헤더 *없을 때*는 클라이언트가 즉시 재시도해 더 망함. **교훈: 헤더로 *클라이언트 협조*를 유도.**
+
+</details>
 
 ---
 
@@ -198,6 +225,15 @@ resilience4j.bulkhead:
 - 최대 throughput에서 latency가 급격히 꺾이는 지점 (knee)
 - 실험적으로 부하 테스트(k6, JMeter)로 검증
 
+<details>
+<summary>📋 <b>사례</b></summary>
+
+<br/>
+
+평소 p99 동시성 18로 임계치 30 설정 → 평소 충분히 여유, 장애 시 *격리 효과 명확*. k6 부하 테스트로 knee point 검증. **교훈: 1.5~2배가 *너무 적지도 너무 많지도 않은* 절충점.**
+
+</details>
+
 ### 🔄 꼬리질문 2: 풀 분리의 오버헤드는 없나요?
 
 **기대 답변:**
@@ -207,12 +243,30 @@ resilience4j.bulkhead:
 
 Virtual Thread 환경이면 스레드 풀 대신 **세마포어**로 동시성 상한.
 
+<details>
+<summary>📋 <b>사례</b></summary>
+
+<br/>
+
+처음 15개 외부 호출 *전부 풀 분리* → 메모리 80% 사용. 핵심 5개만 분리, 나머지 공유로 재설계 → 메모리 40%. **교훈: Bulkhead도 *과하면 자원 낭비*, 80/20 법칙으로 선별.**
+
+</details>
+
 ### 🔄 꼬리질문 3: 거절 전략은 어떻게 설계하나요?
 
 **기대 답변:**
 - 큐 가득 차면 즉시 거절 (`RejectedExecutionException`)
 - 비즈니스에 따라 캐시된 stale 데이터로 fallback
 - 클라이언트에 `503 Service Unavailable` + `Retry-After`
+
+<details>
+<summary>📋 <b>사례</b></summary>
+
+<br/>
+
+SMS Bulkhead 가득 시 *즉시 거절* + "발송 지연 안내" UI. 큐 대기로 30초 hang 대신 즉시 응답 → 사용자 경험·시스템 회복력 둘 다 개선. **교훈: 빠른 실패가 *느린 성공보다* 시스템 친화적.**
+
+</details>
 
 ---
 
@@ -298,6 +352,15 @@ fun fallback(userId: Long, e: Throwable): List<Product> {
 - 성공률 N% 넘으면 Closed로 복귀
 - 실패하면 다시 Open + 대기 시간 지수 증가
 
+<details>
+<summary>📋 <b>사례</b></summary>
+
+<br/>
+
+Half-Open에서 5건 테스트, 3건 이상 성공 + p99 < 1s를 복구 기준화. 실패 시 wait 60s·120s·240s 지수 증가. ML 모델 *부분 복구* 상황에서 *너무 빨리 Closed* 방지. **교훈: 복구 판단은 *건수 + 지연*을 같이 봐야 안전.**
+
+</details>
+
 ### 🔄 꼬리질문 2: Fallback의 데이터 품질은 어떻게 다루나요?
 
 **기대 답변:**
@@ -305,12 +368,30 @@ fun fallback(userId: Long, e: Throwable): List<Product> {
 - 빈 응답 vs stale, 도메인에 따라 결정 (결제는 빈 응답, 추천은 stale)
 - 사용자 경험에서 *오답*과 *지연*의 비용 비교
 
+<details>
+<summary>📋 <b>사례</b></summary>
+
+<br/>
+
+추천: stale OK (이전 추천 + 인기상품 fallback), 결제 잔액: stale 금지 (정확한 값 또는 에러). 도메인별 다른 정책. **교훈: Fallback은 *기술 결정*이 아니라 *비즈니스 결정*.**
+
+</details>
+
 ### 🔄 꼬리질문 3: 서킷 브레이커와 재시도를 같이 쓸 때 주의점은?
 
 **기대 답변:**
 - 서킷이 Open이면 재시도하지 않음 (즉시 Fallback)
 - 재시도 → 서킷 카운트 영향 분리 (재시도 누적이 서킷을 잘못 열게 함)
 - 재시도는 idempotent 호출에만
+
+<details>
+<summary>📋 <b>사례</b></summary>
+
+<br/>
+
+재시도가 서킷 실패 카운트에 가산되어 *정상보다 빠르게 Open*되는 사고 → 재시도 메트릭과 서킷 메트릭 분리. **교훈: 재시도 = 분산, 서킷 = 차단, *역할 분리* 필수.**
+
+</details>
 
 ---
 
@@ -394,12 +475,30 @@ webClient.get()
 - 하위가 이미 죽었는데 상위가 재시도 → 회복 자체를 막음
 - 클라이언트가 끊겨도 서버는 계속 작업 → 자원 낭비
 
+<details>
+<summary>📋 <b>사례</b></summary>
+
+<br/>
+
+일률 5s timeout → 상위가 *이미 4s에 timeout 했는데* 하위는 5s까지 작업 계속. 좀비 작업 일 1만 건. Deadline 전파로 0건. **교훈: 일률 timeout은 *자원 낭비의 주범*.**
+
+</details>
+
 ### 🔄 꼬리질문 2: deadline propagation을 어떻게 구현하나요?
 
 **기대 답변:**
 - gRPC: 메타데이터 `grpc-timeout` 자동 전파
 - HTTP: 커스텀 헤더(예: `X-Deadline-Ms`) + 인터셉터에서 남은 시간 계산
 - 컨텍스트(Spring `WebClient`의 `responseTimeout`)에 남은 deadline 반영
+
+<details>
+<summary>📋 <b>사례</b></summary>
+
+<br/>
+
+HTTP 환경에서 `X-Deadline-Ms` 헤더 + Servlet Filter로 남은 시간 계산. 모든 외부 호출에 자동 적용. gRPC 전환 없이도 cascade 차단. **교훈: HTTP에서도 *deadline 전파는 직접 구현 가능*.**
+
+</details>
 
 ### 🔄 꼬리질문 3: 클라이언트 cancel을 백엔드까지 어떻게 전파하나요?
 
@@ -408,6 +507,15 @@ webClient.get()
 - Servlet은 `AsyncContext` + 클라이언트 disconnect 감지
 - Reactive(WebFlux)는 Publisher cancel 자동 전파
 - 백엔드에서 DB 쿼리도 cancel(`pg_cancel_backend`)까지 연결
+
+<details>
+<summary>📋 <b>사례</b></summary>
+
+<br/>
+
+WebFlux + R2DBC 환경에서 클라이언트 cancel이 *DB 쿼리까지 자동 전파* — 30초 분석 쿼리도 즉시 중단. PG 부하 30% 감소. **교훈: cancel 전파는 *말단까지 연결*되어야 효과.**
+
+</details>
 
 ---
 
@@ -503,6 +611,15 @@ fun callPg(req: PaymentRequest): PaymentResult {
 
 대부분의 케이스에서 **Full Jitter**가 thundering herd를 가장 잘 막습니다.
 
+<details>
+<summary>📋 <b>사례</b></summary>
+
+<br/>
+
+Equal Jitter로 시작 → 복구 직후 1초간 38% 재시도, 여전히 PG사 다운. Full Jitter로 전환 후 12%까지 평탄화. **교훈: Full Jitter는 *그냥 기본값으로* 채택해도 무방.**
+
+</details>
+
 ### 🔄 꼬리질문 2: 멱등성이 보장 안 된 호출도 재시도하나요?
 
 **기대 답변:**
@@ -512,12 +629,30 @@ fun callPg(req: PaymentRequest): PaymentResult {
 
 서버가 멱등키를 받아 처리 이력을 저장하면 클라이언트는 안심하고 재시도 가능합니다.
 
+<details>
+<summary>📋 <b>사례</b></summary>
+
+<br/>
+
+PG 결제 호출에 `Idempotency-Key` 헤더 도입 (Stripe 패턴). 같은 키 재요청은 서버가 기존 응답 반환. 중복 결제 사고 0건. **교훈: 멱등키는 *클라이언트 재시도 안전망*.**
+
+</details>
+
 ### 🔄 꼬리질문 3: 서킷 브레이커와 재시도 jitter를 어떻게 조합하나요?
 
 **기대 답변:**
 - 서킷 Open이면 재시도 자체 차단 (즉시 Fallback)
 - 서킷 Closed/Half-open일 때만 재시도 (지수 백오프 + Full Jitter)
 - 재시도 횟수는 서킷 카운트에서 분리해 별도 메트릭으로 관측
+
+<details>
+<summary>📋 <b>사례</b></summary>
+
+<br/>
+
+`@CircuitBreaker` + `@Retry`(Full Jitter) 조합. 서킷 Open은 즉시 Fallback, Closed/Half-Open만 jitter retry. 재시도 카운트와 서킷 카운트 Micrometer로 분리. **교훈: 두 도구는 *역할이 다름*, 같이 쓰되 메트릭은 분리.**
+
+</details>
 
 ---
 

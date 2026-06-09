@@ -96,6 +96,15 @@ ALTER TABLE notifications SET (
 
 `(A=, B=, C BETWEEN)` 순서가 안정적입니다.
 
+<details>
+<summary>📋 <b>사례</b></summary>
+
+<br/>
+
+`(created_at, status)`로 만든 인덱스 → `WHERE status='ACTIVE' AND created_at > ...` 쿼리에서 풀스캔. `(status, created_at)` 순서로 재생성 → 3.2초 → 45ms. **교훈: 등치 컬럼이 *항상* 인덱스 선두.**
+
+</details>
+
 ### 🔄 꼬리질문 2: 커버링 인덱스가 항상 좋은 건가요?
 
 **기대 답변:**
@@ -106,6 +115,15 @@ ALTER TABLE notifications SET (
 
 자주 쓰이는 조회만 선별적으로 커버링.
 
+<details>
+<summary>📋 <b>사례</b></summary>
+
+<br/>
+
+페이징 쿼리에 커버링 인덱스 추가 → 40ms → 8ms, 그러나 인덱스 크기 1.2GB → 2.8GB로 *버퍼 풀 적중률 감소*. 핫 쿼리에만 선별 적용. **교훈: 커버링은 *읽기 최적화*와 *쓰기·메모리 비용*의 trade-off.**
+
+</details>
+
 ### 🔄 꼬리질문 3: JPA N+1과 인덱스의 관계는?
 
 **기대 답변:**
@@ -113,6 +131,15 @@ N+1은 *쿼리 횟수* 문제지만 인덱스가 없으면 N개의 풀스캔이 
 - ToOne 관계는 페치 조인으로 1쿼리화
 - ToMany는 `default_batch_fetch_size`로 IN 쿼리 (카르테시안 곱 회피)
 - FK 컬럼 인덱스는 기본으로 보장
+
+<details>
+<summary>📋 <b>사례</b></summary>
+
+<br/>
+
+`order.user`를 lazy로 두고 100건 조회 → 100번 SELECT + FK 인덱스 누락으로 매번 풀스캔. 페치 조인 + FK 인덱스 추가로 1쿼리 + 즉시 응답. **교훈: N+1은 *쿼리 횟수 + 인덱스* 둘 다 영향.**
+
+</details>
 
 ---
 
@@ -205,6 +232,15 @@ fun withdrawAtomic(id: Long, amount: BigDecimal): Int  // updated row count
 - MySQL/InnoDB: gap lock으로 막힘 (사실상 SERIALIZABLE 근접)
 - PostgreSQL: RR(엄밀히 snapshot isolation)이라 phantom은 막지만 *write skew*는 발생 → 필요 시 SERIALIZABLE
 
+<details>
+<summary>📋 <b>사례</b></summary>
+
+<br/>
+
+PG에서 *의사가 동시에 휴가 신청해 응급실에 0명 남는* write skew 발생 → SERIALIZABLE로 격리 수준 상향, 충돌 시 재시도. **교훈: RR(snapshot isolation)은 *완전한 직렬화 아님*, write skew 경계 필요.**
+
+</details>
+
 ### 🔄 꼬리질문 2: MVCC가 어떻게 격리 수준을 보장하나요?
 
 **기대 답변:**
@@ -214,12 +250,30 @@ fun withdrawAtomic(id: Long, amount: BigDecimal): Int  // updated row count
 
 비용은 **Undo/Old version 누적** → vacuum/cleanup 필요.
 
+<details>
+<summary>📋 <b>사례</b></summary>
+
+<br/>
+
+장기 실행 분석 쿼리 1시간 → Old version 누적으로 vacuum 못 함, dead tuple 폭증으로 쿼리 전체 느려짐. 분석 쿼리는 *read replica*로 분리. **교훈: MVCC 비용은 *장기 트랜잭션*이 가장 큼.**
+
+</details>
+
 ### 🔄 꼬리질문 3: 일관성을 더 높이면 처리량은 어떻게 변하나요?
 
 **기대 답변:**
 - SERIALIZABLE은 직렬화 가능 충돌 감지 비용 + retry 증가
 - 처리량은 보통 RC > RR > SERIALIZABLE
 - 비즈니스가 진짜로 필요한 격리만 선택. *모든 트랜잭션을 SERIALIZABLE*은 안티패턴.
+
+<details>
+<summary>📋 <b>사례</b></summary>
+
+<br/>
+
+전체 트랜잭션 SERIALIZABLE → 충돌 retry 폭증으로 처리량 50% 감소. 결제만 SERIALIZABLE, 나머지 RC 복귀 → 처리량 복구 + 정합성 유지. **교훈: 격리 수준은 *트랜잭션 단위*로 결정.**
+
+</details>
 
 ---
 
@@ -302,6 +356,15 @@ ALTER TABLE messages WITH compaction = {
 
 쓰기가 많으면 Tiered, 읽기가 많으면 Leveled.
 
+<details>
+<summary>📋 <b>사례</b></summary>
+
+<br/>
+
+로그 적재(write-heavy)에 Leveled → WA 5배로 디스크 IO 한계. STCS로 전환 후 WA 2배, 디스크 처리량 회복. 단 읽기 latency 약간 증가. **교훈: 워크로드(write/read 비율)로 Compaction 선택.**
+
+</details>
+
 ### 🔄 꼬리질문 2: Tombstone이 왜 비용이 되나요?
 
 **기대 답변:**
@@ -311,6 +374,15 @@ ALTER TABLE messages WITH compaction = {
 
 → 데이터 모델 단계에서 *영구 삭제 vs 갱신* 정책을 결정해야 합니다.
 
+<details>
+<summary>📋 <b>사례</b></summary>
+
+<br/>
+
+채팅방에 tombstone 10만 개 → `TombstoneOverwhelmingException`으로 읽기 자체 실패. 파티션 키에 `day` 추가해 파티션 분할. **교훈: tombstone 임계치는 *데이터 모델 설계의 신호*.**
+
+</details>
+
 ### 🔄 꼬리질문 3: 운영에서 amplification을 어떻게 모니터링하나요?
 
 **기대 답변:**
@@ -318,6 +390,15 @@ ALTER TABLE messages WITH compaction = {
 - LSM 엔진의 compaction 메트릭(rocksdb: `WRITE_AMP`)
 - SSD SMART의 wear leveling 지표
 - 알람은 *amp 비율 + 디스크 여유*로 조합
+
+<details>
+<summary>📋 <b>사례</b></summary>
+
+<br/>
+
+RocksDB metrics `WRITE_AMP` Grafana 알람 — 5배 초과 시 알림. Compaction 정책 조정 트리거. SSD SMART 마모도 70%면 교체. **교훈: WA 모니터링은 *디스크 수명·비용의 선행 지표*.**
+
+</details>
 
 ---
 
@@ -417,6 +498,15 @@ CREATE INDEX idx_documents_tenant_owner ON documents(tenant_id, owner_id);
 - HikariCP `connectionInitSql` + `connectionTestQuery` 활용
 - 풀 단위 검증 테스트 (다른 tenant ID로 회귀 테스트)
 
+<details>
+<summary>📋 <b>사례</b></summary>
+
+<br/>
+
+반납 시 RESET 누락 → 다음 tenant가 *이전 tenant 데이터* 조회 가능. CI에 *서로 다른 tenant ID로 풀 검증 테스트* 추가. 사고 0건. **교훈: 세션 변수는 *반납 시점 격리*가 핵심.**
+
+</details>
+
 ### 🔄 꼬리질문 2: 성능 영향은 어떻게 측정하나요?
 
 **기대 답변:**
@@ -424,12 +514,30 @@ CREATE INDEX idx_documents_tenant_owner ON documents(tenant_id, owner_id);
 - 정책 조건을 인덱스 첫 컬럼으로 두기
 - 통계 정보(extended statistics)로 옵티마이저 추정 보정
 
+<details>
+<summary>📋 <b>사례</b></summary>
+
+<br/>
+
+RLS 적용 직후 일부 쿼리 *풀스캔 회귀* — EXPLAIN ANALYZE로 인덱스가 tenant_id 포함 안 함 발견. 모든 인덱스 선두에 tenant_id 추가. **교훈: RLS 도입 시 *인덱스 전수 재검토* 필수.**
+
+</details>
+
 ### 🔄 꼬리질문 3: RLS vs 애플리케이션 필터, 언제 어느 쪽?
 
 **기대 답변:**
 - RLS: 데이터 격리가 *법적/계약적 의무*인 경우 (의료, 금융)
 - 애플리케이션 필터: 단일 팀이 소유, 코드 리뷰로 충분
 - **둘 다**: 깊이 방어(defense in depth)가 필요한 경우
+
+<details>
+<summary>📋 <b>사례</b></summary>
+
+<br/>
+
+의료 데이터(HIPAA 준수)에 *RLS + 앱 필터 둘 다* 적용 — 한쪽 누락에도 안전. 일반 SaaS는 *앱 필터만*. **교훈: 보안 요구사항이 *법적*이면 다층 방어, 그 외엔 단일 충분.**
+
+</details>
 
 ---
 
@@ -533,6 +641,15 @@ ANALYZE orders;
 - `CREATE STATISTICS s1 ON col_a, col_b FROM tbl` 로 다변량 통계 수집
 - 추정 오류로 nested loop이 풀스캔으로 바뀌는 케이스에 결정적
 
+<details>
+<summary>📋 <b>사례</b></summary>
+
+<br/>
+
+`customer_id`와 `status` 강한 상관관계 — 옵티마이저는 독립 가정으로 500만 추정 (실제 200). Extended Statistics 생성 후 정확한 추정 → plan flip 사라짐. **교훈: 상관관계 있는 컬럼은 *명시적 통계*로 보완.**
+
+</details>
+
 ### 🔄 꼬리질문 2: 논리 복제 슬롯도 같이 다뤄본 적 있나요?
 
 **기대 답변:**
@@ -540,12 +657,30 @@ ANALYZE orders;
 - `restart_lsn` 상시 모니터링, 미사용 슬롯 즉시 Drop
 - Fail-over 시 슬롯이 대기 서버로 복제되지 않으므로 **재생성 자동화 + LSN 정합성 검증** 필요
 
+<details>
+<summary>📋 <b>사례</b></summary>
+
+<br/>
+
+CDC 컨슈머 중단 → 슬롯이 WAL 1주일치 보관, 디스크 95% 도달 후 알람. 자동 *미사용 슬롯 Drop* 스크립트로 회피. **교훈: 슬롯은 *컨슈머 헬스체크*와 *디스크 알람* 두 가지가 필수.**
+
+</details>
+
 ### 🔄 꼬리질문 3: 통계 신선도를 어떻게 관리하나요?
 
 **기대 답변:**
 - autovacuum threshold를 핫 테이블 별로 조정
 - 대량 적재 후 수동 `ANALYZE`
 - 통계 샘플 비율(`default_statistics_target`)을 핫 컬럼만 100→1000 정도로 상향
+
+<details>
+<summary>📋 <b>사례</b></summary>
+
+<br/>
+
+마이그레이션 스크립트 끝에 *명시적 `ANALYZE`* 추가 — 다음 날 새벽 plan flip 사라짐. 핫 컬럼만 `default_statistics_target=1000`로 상향. **교훈: 통계 관리는 *마이그레이션 절차*의 일부.**
+
+</details>
 
 ---
 
