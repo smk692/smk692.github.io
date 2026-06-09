@@ -136,6 +136,34 @@
 </tr>
 </tbody>
 </table>
+<details>
+<summary>💡 <b>면접관 반응으로 읽는 시그널</b></summary>
+<br/>
+<p><strong>A1 — “합류 후 첫 한 달”:</strong></p>
+<ul>
+<li>✅ 좋은 신호: “구체적인 온보딩 계획을 보여드릴게요. 첫 2주는 코드베이스 이해, 3~4주차에 작은 PR…”</li>
+<li>⚠️ 위험 신호: “음… 그냥 자유롭게 적응하시면 돼요” → 온보딩 자산 부재</li>
+<li>🚨 빨간불: “다른 분들도 알아서 잘 하셨어요” → 의도된 무관심</li>
+</ul>
+<p><strong>A2 — “회의 반대 의견”:</strong></p>
+<ul>
+<li>✅ “OO님이 자주 다른 시각을 던지세요. 덕분에 작년에 ML 모델 도입 결정이 바뀌었어요” → 구체 사례 + 결과</li>
+<li>⚠️ “다들 잘 협력해요” → 갈등 회피</li>
+<li>🚨 “딱히 반대 의견이 나오진 않아요” → 침묵 문화</li>
+</ul>
+<p><strong>A6 — “기술 부채 비율”:</strong></p>
+<ul>
+<li>✅ “분기마다 20%를 기술 부채에 할당해요. 작년에 결제 모듈 리팩토링도…”</li>
+<li>⚠️ “필요할 때 해요” → 비계획적, 우선순위 밀림</li>
+<li>🚨 “기능 개발이 우선이라…” → 부채 누적</li>
+</ul>
+<p><strong>현장 팁:</strong></p>
+<ul>
+<li>망설임 시간이 길면 <em>준비 안 된 답변</em></li>
+<li>시선이 다른 면접관 쪽으로 가면 <em>공유된 답이 없다는 신호</em></li>
+<li>구체 사례 없이 일반론만 나오면 <em>실제로는 안 되는 일</em>일 가능성</li>
+</ul>
+</details>
 <hr>
 <h2 id="b-운영장애-4선" style="position:relative;"><a href="#b-%EC%9A%B4%EC%98%81%EC%9E%A5%EC%95%A0-4%EC%84%A0" aria-label="b 운영장애 4선 permalink" class="anchor before"><svg aria-hidden="true" focusable="false" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>B. 운영·장애 (4선)</h2>
 <p>장애 대응이 시스템인지 영웅에 의존하는지 확인합니다.</p>
@@ -175,6 +203,55 @@
 </tr>
 </tbody>
 </table>
+<details>
+<summary>💡 <b>이상적인 답변 vs 위험 신호</b></summary>
+<br/>
+<p><strong>B3 — “야간 호출 빈도” — 가장 솔직한 답이 나오는 질문:</strong></p>
+<table>
+<thead>
+<tr>
+<th>답변 유형</th>
+<th>의미</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>“한 달에 1~2번, 로테이션 6명”</td>
+<td>✅ 건강한 분포</td>
+</tr>
+<tr>
+<td>“온콜 전담자 2명이 매주 돌아요”</td>
+<td>⚠️ 부담 집중</td>
+</tr>
+<tr>
+<td>“다들 도와요” (구체 숫자 없음)</td>
+<td>🚨 사실상 단독 온콜 가능성</td>
+</tr>
+<tr>
+<td>“거의 없어요, 작년에 한 번?”</td>
+<td>✅ 안정된 시스템 OR ⚠️ 알람 미수</td>
+</tr>
+</tbody>
+</table>
+<p><strong>B4 — “P1 장애 대응 도구” — 운영 성숙도 측정:</strong></p>
+<ul>
+<li>✅ 도구 이름이 즉시 나옴 (PagerDuty + Datadog + Slack 워룸 채널)</li>
+<li>✅ Runbook 언급 → 절차화됨</li>
+<li>⚠️ “OO님이 매번 잘 잡아요” → 영웅 의존</li>
+<li>🚨 “운 좋게…” → 체계 부재</li>
+</ul>
+<p><strong>B1 — “회고에서 바뀐 결정” — 진짜 회고 문화 측정:</strong></p>
+<ul>
+<li>✅ 구체적인 액션 아이템 + 실행 결과 (“자동 롤백 게이트가 그 결과로 도입됐어요”)</li>
+<li>⚠️ “회고 잘 하고 있어요” (사례 없음) → 형식적</li>
+<li>🚨 “누가 잘못해서…” → blame 문화</li>
+</ul>
+<p><strong>현장 팁:</strong></p>
+<ul>
+<li>야간 호출 빈도는 <em>구체적 숫자 요구</em> → 추상적 답은 무의미</li>
+<li>도구 이름과 동시에 “이걸로 작년 ○○ 장애도 빠르게 잡았어요” 같은 구체 결과가 따라오면 진짜</li>
+</ul>
+</details>
 <hr>
 <h2 id="c-커리어성장-3선" style="position:relative;"><a href="#c-%EC%BB%A4%EB%A6%AC%EC%96%B4%EC%84%B1%EC%9E%A5-3%EC%84%A0" aria-label="c 커리어성장 3선 permalink" class="anchor before"><svg aria-hidden="true" focusable="false" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>C. 커리어·성장 (3선)</h2>
 <p>본인의 성장 방향과 팀의 궤적이 맞는지 확인합니다.</p>
@@ -208,6 +285,40 @@
 </tr>
 </tbody>
 </table>
+<details>
+<summary>💡 <b>본인 가치관과의 정렬 점검</b></summary>
+<br/>
+<p><strong>C1 — “학습 예산”:</strong></p>
+<ul>
+<li>✅ “연 200만 원 + 컨퍼런스 1회 회사 부담” 같은 <em>구체 숫자</em></li>
+<li>✅ “도서 구매 무제한, Pluralsight 계정 제공” 같은 <em>실제 인프라</em></li>
+<li>⚠️ “필요하면 회사가 지원해줘요” (신청·승인 절차 없음) → 사실상 사비</li>
+<li>🚨 답변 망설임 → 정책 부재</li>
+</ul>
+<p><strong>C2 — “첫 분기 작업”:</strong></p>
+<ul>
+<li>본인이 <em>신규 기능파</em>라면 → 레거시 정리 답변 시 신중하게 결정</li>
+<li>본인이 <em>시스템 청소파</em>라면 → 레거시 답변이 오히려 기회</li>
+<li>솔직히 양쪽 다 한다는 답이 가장 정상 (현실적 분배)</li>
+</ul>
+<p><strong>C3 — “도메인 전문가 vs 제너럴리스트”:</strong></p>
+<ul>
+<li>시니어 단계에서 본인 정체성을 분명히 해야 함</li>
+<li><em>결제 전문가</em>로 가고 싶다면 매분기 도메인 바뀌는 조직은 적합 X</li>
+<li><em>플랫폼/인프라</em>가 목표면 여러 도메인을 도는 게 자산</li>
+</ul>
+<p><strong>자기 진단:</strong></p>
+<ul>
+<li>“5년 후 어떤 사람이 되고 싶은가?”에 답을 가진 상태로 질문해야 답을 평가할 수 있음</li>
+<li>회사 정책이 좋아도 <em>본인 방향과 안 맞으면</em> 좋은 선택 아님</li>
+<li>면접은 <em>회사가 나를 평가</em>이지만 <em>나도 회사를 평가</em>하는 자리</li>
+</ul>
+<p><strong>현장 팁:</strong></p>
+<ul>
+<li>학습 예산은 <em>온보딩 가이드 문서</em>에 명시되어 있는지도 같이 확인</li>
+<li>C2, C3는 <em>팀 매니저 라운드</em>에서 가장 솔직한 답이 나옴</li>
+</ul>
+</details>
 <hr>
 <h2 id="d-협업체계-5선" style="position:relative;"><a href="#d-%ED%98%91%EC%97%85%EC%B2%B4%EA%B3%84-5%EC%84%A0" aria-label="d 협업체계 5선 permalink" class="anchor before"><svg aria-hidden="true" focusable="false" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>D. 협업·체계 (5선)</h2>
 <p>조직의 운영 체계와 협업 방식을 확인합니다.</p>
@@ -253,6 +364,64 @@
 </tr>
 </tbody>
 </table>
+<details>
+<summary>💡 <b>가장 솔직한 답을 끌어내는 질문 — D1 활용법</b></summary>
+<br/>
+<p><strong>D1 — “최근 1년 떠난 분들의 이유” — 모든 질문 중 가장 솔직함이 시험되는 질문:</strong></p>
+<p>면접관이 답하는 방식으로 <em>조직의 진짜 상태</em>를 읽을 수 있습니다.</p>
+<p><strong>✅ 신뢰할 만한 답변:</strong></p>
+<ul>
+<li>“작년 3명 떠났는데 한 분은 해외 이직, 한 분은 가족 사정, 한 분은 우리 팀의 ○○ 부족 때문이었어요”</li>
+<li><em>떠난 사람의 사유를 구분해서 명시</em> + <em>조직 결핍도 인정</em></li>
+</ul>
+<p><strong>⚠️ 주의 신호:</strong></p>
+<ul>
+<li>“더 좋은 기회 찾아서요” (모두 같은 답)</li>
+<li>“개인 사정으로요” (사정의 범위가 불분명)</li>
+<li><em>모두를 묶어서 비슷한 답</em>이면 매니저가 실체를 모르거나 솔직하지 않음</li>
+</ul>
+<p><strong>🚨 빨간 신호:</strong></p>
+<ul>
+<li>“퇴직률 낮아요” (질문 회피)</li>
+<li>“그건 잘 모르겠네요” (관심 부족)</li>
+<li>“그 사람들은 안 맞았던 거 같아요” (blame)</li>
+</ul>
+<p><strong>D4 — “배포 후 가장 먼저 보는 지표” — 데이터 문화 측정:</strong></p>
+<table>
+<thead>
+<tr>
+<th>답변</th>
+<th>의미</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>“에러율, p99 응답시간, 비즈니스 KPI(예: 전환율)”</td>
+<td>✅ 측정 가능 지표 환산 능력</td>
+</tr>
+<tr>
+<td>“에러율과 사용자 피드백”</td>
+<td>⚠️ 정성 의존</td>
+</tr>
+<tr>
+<td>“별일 없는지 확인해요”</td>
+<td>🚨 무지표 운영</td>
+</tr>
+</tbody>
+</table>
+<p><strong>D5 — “죽은 모듈 걷어낸 사례” — 코드 위생 측정:</strong></p>
+<ul>
+<li>✅ 구체 사례 + 추적 방법 (사용량 메트릭, 카나리 deprecation)</li>
+<li>⚠️ “하긴 하는데…” (실제 사례 없음)</li>
+<li>🚨 “그냥 두는 편이에요” → 부채 누적</li>
+</ul>
+<p><strong>현장 팁:</strong></p>
+<ul>
+<li>D1은 <em>시니어 면접에서만</em> 던지기 (주니어 면접에 던지면 부담 줌)</li>
+<li>D5는 <em>기술 부채를 본인이 관리할 의지가 있다</em>는 시그널까지 줌 (양면 평가)</li>
+<li>매니저 라운드와 동료 라운드에서 <em>동일 질문</em>을 던져 답변 일관성 확인</li>
+</ul>
+</details>
 <hr>
 <h2 id="면접-마지막-5분-운영-팁" style="position:relative;"><a href="#%EB%A9%B4%EC%A0%91-%EB%A7%88%EC%A7%80%EB%A7%89-5%EB%B6%84-%EC%9A%B4%EC%98%81-%ED%8C%81" aria-label="면접 마지막 5분 운영 팁 permalink" class="anchor before"><svg aria-hidden="true" focusable="false" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>면접 마지막 5분 운영 팁</h2>
 <h3 id="1-우선순위" style="position:relative;"><a href="#1-%EC%9A%B0%EC%84%A0%EC%88%9C%EC%9C%84" aria-label="1 우선순위 permalink" class="anchor before"><svg aria-hidden="true" focusable="false" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>1. 우선순위</h3>
@@ -280,6 +449,57 @@
 <li>가장 인상 깊었던 부분을 짧게 언급 (“이전 1on1 방식이 인상적이었어요”)</li>
 <li>피크엔드 효과를 의도적으로 활용</li>
 </ul>
+<details>
+<summary>💡 <b>실전 시뮬레이션 - 마지막 5분 흐름 예시</b></summary>
+<br/>
+<p><strong>시나리오:</strong> 5분 남았다. 면접관 2명. 본인은 결제·정산 도메인을 깊이 가고 싶음.</p>
+<p><strong>시작 (10초):</strong></p>
+<blockquote>
+<p>“감사합니다. 마지막에 몇 가지 여쭤보고 싶은데요.”
+(메모지 보지 않고 자연스럽게)</p>
+</blockquote>
+<p><strong>Q1 (1분, 본인 가치관):</strong></p>
+<blockquote>
+<p>“C3 — 한 사람이 보통 한 도메인에 머무는 편인가요, 여러 도메인을 도는 편인가요?”</p>
+<p>[면접관 답: “주로 한 도메인에 머물러요. 결제팀은 평균 2년 이상 같이 하시는 분들이…“]</p>
+<p><em>팔로업:</em> “그러면 시니어로 합류한 사람도 한 도메인을 깊이 가는 경로가 자연스럽나요?”</p>
+</blockquote>
+<p><strong>Q2 (1분, 운영 체계):</strong></p>
+<blockquote>
+<p>“B3 — 결제 도메인 온콜은 어떻게 돌아가나요? 야간 호출은 한 달 평균 몇 번 정도세요?”</p>
+<p>[면접관 답: “결제팀 6명이 주 단위 로테이션, 야간 한 달 1~2번…“]</p>
+<p>✅ 구체 숫자 → 신뢰</p>
+</blockquote>
+<p><strong>Q3 (1분, 협업):</strong></p>
+<blockquote>
+<p>“D5 — 결제 모듈에서 최근에 걷어낸 기능이나 코드가 있었나요?”</p>
+<p>[면접관 답: “작년에 구 PG사 어댑터 4개를 정리했어요. 사용량 메트릭으로 0%인 거 확인하고 3개월 deprecation 거쳐서…“]</p>
+<p>✅ 구체 사례 + 추적 방법 → 코드 위생 OK</p>
+</blockquote>
+<p><strong>Q4 (1분, 사람):</strong></p>
+<blockquote>
+<p>“A4 — 매니저님과의 1on1은 보통 어떤 주제로 시작되세요?”</p>
+<p>[면접관 답: “보통 *지금 가장 막히는 게 뭐예요?*로 시작해요. 그 다음 커리어 얘기, 마지막 5분은 가벼운 이야기…“]</p>
+<p>✅ 보고가 아닌 <em>성장 대화</em></p>
+</blockquote>
+<p><strong>마무리 (30초):</strong></p>
+<blockquote>
+<p>“오늘 말씀 들으면서 <em>결제 도메인에 오래 머물 수 있는 환경</em>과 <em>1on1 문화</em>가 특히 인상적이었어요. 감사합니다.”</p>
+<p>✅ 피크엔드 효과 활용 — 면접관이 가장 마지막에 들은 인상이 평가에 반영</p>
+</blockquote>
+<p><strong>평가 체크리스트 (본인 정리):</strong></p>
+<ul class="contains-task-list">
+<li class="task-list-item"><input type="checkbox" disabled> 4개 질문이 <em>내 가치관 → 운영 → 협업 → 사람</em> 흐름으로 자연스러웠나</li>
+<li class="task-list-item"><input type="checkbox" disabled> 답변에 <em>망설임/추상화/blame</em> 없었나</li>
+<li class="task-list-item"><input type="checkbox" disabled> 마무리에 <em>구체적 인상</em>을 남겼나</li>
+</ul>
+<p><strong>금지 사항:</strong></p>
+<ul>
+<li>처우·연봉·휴가 질문 (HR 라운드)</li>
+<li>“주말에도 일하시나요?” 같은 <em>나만의 걱정</em> (간접 질문으로)</li>
+<li>메모지에 적힌 걸 그대로 읽기 (대화의 흐름 깨짐)</li>
+</ul>
+</details>
 <hr>
 <h2 id="마무리-시리즈-완결" style="position:relative;"><a href="#%EB%A7%88%EB%AC%B4%EB%A6%AC-%EC%8B%9C%EB%A6%AC%EC%A6%88-%EC%99%84%EA%B2%B0" aria-label="마무리 시리즈 완결 permalink" class="anchor before"><svg aria-hidden="true" focusable="false" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>마무리: 시리즈 완결</h2>
 <p>1~9편으로 <strong>시니어 백엔드 기술 면접의 큐레이션</strong>을, 부록으로 <strong>마지막 5분</strong>까지 정리했습니다.</p>
