@@ -93,7 +93,10 @@ module.exports = {
             options: {
               classPrefix: 'language-',
               inlineCodeMarker: null,
-              aliases: {},
+              aliases: {
+                cql: 'sql',
+                rego: 'json',
+              },
               showLineNumbers: false,
               noInlineHighlight: false,
               languageExtensions: [
