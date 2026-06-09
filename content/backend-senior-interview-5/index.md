@@ -32,6 +32,56 @@ series: "시니어 백엔드 면접 질문"
 
 선택 기준은 서비스 수와 흐름 복잡도입니다. 단순 흐름은 Choreography, 가시성·복구가 중요하면 Orchestration.
 
+<details>
+<summary>💡 <b>실제 사례 보기</b></summary>
+
+<br/>
+
+**시나리오:** 항공 예약 흐름 — 결제 → 좌석 확보 → 마일리지 적립 → 항공사 발권 4단계 분산 서비스.
+
+**Orchestration SAGA 설계:**
+```
+SagaOrchestrator
+  step 1: 결제 (Payment Service)
+    compensate: 환불
+  step 2: 좌석 확보 (Seat Service)
+    compensate: 좌석 해제
+  step 3: 마일리지 적립 (Mileage Service)
+    compensate: 마일리지 차감
+  step 4: 항공사 발권 (Airline Adapter)
+    compensate: 발권 취소 요청
+```
+
+**실제 장애 사례 — 마일리지 적립 실패:**
+
+| 시점 | 이벤트 |
+|---|---|
+| T+0s | 결제 성공 |
+| T+1s | 좌석 확보 성공 |
+| T+2s | 마일리지 서비스 timeout |
+| T+3s | Orchestrator가 step 1, 2 보상 시작 |
+| T+3s | 좌석 해제 성공 |
+| T+4s | **환불 호출 실패** (PG사 일시 장애) |
+| T+4s | 환불 retry 3회 모두 실패 → **DLQ로 격리** |
+| T+5s | 운영 알람 발생 (PagerDuty) |
+
+**DLQ 처리:**
+- 운영 콘솔에서 사가 ID로 조회 → 보상 실패 단계 확인
+- 멱등키로 환불 재실행 (PG사 복구 후 수동 트리거)
+- 정합성 회복 시간: 평균 15분, 최대 2시간
+
+**Choreography로 했다면?**
+- 같은 시나리오에서 *누가 보상을 책임지는지 모호*
+- 이벤트 흐름 디버깅이 어려워 RCA 시간 3배 증가
+- 운영 가시성 = Orchestration이 압도적
+
+**교훈:**
+- **단계가 4개 넘고 보상이 복잡하면 Orchestration**
+- 보상 자체가 실패할 수 있음을 가정 → **DLQ + 운영 콘솔이 SAGA의 절반**
+- 사가 ID 기반의 모든 단계 추적이 *운영의 마지막 보루*
+
+</details>
+
 ### 🔄 꼬리질문 1: 보상 트랜잭션 자체가 실패하면 어떻게 하나요?
 
 **기대 답변:**
@@ -71,6 +121,64 @@ series: "시니어 백엔드 면접 질문"
 
 도입 비용은 프로젝션 갱신 지연(eventual consistency)과 운영 복잡도입니다.
 
+<details>
+<summary>💡 <b>실제 사례 보기</b></summary>
+
+<br/>
+
+**시나리오:** 셀러 대시보드 — 정규화된 OLTP DB에서 매번 5개 테이블 조인 + GROUP BY. 응답 8초, 셀러 1만 명 동시 접속 시 DB 멈춤.
+
+**문제 분석:**
+- 쓰기 모델은 정규화가 옳음 (주문 INSERT는 단일 row)
+- 조회 모델은 *셀러별 일/주/월 집계*가 필요
+- 같은 테이블이 두 요구를 동시에 만족 불가
+
+**CQRS 도입:**
+
+**Write side (기존 유지):**
+- PostgreSQL OLTP
+- 주문·결제·환불 정규화 모델
+
+**Read side (신규):**
+- ClickHouse (OLAP)
+- 셀러별 일별 집계 테이블 (pre-aggregated)
+- 응답 50ms
+
+**프로젝션 파이프라인:**
+```
+Order Service (PG) 
+  → Debezium CDC
+  → Kafka topic: order.events
+  → Kafka Streams aggregator
+  → ClickHouse
+```
+
+**일관성 윈도우:**
+- 정상: 2~5초 lag
+- 피크: 15초 lag
+- 셀러 화면에 "데이터 갱신: 방금 전" 표시
+
+**Read Your Writes 처리:**
+- 셀러가 *방금 자기 행동*을 봐야 하는 화면(예: "방금 등록한 상품")은 OLTP 직접 조회
+- 집계 화면만 ClickHouse 사용
+
+**결과:**
+- 대시보드 응답: 8초 → 50ms (160배)
+- OLTP CPU: 80% → 25%
+- 셀러 만족도 NPS +12점
+
+**비용:**
+- ClickHouse + Kafka + Debezium 인프라
+- 운영 복잡도 (lag 모니터링, 재처리 시나리오, 스키마 동기화)
+- 팀의 학습 곡선 약 2개월
+
+**교훈:**
+- CQRS는 *단순 분리*가 아니라 *조회 모델 재설계 기회*
+- 일관성 윈도우를 사용자가 인지할 수 있게 UI에 표시
+- 도입 비용이 크므로 *진짜 필요한 도메인*만 (전체 시스템 X)
+
+</details>
+
 ### 🔄 꼬리질문 1: 일관성 윈도우는 어떻게 다루나요?
 
 **기대 답변:**
@@ -106,6 +214,51 @@ series: "시니어 백엔드 면접 질문"
 
 비즈니스 로직·집계는 두지 않습니다. BFF가 필요하면 별도 레이어로.
 
+<details>
+<summary>💡 <b>실제 사례 보기</b></summary>
+
+<br/>
+
+**시나리오:** Spring Cloud Gateway 도입 후 6개월. 외부 API 80개를 게이트웨이 단일 진입점으로 통합. 어느 날 게이트웨이가 단일 장애점이 됨.
+
+**장애 발생:**
+- 한 백엔드 서비스의 응답이 30초로 지연
+- 게이트웨이의 reactor netty 이벤트 루프 점유율 100%
+- 무관한 80개 API 전부 5xx
+
+**원인:**
+- 게이트웨이에 *서킷 브레이커 없음*
+- 한 백엔드의 지연이 게이트웨이 자체 자원을 잠식
+
+**대응 (긴급 → 영구):**
+
+**긴급 (장애 중):**
+- 문제 백엔드 라우팅을 임시 차단 (`spring.cloud.gateway.routes` 필터)
+- 게이트웨이 리스타트 → 자원 회복
+
+**영구 (1주 작업):**
+1. **Resilience4j 서킷 브레이커** 모든 라우트에 적용
+   - 임계치: 에러율 30%, 슬로우 콜 비율 50% (p99 > 2s)
+2. **Bulkhead**: 백엔드별 동시성 상한 (semaphore-based)
+3. **인스턴스 다중화**: 2 → 6, 무상태 + L7 LB
+4. **JWT 검증 캐시**: ID provider 의존도 축소 (Redis 5분 TTL)
+
+**관측 강화:**
+- 라우트별 p99, 에러율 대시보드
+- 서킷 Open 발생 시 Slack 알림
+- 인증 캐시 hit ratio 모니터링
+
+**결과:**
+- 다음 백엔드 지연 발생 시 *해당 라우트만 격리*, 나머지 정상
+- 인증 캐시로 ID provider QPS 90% 감소
+
+**교훈:**
+- 게이트웨이는 *편의 도구*가 아니라 *모든 의존성의 집중점*
+- **서킷 브레이커 + Bulkhead + 다중화**가 게이트웨이의 3종 세트
+- "게이트웨이를 도입했는데 회복력이 줄었다"는 신호면 즉시 점검
+
+</details>
+
 ### 🔄 꼬리질문 1: 단일 장애점 위험은 어떻게 줄이나요?
 
 **기대 답변:**
@@ -138,6 +291,55 @@ series: "시니어 백엔드 면접 질문"
 - **코드**: 모듈/패키지 경계 = 컨텍스트 경계. 다른 컨텍스트 객체 직접 import 금지
 - **팀**: 한 컨텍스트는 한 팀의 결정권
 - **DB**: 스키마 분리 (가능하면 인스턴스도). 공유 DB는 컨텍스트 경계를 깨뜨림
+
+<details>
+<summary>💡 <b>실제 사례 보기</b></summary>
+
+<br/>
+
+**시나리오:** 1만 명 규모 모놀리스에서 결제·정산 컨텍스트를 *모듈러 모놀리스* 형태로 분리.
+
+**분리 전 문제:**
+- 결제 도메인 객체가 `@Entity Order`와 직접 결합
+- 정산 로직이 주문 테이블 조인으로 처리됨 → 정산 변경할 때마다 주문 모듈 영향
+- 결제 PR이 평균 12개 모듈 수정 (불필요한 범위 확산)
+
+**리팩토링 (3개월, 4단계):**
+
+**Step 1 — 도메인 모듈 분리 (1개월)**
+- `domain/payment/` 패키지 신설
+- 결제 *도메인 객체*(`Payment`, `Refund`)를 ORM 엔티티에서 분리
+- 매핑은 별도 `PaymentMapper`에 격리
+
+**Step 2 — DB 스키마 격리 (1개월)**
+- 결제 테이블을 별도 schema (`payment.*`)로 이전
+- Cross-schema FK 제거, 대신 ID 참조만
+- ACL(Anti-Corruption Layer)로 다른 컨텍스트와 통신
+
+**Step 3 — 모듈 경계 강제 (3주)**
+- ArchUnit으로 컨텍스트 간 직접 import 금지 규칙 추가
+- CI에서 위반 시 빌드 실패
+- 통신은 명시적 API (예: `PaymentFacade`) 또는 도메인 이벤트
+
+**Step 4 — 팀 분리 (2주)**
+- 결제 모듈 = 결제팀이 PR 승인권자
+- 다른 팀은 PaymentFacade만 사용, 내부 변경은 결제팀 책임
+
+**결과:**
+- 결제 PR 평균 수정 모듈: 12개 → 2.5개
+- 결제 도메인 단위 테스트 가능 (외부 의존성 mock)
+- 향후 MSA 분리 시 *코드 이동만으로 가능* (DB도 이미 분리됨)
+
+**예상치 못한 효과:**
+- 결제팀이 *온콜 부담 감소* (다른 모듈 장애에 안 깨도 됨)
+- 결제 도메인 ADR이 5개 작성됨 (그동안 암묵지로 흩어져 있었음)
+
+**교훈:**
+- **컨텍스트 경계는 코드만으로는 부족, DB·팀까지 정렬**되어야 진짜
+- 모놀리스 안에서도 DDD가 충분히 의미 있음 (MSA 갈 필요 없음)
+- ArchUnit 같은 *자동 강제*가 인간 규율보다 강력
+
+</details>
 
 ### 🔄 꼬리질문 1: 컨텍스트 간 통신은 어떻게 하나요?
 
@@ -174,6 +376,92 @@ series: "시니어 백엔드 면접 질문"
 1. **이벤트 발행 시점 제어**: 커밋 후 발행 (`@TransactionalEventListener AFTER_COMMIT`)
 2. **유실 방지**: **Outbox 패턴** — 같은 트랜잭션에 outbox 테이블 insert, 별도 릴레이가 발행
 3. **실패 처리**: 재시도 + DLQ + 보상 트랜잭션
+
+<details>
+<summary>💡 <b>실제 사례 보기</b></summary>
+
+<br/>
+
+**시나리오:** 주문 모듈 → 알림·재고·통계 3개 컨슈머. 평소 잘 돌다가 한 달에 2~3건 *주문은 있는데 알림은 안 가는* 사고 발생.
+
+**문제 코드 (Before):**
+```kotlin
+@Transactional
+fun createOrder(req: OrderRequest): Order {
+  val order = orderRepo.save(Order(...))
+  
+  // 🚨 같은 트랜잭션 안에서 Kafka 발행
+  kafkaTemplate.send("order.created", order.toEvent())
+  
+  return order
+}
+```
+
+**왜 유실되는가:**
+- Kafka 발행은 성공했는데 트랜잭션 *커밋*이 실패 → 컨슈머는 이미 처리, DB에는 주문 없음
+- 또는 Kafka 발행은 실패했는데 트랜잭션은 커밋 → DB에 주문 있는데 알림 안 감
+- *분산 트랜잭션*은 답이 없음
+
+**해결 — Outbox 패턴 (After):**
+```kotlin
+@Transactional
+fun createOrder(req: OrderRequest): Order {
+  val order = orderRepo.save(Order(...))
+  
+  // 같은 트랜잭션 안에 outbox 테이블 insert (DB 보장)
+  outboxRepo.save(OutboxEvent(
+    aggregateId = order.id,
+    eventType = "order.created",
+    payload = order.toEvent().toJson(),
+    status = "PENDING"
+  ))
+  
+  return order
+}
+
+// 별도 스케줄러가 outbox를 폴링해 Kafka 발행
+@Scheduled(fixedDelay = 1000)
+fun relay() {
+  val pending = outboxRepo.findByStatus("PENDING", limit = 100)
+  pending.forEach { event ->
+    try {
+      kafkaTemplate.send(event.eventType, event.payload).get(3, SECONDS)
+      event.markPublished()
+    } catch (e: Exception) {
+      event.incrementRetry()
+      if (event.retries > 5) event.moveToDLQ()
+    }
+  }
+  outboxRepo.saveAll(pending)
+}
+```
+
+**컨슈머 측 멱등성:**
+```kotlin
+@KafkaListener(topics = ["order.created"])
+fun onOrderCreated(event: OrderCreatedEvent) {
+  if (processedEventRepo.existsByEventId(event.id)) return  // 멱등
+  
+  sendNotification(event)
+  processedEventRepo.save(ProcessedEvent(event.id))
+}
+```
+
+**결과:**
+- 유실 0건 (3개월간)
+- 한 달 한 번 DB 마이그레이션 중 outbox lag 30분 → 알람으로 즉시 인지, 데이터는 결국 다 발행됨
+
+**진화 — CDC로 전환 (6개월 후):**
+- Outbox 폴링이 DB 부하 + 1초 lag
+- Debezium CDC로 outbox 테이블 변경을 자동으로 Kafka로
+- 폴링 제거, lag 50ms 미만
+
+**교훈:**
+- *원자성*은 같은 DB 트랜잭션 안에서만 보장 → 외부 발행은 별 트랙으로
+- Outbox는 단순하지만 *유실 0*을 진짜로 가능하게 함
+- 규모가 커지면 CDC로 진화하는 것이 자연스러운 흐름
+
+</details>
 
 ### 🔄 꼬리질문 1: 커밋 전 발행하면 어떤 일이 생기나요?
 
