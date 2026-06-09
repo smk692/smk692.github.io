@@ -140,6 +140,11 @@
 <li>리팩토링 전 테스트 커버리지 확보</li>
 <li>큰 부채는 별도 프로젝트로 계획</li>
 </ul>
+<details>
+<summary>📋 <b>사례</b></summary>
+<br/>
+<p>기술 부채 백로그를 <em>Notion 보드</em>에 분리 — 영향도×긴급도 매트릭스로 분기마다 상위 5개 선정. 분기 스프린트 20% 할당. 1년 후 critical 부채 0개. <strong>교훈: 부채는 <em>보이지 않으면 청산 안 됨</em>, 가시화가 첫 단계.</strong></p>
+</details>
 <h3 id="-꼬리질문-2-아키텍처-의사결정-기록adr을-작성해보신-적-있나요" style="position:relative;"><a href="#-%EA%BC%AC%EB%A6%AC%EC%A7%88%EB%AC%B8-2-%EC%95%84%ED%82%A4%ED%85%8D%EC%B2%98-%EC%9D%98%EC%82%AC%EA%B2%B0%EC%A0%95-%EA%B8%B0%EB%A1%9Dadr%EC%9D%84-%EC%9E%91%EC%84%B1%ED%95%B4%EB%B3%B4%EC%8B%A0-%EC%A0%81-%EC%9E%88%EB%82%98%EC%9A%94" aria-label=" 꼬리질문 2 아키텍처 의사결정 기록adr을 작성해보신 적 있나요 permalink" class="anchor before"><svg aria-hidden="true" focusable="false" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>🔄 꼬리질문 2: 아키텍처 의사결정 기록(ADR)을 작성해보신 적 있나요?</h3>
 <p><strong>기대 답변:</strong></p>
 <ul>
@@ -148,9 +153,19 @@
 <li><strong>Consequences</strong>: 예상되는 장단점</li>
 <li>팀 내 공유와 온보딩에 활용. 나중에 “왜 이렇게 했지?” 방지.</li>
 </ul>
+<details>
+<summary>📋 <b>사례</b></summary>
+<br/>
+<p><code class="language-text">docs/adr/</code> 디렉토리에 마크다운 ADR 30건 누적. 신규 입사자가 <em>왜 Kotlin인지·왜 Helm Base Chart인지</em> 별도 설명 없이 파악. 결정 번복 시 <em>기존 ADR을 Superseded</em> 표시로 이력 보존. <strong>교훈: ADR은 <em>과거의 나</em>와 <em>미래의 동료</em> 모두에게 보내는 편지.</strong></p>
+</details>
 <h3 id="-꼬리질문-3-기술-선택에서-실패한-경험이-있다면" style="position:relative;"><a href="#-%EA%BC%AC%EB%A6%AC%EC%A7%88%EB%AC%B8-3-%EA%B8%B0%EC%88%A0-%EC%84%A0%ED%83%9D%EC%97%90%EC%84%9C-%EC%8B%A4%ED%8C%A8%ED%95%9C-%EA%B2%BD%ED%97%98%EC%9D%B4-%EC%9E%88%EB%8B%A4%EB%A9%B4" aria-label=" 꼬리질문 3 기술 선택에서 실패한 경험이 있다면 permalink" class="anchor before"><svg aria-hidden="true" focusable="false" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>🔄 꼬리질문 3: 기술 선택에서 실패한 경험이 있다면?</h3>
 <p><strong>이 질문의 의도:</strong>
 완벽한 결정만 있는 건 아닙니다. 실패 경험에서 무엇을 배웠는지, 어떻게 수정했는지가 더 중요합니다.</p>
+<details>
+<summary>📋 <b>사례</b></summary>
+<br/>
+<p>이벤트 소싱 도입 후 6개월 운영 — 감사 요구는 만족했으나 <em>프로젝션 디버깅·재계산 비용</em>이 예상의 5배. 일부 도메인은 다시 CRUD로 회귀. <strong>교훈: 실패는 <em>결정의 잘못</em>보다 <em>trade-off 측정 부족</em>이 더 흔한 원인.</strong></p>
+</details>
 <hr>
 <h2 id="2-시스템-디자인" style="position:relative;"><a href="#2-%EC%8B%9C%EC%8A%A4%ED%85%9C-%EB%94%94%EC%9E%90%EC%9D%B8" aria-label="2 시스템 디자인 permalink" class="anchor before"><svg aria-hidden="true" focusable="false" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>2. 시스템 디자인</h2>
 <h3 id="q2-url-단축-서비스를-설계해주세요" style="position:relative;"><a href="#q2-url-%EB%8B%A8%EC%B6%95-%EC%84%9C%EB%B9%84%EC%8A%A4%EB%A5%BC-%EC%84%A4%EA%B3%84%ED%95%B4%EC%A3%BC%EC%84%B8%EC%9A%94" aria-label="q2 url 단축 서비스를 설계해주세요 permalink" class="anchor before"><svg aria-hidden="true" focusable="false" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Q2. URL 단축 서비스를 설계해주세요.</h3>
@@ -213,6 +228,11 @@
 <li><strong>Unique ID 기반</strong>: Snowflake, UUID 사용</li>
 <li><strong>DB Unique Constraint</strong>: 삽입 실패 시 재생성</li>
 </ul>
+<details>
+<summary>📋 <b>사례</b></summary>
+<br/>
+<p>초기 MD5 hash 앞 7자 사용 → 1억 건 도달 시 충돌 0.3%. Snowflake → Base62로 전환 후 충돌 0건. <strong>교훈: Hash 기반은 <em>생일 역설</em>로 결국 충돌, unique ID가 분산 환경 정석.</strong></p>
+</details>
 <h3 id="-꼬리질문-2-초당-10만-요청이-들어온다면" style="position:relative;"><a href="#-%EA%BC%AC%EB%A6%AC%EC%A7%88%EB%AC%B8-2-%EC%B4%88%EB%8B%B9-10%EB%A7%8C-%EC%9A%94%EC%B2%AD%EC%9D%B4-%EB%93%A4%EC%96%B4%EC%98%A8%EB%8B%A4%EB%A9%B4" aria-label=" 꼬리질문 2 초당 10만 요청이 들어온다면 permalink" class="anchor before"><svg aria-hidden="true" focusable="false" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>🔄 꼬리질문 2: 초당 10만 요청이 들어온다면?</h3>
 <p><strong>기대 답변:</strong></p>
 <ul>
@@ -221,6 +241,11 @@
 <li><strong>CDN</strong>: 리다이렉트 응답 캐싱</li>
 <li><strong>로드밸런서</strong>: 요청 분산</li>
 </ul>
+<details>
+<summary>📋 <b>사례</b></summary>
+<br/>
+<p>리다이렉트 100k QPS — CDN edge에서 301 응답 캐시(1주 TTL)로 origin은 30k QPS만 도달. Redis 클러스터 hit 92%, DB 도달은 8% (8k QPS). <strong>교훈: 리다이렉트는 <em>불변에 가까운 응답</em>, CDN 캐시 활용이 가장 큰 레버리지.</strong></p>
+</details>
 <h3 id="-꼬리질문-3-악성-url-차단은-어떻게-하시겠어요" style="position:relative;"><a href="#-%EA%BC%AC%EB%A6%AC%EC%A7%88%EB%AC%B8-3-%EC%95%85%EC%84%B1-url-%EC%B0%A8%EB%8B%A8%EC%9D%80-%EC%96%B4%EB%96%BB%EA%B2%8C-%ED%95%98%EC%8B%9C%EA%B2%A0%EC%96%B4%EC%9A%94" aria-label=" 꼬리질문 3 악성 url 차단은 어떻게 하시겠어요 permalink" class="anchor before"><svg aria-hidden="true" focusable="false" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>🔄 꼬리질문 3: 악성 URL 차단은 어떻게 하시겠어요?</h3>
 <p><strong>기대 답변:</strong></p>
 <ul>
@@ -229,6 +254,11 @@
 <li><strong>주기적 스캔</strong>: 비동기 배치로 검사</li>
 <li><strong>Rate Limiting</strong>: 대량 생성 방지</li>
 </ul>
+<details>
+<summary>📋 <b>사례</b></summary>
+<br/>
+<p>피싱 URL 대량 생성 사건 — 한 IP에서 분당 5,000건 생성. Rate Limit (분당 100건) + Safe Browsing 비동기 + 위험 도메인 화이트리스트로 차단. 사후 신고 기반 자동 분석 파이프라인까지 구축. <strong>교훈: 보안은 <em>다층 방어</em>, 단일 메커니즘만으론 우회됨.</strong></p>
+</details>
 <hr>
 <h2 id="3-코드-리뷰와-품질" style="position:relative;"><a href="#3-%EC%BD%94%EB%93%9C-%EB%A6%AC%EB%B7%B0%EC%99%80-%ED%92%88%EC%A7%88" aria-label="3 코드 리뷰와 품질 permalink" class="anchor before"><svg aria-hidden="true" focusable="false" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>3. 코드 리뷰와 품질</h2>
 <h3 id="q3-코드-리뷰할-때-어떤-점을-중점적으로-보시나요" style="position:relative;"><a href="#q3-%EC%BD%94%EB%93%9C-%EB%A6%AC%EB%B7%B0%ED%95%A0-%EB%95%8C-%EC%96%B4%EB%96%A4-%EC%A0%90%EC%9D%84-%EC%A4%91%EC%A0%90%EC%A0%81%EC%9C%BC%EB%A1%9C-%EB%B3%B4%EC%8B%9C%EB%82%98%EC%9A%94" aria-label="q3 코드 리뷰할 때 어떤 점을 중점적으로 보시나요 permalink" class="anchor before"><svg aria-hidden="true" focusable="false" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Q3. 코드 리뷰할 때 어떤 점을 중점적으로 보시나요?</h3>
@@ -304,6 +334,11 @@
 <li>합의 안 되면 팀 컨벤션 또는 테크 리드 판단 요청</li>
 <li>“나중에 개선하자”로 타협하기보다 지금 결정</li>
 </ul>
+<details>
+<summary>📋 <b>사례</b></summary>
+<br/>
+<p>DI vs Service Locator 논쟁 — 양쪽 <em>의도와 장단점</em> 정리 후 ADR 작성. 컨벤션화하니 이후 같은 논쟁 0회. <strong>교훈: 반복되는 논쟁은 <em>문서로 종결</em>해야 팀 시간 낭비 안 됨.</strong></p>
+</details>
 <h3 id="-꼬리질문-2-주니어-코드를-리뷰할-때-특별히-신경-쓰는-점은" style="position:relative;"><a href="#-%EA%BC%AC%EB%A6%AC%EC%A7%88%EB%AC%B8-2-%EC%A3%BC%EB%8B%88%EC%96%B4-%EC%BD%94%EB%93%9C%EB%A5%BC-%EB%A6%AC%EB%B7%B0%ED%95%A0-%EB%95%8C-%ED%8A%B9%EB%B3%84%ED%9E%88-%EC%8B%A0%EA%B2%BD-%EC%93%B0%EB%8A%94-%EC%A0%90%EC%9D%80" aria-label=" 꼬리질문 2 주니어 코드를 리뷰할 때 특별히 신경 쓰는 점은 permalink" class="anchor before"><svg aria-hidden="true" focusable="false" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>🔄 꼬리질문 2: 주니어 코드를 리뷰할 때 특별히 신경 쓰는 점은?</h3>
 <p><strong>기대 답변:</strong></p>
 <ul>
@@ -312,6 +347,11 @@
 <li><strong>질문 형태</strong>: “이건 왜 이렇게 했어요?”로 생각 유도</li>
 <li><strong>너무 많은 지적 피하기</strong>: 핵심 2-3개에 집중</li>
 </ul>
+<details>
+<summary>📋 <b>사례</b></summary>
+<br/>
+<p>주니어 PR에 코멘트 20개 → 의기소침. 다음부터 <em>핵심 2~3개</em>만 + 칭찬 1개로 변경. 본인이 <em>왜 그렇게 했는지</em> 질문 형태로. 3개월 후 본인 PR 품질 향상 + 적극성 회복. <strong>교훈: 리뷰는 <em>교정</em>이 아니라 <em>대화</em>.</strong></p>
+</details>
 <h3 id="-꼬리질문-3-코드-리뷰-없이-머지된-코드에서-버그가-발견되면" style="position:relative;"><a href="#-%EA%BC%AC%EB%A6%AC%EC%A7%88%EB%AC%B8-3-%EC%BD%94%EB%93%9C-%EB%A6%AC%EB%B7%B0-%EC%97%86%EC%9D%B4-%EB%A8%B8%EC%A7%80%EB%90%9C-%EC%BD%94%EB%93%9C%EC%97%90%EC%84%9C-%EB%B2%84%EA%B7%B8%EA%B0%80-%EB%B0%9C%EA%B2%AC%EB%90%98%EB%A9%B4" aria-label=" 꼬리질문 3 코드 리뷰 없이 머지된 코드에서 버그가 발견되면 permalink" class="anchor before"><svg aria-hidden="true" focusable="false" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>🔄 꼬리질문 3: 코드 리뷰 없이 머지된 코드에서 버그가 발견되면?</h3>
 <p><strong>기대 답변:</strong></p>
 <ul>
@@ -320,6 +360,11 @@
 <li>자동화: CI에 필수 리뷰어, 테스트 통과 조건 추가</li>
 <li>팀 회고: 재발 방지 논의</li>
 </ul>
+<details>
+<summary>📋 <b>사례</b></summary>
+<br/>
+<p>핫픽스 명목으로 리뷰 없이 머지된 코드에 정합성 버그 — 즉시 수정 후 GitHub branch protection 강화 (필수 리뷰어 1명·CI 통과 필수). 핫픽스도 사후 리뷰 의무화. <strong>교훈: <em>예외 프로세스</em>가 일상이 되면 <em>시스템 부재</em>.</strong></p>
+</details>
 <hr>
 <h2 id="4-팀-리딩과-멘토링" style="position:relative;"><a href="#4-%ED%8C%80-%EB%A6%AC%EB%94%A9%EA%B3%BC-%EB%A9%98%ED%86%A0%EB%A7%81" aria-label="4 팀 리딩과 멘토링 permalink" class="anchor before"><svg aria-hidden="true" focusable="false" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>4. 팀 리딩과 멘토링</h2>
 <h3 id="q4-주니어-개발자-멘토링은-어떻게-하시나요" style="position:relative;"><a href="#q4-%EC%A3%BC%EB%8B%88%EC%96%B4-%EA%B0%9C%EB%B0%9C%EC%9E%90-%EB%A9%98%ED%86%A0%EB%A7%81%EC%9D%80-%EC%96%B4%EB%96%BB%EA%B2%8C-%ED%95%98%EC%8B%9C%EB%82%98%EC%9A%94" aria-label="q4 주니어 개발자 멘토링은 어떻게 하시나요 permalink" class="anchor before"><svg aria-hidden="true" focusable="false" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Q4. 주니어 개발자 멘토링은 어떻게 하시나요?</h3>
@@ -379,6 +424,11 @@
 <li>1:1에서 솔직하게 피드백</li>
 <li>개선 계획 함께 수립</li>
 </ul>
+<details>
+<summary>📋 <b>사례</b></summary>
+<br/>
+<p>특정 팀원이 <em>트랜잭션 경계</em> 실수 반복 — 1:1에서 “왜 헷갈리는지” 듣고 nullable wrapper 패턴 + PR 템플릿 체크리스트 추가. 이후 같은 실수 0건. <strong>교훈: 반복 실수는 <em>개인 문제</em>보다 <em>시스템·교육 부재</em> 신호.</strong></p>
+</details>
 <h3 id="-꼬리질문-2-팀-내-기술-공유는-어떻게-하시나요" style="position:relative;"><a href="#-%EA%BC%AC%EB%A6%AC%EC%A7%88%EB%AC%B8-2-%ED%8C%80-%EB%82%B4-%EA%B8%B0%EC%88%A0-%EA%B3%B5%EC%9C%A0%EB%8A%94-%EC%96%B4%EB%96%BB%EA%B2%8C-%ED%95%98%EC%8B%9C%EB%82%98%EC%9A%94" aria-label=" 꼬리질문 2 팀 내 기술 공유는 어떻게 하시나요 permalink" class="anchor before"><svg aria-hidden="true" focusable="false" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>🔄 꼬리질문 2: 팀 내 기술 공유는 어떻게 하시나요?</h3>
 <p><strong>기대 답변:</strong></p>
 <ul>
@@ -387,9 +437,19 @@
 <li><strong>스터디 그룹</strong>: 관심 주제별 소그룹</li>
 <li><strong>장애 리뷰 공유</strong>: 실수에서 배우기</li>
 </ul>
+<details>
+<summary>📋 <b>사례</b></summary>
+<br/>
+<p>주 1회 <em>15분 라이트닝 토크</em> 도입. 발표자 부담 최소화 위해 슬라이드 없이 <em>whiteboard + 라이브 코딩</em>. 1년 누적 50건 공유, 신규 입사자 온보딩 자산화. <strong>교훈: 공유는 <em>완벽한 발표</em>가 아닌 <em>작은 습관화</em>가 답.</strong></p>
+</details>
 <h3 id="-꼬리질문-3-본인이-가장-성장했던-경험은" style="position:relative;"><a href="#-%EA%BC%AC%EB%A6%AC%EC%A7%88%EB%AC%B8-3-%EB%B3%B8%EC%9D%B8%EC%9D%B4-%EA%B0%80%EC%9E%A5-%EC%84%B1%EC%9E%A5%ED%96%88%EB%8D%98-%EA%B2%BD%ED%97%98%EC%9D%80" aria-label=" 꼬리질문 3 본인이 가장 성장했던 경험은 permalink" class="anchor before"><svg aria-hidden="true" focusable="false" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>🔄 꼬리질문 3: 본인이 가장 성장했던 경험은?</h3>
 <p><strong>이 질문의 의도:</strong>
 성장 마인드셋이 있는지, 자신의 성장을 돌아볼 줄 아는지 확인합니다. 겸손함과 자기 인식 능력을 봅니다.</p>
+<details>
+<summary>📋 <b>사례</b></summary>
+<br/>
+<p>3년차에 처음 <em>P1 결제 장애 대응</em>을 단독 리드 — 패닉 속에서도 mitigation 우선, 사후 포스트모템 호스트까지. 이전엔 <em>코드만</em> 보던 시각이 <em>운영·비즈니스 영향</em>까지 확장됨. <strong>교훈: 가장 큰 성장은 <em>불편한 상황에서의 책임</em>이 만듦.</strong></p>
+</details>
 <hr>
 <h2 id="5-협업과-커뮤니케이션" style="position:relative;"><a href="#5-%ED%98%91%EC%97%85%EA%B3%BC-%EC%BB%A4%EB%AE%A4%EB%8B%88%EC%BC%80%EC%9D%B4%EC%85%98" aria-label="5 협업과 커뮤니케이션 permalink" class="anchor before"><svg aria-hidden="true" focusable="false" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>5. 협업과 커뮤니케이션</h2>
 <h3 id="q5-기획디자인-팀과-의견-충돌이-있을-때-어떻게-하시나요" style="position:relative;"><a href="#q5-%EA%B8%B0%ED%9A%8D%EB%94%94%EC%9E%90%EC%9D%B8-%ED%8C%80%EA%B3%BC-%EC%9D%98%EA%B2%AC-%EC%B6%A9%EB%8F%8C%EC%9D%B4-%EC%9E%88%EC%9D%84-%EB%95%8C-%EC%96%B4%EB%96%BB%EA%B2%8C-%ED%95%98%EC%8B%9C%EB%82%98%EC%9A%94" aria-label="q5 기획디자인 팀과 의견 충돌이 있을 때 어떻게 하시나요 permalink" class="anchor before"><svg aria-hidden="true" focusable="false" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Q5. 기획/디자인 팀과 의견 충돌이 있을 때 어떻게 하시나요?</h3>
@@ -474,6 +534,11 @@
 <li>우선순위 재조정 요청</li>
 <li>무리한 약속 안 하기 (야근으로 해결 X)</li>
 </ul>
+<details>
+<summary>📋 <b>사례</b></summary>
+<br/>
+<p>기획팀의 추가 요청 → “현재 백로그 + 신규 요청 일정 표 + Risk 도식” 제시. PM이 직접 우선순위 재조정해 일부 deprioritize. <strong>교훈: 일정 협상은 <em>데이터로 보여줄 때</em> 합리적 결론.</strong></p>
+</details>
 <h3 id="-꼬리질문-2-원격-근무에서-협업-잘-하는-팁은" style="position:relative;"><a href="#-%EA%BC%AC%EB%A6%AC%EC%A7%88%EB%AC%B8-2-%EC%9B%90%EA%B2%A9-%EA%B7%BC%EB%AC%B4%EC%97%90%EC%84%9C-%ED%98%91%EC%97%85-%EC%9E%98-%ED%95%98%EB%8A%94-%ED%8C%81%EC%9D%80" aria-label=" 꼬리질문 2 원격 근무에서 협업 잘 하는 팁은 permalink" class="anchor before"><svg aria-hidden="true" focusable="false" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>🔄 꼬리질문 2: 원격 근무에서 협업 잘 하는 팁은?</h3>
 <p><strong>기대 답변:</strong></p>
 <ul>
@@ -482,6 +547,11 @@
 <li><strong>화상 미팅</strong>: 복잡한 논의는 텍스트보다 얼굴 보고</li>
 <li><strong>명확한 기대치</strong>: 응답 시간, 회의 시간대 합의</li>
 </ul>
+<details>
+<summary>📋 <b>사례</b></summary>
+<br/>
+<p>원격 100% 팀에서 <em>async-first</em> 원칙 — 회의 전 Notion에 안건+컨텍스트 사전 공유, 의사결정은 <em>댓글 + 비동기 voting</em>으로. 동기 회의 시간 50% 감소. <strong>교훈: 원격은 <em>언제 만나느냐</em>가 아니라 <em>어떻게 비동기로 흐르느냐</em>.</strong></p>
+</details>
 <h3 id="-꼬리질문-3-기술-결정을-비개발자에게-설명할-때-어떻게-하시나요" style="position:relative;"><a href="#-%EA%BC%AC%EB%A6%AC%EC%A7%88%EB%AC%B8-3-%EA%B8%B0%EC%88%A0-%EA%B2%B0%EC%A0%95%EC%9D%84-%EB%B9%84%EA%B0%9C%EB%B0%9C%EC%9E%90%EC%97%90%EA%B2%8C-%EC%84%A4%EB%AA%85%ED%95%A0-%EB%95%8C-%EC%96%B4%EB%96%BB%EA%B2%8C-%ED%95%98%EC%8B%9C%EB%82%98%EC%9A%94" aria-label=" 꼬리질문 3 기술 결정을 비개발자에게 설명할 때 어떻게 하시나요 permalink" class="anchor before"><svg aria-hidden="true" focusable="false" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>🔄 꼬리질문 3: 기술 결정을 비개발자에게 설명할 때 어떻게 하시나요?</h3>
 <p><strong>기대 답변:</strong></p>
 <ul>
@@ -490,6 +560,11 @@
 <li><strong>시각 자료</strong>: 다이어그램, 간단한 도식</li>
 <li><strong>질문 유도</strong>: 이해했는지 확인</li>
 </ul>
+<details>
+<summary>📋 <b>사례</b></summary>
+<br/>
+<p>DB 샤딩 설명을 <em>책장과 책 비유</em>로 — “한 책장이 꽉 차서 같은 종류 책을 여러 책장에 나눠 두는 것”. PM이 즉시 이해하고 <em>왜 일정이 더 걸리는지</em> 납득. <strong>교훈: 기술 용어는 <em>벽</em>, 비유는 <em>문</em>.</strong></p>
+</details>
 <hr>
 <h2 id="마무리-시니어에게-기대하는-것" style="position:relative;"><a href="#%EB%A7%88%EB%AC%B4%EB%A6%AC-%EC%8B%9C%EB%8B%88%EC%96%B4%EC%97%90%EA%B2%8C-%EA%B8%B0%EB%8C%80%ED%95%98%EB%8A%94-%EA%B2%83" aria-label="마무리 시니어에게 기대하는 것 permalink" class="anchor before"><svg aria-hidden="true" focusable="false" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>마무리: 시니어에게 기대하는 것</h2>
 <ol>

@@ -156,6 +156,11 @@ mTLS ON (zero-copy 우회):
 <li><strong>mmap</strong>: 파일을 메모리에 매핑, 유저 공간에서 접근 가능. write 비용은 sendfile보다 큼</li>
 </ul>
 <p>전송만 하면 sendfile, 일부 가공이 필요하면 mmap.</p>
+<details>
+<summary>📋 <b>사례</b></summary>
+<br/>
+<p>nginx 정적 자산 서빙에 sendfile 활성화 → CPU 35% → 12%. 동영상 변환 서비스는 mmap으로 부분 가공. <strong>교훈: <em>순수 전송</em>이면 sendfile, <em>부분 가공</em>이면 mmap.</strong></p>
+</details>
 <h3 id="-꼬리질문-2-kafka는-어떻게-zero-copy를-활용하나요" style="position:relative;"><a href="#-%EA%BC%AC%EB%A6%AC%EC%A7%88%EB%AC%B8-2-kafka%EB%8A%94-%EC%96%B4%EB%96%BB%EA%B2%8C-zero-copy%EB%A5%BC-%ED%99%9C%EC%9A%A9%ED%95%98%EB%82%98%EC%9A%94" aria-label=" 꼬리질문 2 kafka는 어떻게 zero copy를 활용하나요 permalink" class="anchor before"><svg aria-hidden="true" focusable="false" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>🔄 꼬리질문 2: Kafka는 어떻게 zero-copy를 활용하나요?</h3>
 <p><strong>기대 답변:</strong></p>
 <ul>
@@ -163,6 +168,11 @@ mTLS ON (zero-copy 우회):
 <li>단, <strong>TLS</strong>가 켜지면 페이로드 암호화 때문에 zero-copy 불가 → 성능 저하</li>
 <li>운영에서는 mTLS 강제 시 네트워크 처리량 30%+ 감소를 미리 예측</li>
 </ul>
+<details>
+<summary>📋 <b>사례</b></summary>
+<br/>
+<p>mTLS 도입 사전 부하 테스트 — 컨슈머 throughput 30% 감소 예측, 인스턴스 1단계 업그레이드 사전 결정. <em>기습 다운 사고 0건</em>. <strong>교훈: 보안 강화 변경은 <em>항상 성능 사전 측정</em>.</strong></p>
+</details>
 <h3 id="-꼬리질문-3-운영에서-zero-copy-효과를-어떻게-측정하나요" style="position:relative;"><a href="#-%EA%BC%AC%EB%A6%AC%EC%A7%88%EB%AC%B8-3-%EC%9A%B4%EC%98%81%EC%97%90%EC%84%9C-zero-copy-%ED%9A%A8%EA%B3%BC%EB%A5%BC-%EC%96%B4%EB%96%BB%EA%B2%8C-%EC%B8%A1%EC%A0%95%ED%95%98%EB%82%98%EC%9A%94" aria-label=" 꼬리질문 3 운영에서 zero copy 효과를 어떻게 측정하나요 permalink" class="anchor before"><svg aria-hidden="true" focusable="false" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>🔄 꼬리질문 3: 운영에서 zero-copy 효과를 어떻게 측정하나요?</h3>
 <p><strong>기대 답변:</strong></p>
 <ul>
@@ -170,6 +180,11 @@ mTLS ON (zero-copy 우회):
 <li><code class="language-text">perf</code> system call profile (<code class="language-text">read</code>/<code class="language-text">write</code> 호출 비중)</li>
 <li>컨테이너 memory cgroup의 page cache 활용도</li>
 </ul>
+<details>
+<summary>📋 <b>사례</b></summary>
+<br/>
+<p><code class="language-text">perf stat -e syscalls:sys_enter_sendfile</code>로 sendfile 호출 수 측정. mTLS 도입 후 0으로 떨어진 것 확인. <strong>교훈: zero-copy 효과는 <em>syscall 카운트</em>로 직접 검증 가능.</strong></p>
+</details>
 <hr>
 <h2 id="2-helm-base-chart-통합" style="position:relative;"><a href="#2-helm-base-chart-%ED%86%B5%ED%95%A9" aria-label="2 helm base chart 통합 permalink" class="anchor before"><svg aria-hidden="true" focusable="false" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>2. Helm Base Chart 통합</h2>
 <h3 id="q2-사내-공통-base-chart로-통합한-경험이-있나요" style="position:relative;"><a href="#q2-%EC%82%AC%EB%82%B4-%EA%B3%B5%ED%86%B5-base-chart%EB%A1%9C-%ED%86%B5%ED%95%A9%ED%95%9C-%EA%B2%BD%ED%97%98%EC%9D%B4-%EC%9E%88%EB%82%98%EC%9A%94" aria-label="q2 사내 공통 base chart로 통합한 경험이 있나요 permalink" class="anchor before"><svg aria-hidden="true" focusable="false" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Q2. 사내 공통 base chart로 통합한 경험이 있나요?</h3>
@@ -269,6 +284,11 @@ mTLS ON (zero-copy 우회):
 <li>의존성 그래프(같은 리소스 종류 반복) 분석</li>
 <li>80% 룰 → 85% 가능했던 이유: helper template과 includes로 미세 변형 흡수</li>
 </ul>
+<details>
+<summary>📋 <b>사례</b></summary>
+<br/>
+<p>23개 차트 텍스트 diff 자동화 스크립트로 <em>공통 블록 80%</em> 식별. 나머지 5%는 helper template로 흡수. <strong>교훈: 공통화 비율은 <em>측정 후 결정</em>, 감으로 추정 금지.</strong></p>
+</details>
 <h3 id="-꼬리질문-2-표준-차트-버전-업-시-하위-호환성은" style="position:relative;"><a href="#-%EA%BC%AC%EB%A6%AC%EC%A7%88%EB%AC%B8-2-%ED%91%9C%EC%A4%80-%EC%B0%A8%ED%8A%B8-%EB%B2%84%EC%A0%84-%EC%97%85-%EC%8B%9C-%ED%95%98%EC%9C%84-%ED%98%B8%ED%99%98%EC%84%B1%EC%9D%80" aria-label=" 꼬리질문 2 표준 차트 버전 업 시 하위 호환성은 permalink" class="anchor before"><svg aria-hidden="true" focusable="false" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>🔄 꼬리질문 2: 표준 차트 버전 업 시 하위 호환성은?</h3>
 <p><strong>기대 답변:</strong></p>
 <ul>
@@ -277,6 +297,11 @@ mTLS ON (zero-copy 우회):
 <li>Deprecate 정책: 한 MAJOR 동안 alias 유지</li>
 <li>CI 단계에서 <code class="language-text">helm template</code> 결과를 이전 버전과 diff</li>
 </ul>
+<details>
+<summary>📋 <b>사례</b></summary>
+<br/>
+<p>base chart MAJOR 변경 시 <em>이전 버전 alias 1분기 유지</em> + CI에서 <code class="language-text">helm template</code> diff 자동 비교. 사고 0건. <strong>교훈: 표준 차트는 <em>애플리케이션 의존성</em>과 동일한 호환성 정책 필요.</strong></p>
+</details>
 <h3 id="-꼬리질문-3-왜-kustomize가-아니라-helm-base-chart인가요" style="position:relative;"><a href="#-%EA%BC%AC%EB%A6%AC%EC%A7%88%EB%AC%B8-3-%EC%99%9C-kustomize%EA%B0%80-%EC%95%84%EB%8B%88%EB%9D%BC-helm-base-chart%EC%9D%B8%EA%B0%80%EC%9A%94" aria-label=" 꼬리질문 3 왜 kustomize가 아니라 helm base chart인가요 permalink" class="anchor before"><svg aria-hidden="true" focusable="false" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>🔄 꼬리질문 3: 왜 Kustomize가 아니라 Helm base chart인가요?</h3>
 <p><strong>기대 답변:</strong></p>
 <ul>
@@ -285,6 +310,11 @@ mTLS ON (zero-copy 우회):
 <li>사내 GitOps가 ArgoCD Application(Helm 친화)이라면 Helm 우선</li>
 </ul>
 <p>둘은 혼합 가능 (Helm + Kustomize Post-render).</p>
+<details>
+<summary>📋 <b>사례</b></summary>
+<br/>
+<p>base chart는 Helm (releases·rollback·history 추적), 환경별 오버라이드는 Kustomize post-render — 둘의 장점만 결합. <strong>교훈: 도구는 <em>대립이 아니라 조합</em>.</strong></p>
+</details>
 <hr>
 <h2 id="3-argocd와-다중-환경-drift" style="position:relative;"><a href="#3-argocd%EC%99%80-%EB%8B%A4%EC%A4%91-%ED%99%98%EA%B2%BD-drift" aria-label="3 argocd와 다중 환경 drift permalink" class="anchor before"><svg aria-hidden="true" focusable="false" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>3. ArgoCD와 다중 환경 Drift</h2>
 <h3 id="q3-다중-환경-gitops에서-drift는-어떻게-막았나요" style="position:relative;"><a href="#q3-%EB%8B%A4%EC%A4%91-%ED%99%98%EA%B2%BD-gitops%EC%97%90%EC%84%9C-drift%EB%8A%94-%EC%96%B4%EB%96%BB%EA%B2%8C-%EB%A7%89%EC%95%98%EB%82%98%EC%9A%94" aria-label="q3 다중 환경 gitops에서 drift는 어떻게 막았나요 permalink" class="anchor before"><svg aria-hidden="true" focusable="false" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Q3. 다중 환경 GitOps에서 Drift는 어떻게 막았나요?</h3>
@@ -374,6 +404,11 @@ overlays/
 <li>또는 Git revert PR을 봇이 자동 머지 (<code class="language-text">/rollback</code> 명령)</li>
 <li>사후에 정식 Git 흐름으로 정합성 회복</li>
 </ul>
+<details>
+<summary>📋 <b>사례</b></summary>
+<br/>
+<p>Slack <code class="language-text">/rollback v1.2.3</code> 명령 → 봇이 Git revert PR 자동 생성·머지·ArgoCD sync. 30초 안에 롤백, Git 이력도 보존. <strong>교훈: 긴급 우회는 <em>Git 흐름 안에서</em> 자동화.</strong></p>
+</details>
 <h3 id="-꼬리질문-2-self-heal이-위험할-수-있나요" style="position:relative;"><a href="#-%EA%BC%AC%EB%A6%AC%EC%A7%88%EB%AC%B8-2-self-heal%EC%9D%B4-%EC%9C%84%ED%97%98%ED%95%A0-%EC%88%98-%EC%9E%88%EB%82%98%EC%9A%94" aria-label=" 꼬리질문 2 self heal이 위험할 수 있나요 permalink" class="anchor before"><svg aria-hidden="true" focusable="false" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>🔄 꼬리질문 2: Self-Heal이 위험할 수 있나요?</h3>
 <p><strong>기대 답변:</strong>
 네. 운영 중 의도된 임시 변경(예: HPA 수동 조정)이 되돌려질 수 있습니다.</p>
@@ -382,6 +417,11 @@ overlays/
 <li>변경 사항은 즉시 Git에 반영하는 원칙</li>
 <li>알람: Drift 발생 시 알림(Self-Heal 전에 검토)</li>
 </ul>
+<details>
+<summary>📋 <b>사례</b></summary>
+<br/>
+<p>야간 운영자가 replicas 20으로 올린 <em>수동 변경</em>을 Self-Heal이 5로 복구 → 다시 다운. 야간 시간대 Sync window로 Self-Heal off. <strong>교훈: Self-Heal은 <em>시간대·상황별</em> 정책 필요.</strong></p>
+</details>
 <h3 id="-꼬리질문-3-secret-관리는-어떻게-하나요" style="position:relative;"><a href="#-%EA%BC%AC%EB%A6%AC%EC%A7%88%EB%AC%B8-3-secret-%EA%B4%80%EB%A6%AC%EB%8A%94-%EC%96%B4%EB%96%BB%EA%B2%8C-%ED%95%98%EB%82%98%EC%9A%94" aria-label=" 꼬리질문 3 secret 관리는 어떻게 하나요 permalink" class="anchor before"><svg aria-hidden="true" focusable="false" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>🔄 꼬리질문 3: Secret 관리는 어떻게 하나요?</h3>
 <p><strong>기대 답변:</strong></p>
 <ul>
@@ -389,6 +429,11 @@ overlays/
 <li><strong>External Secrets Operator</strong>: AWS Secrets Manager/Vault 동기화</li>
 <li>절대 plain secret을 Git에 두지 않음 — pre-commit hook으로 검증</li>
 </ul>
+<details>
+<summary>📋 <b>사례</b></summary>
+<br/>
+<p>External Secrets Operator + AWS Secrets Manager — 회전 시 자동 동기화, Git엔 reference만. pre-commit hook으로 plain secret 자동 차단. <strong>교훈: secret은 <em>Git 밖</em>에서 관리하고 <em>Git엔 reference만</em>.</strong></p>
+</details>
 <hr>
 <h2 id="4-distroless" style="position:relative;"><a href="#4-distroless" aria-label="4 distroless permalink" class="anchor before"><svg aria-hidden="true" focusable="false" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>4. Distroless</h2>
 <h3 id="q4-distroless-도입의-트레이드오프는" style="position:relative;"><a href="#q4-distroless-%EB%8F%84%EC%9E%85%EC%9D%98-%ED%8A%B8%EB%A0%88%EC%9D%B4%EB%93%9C%EC%98%A4%ED%94%84%EB%8A%94" aria-label="q4 distroless 도입의 트레이드오프는 permalink" class="anchor before"><svg aria-hidden="true" focusable="false" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Q4. Distroless 도입의 트레이드오프는?</h3>
@@ -500,6 +545,11 @@ kubectl debug <span class="token parameter variable">-it</span> pod/my-service-x
 <li>Audit log에 누가·언제·어떤 이미지로 붙였는지 기록</li>
 <li>디버그 이미지는 사내 허용 목록만 사용</li>
 </ul>
+<details>
+<summary>📋 <b>사례</b></summary>
+<br/>
+<p>OPA Gatekeeper로 <em>허용된 디버그 이미지 화이트리스트</em> 강제. audit log를 SIEM으로 전송. 임의 이미지 사용 시도 자동 차단. <strong>교훈: 디버깅 권한은 <em>추적 가능성</em>과 묶여야 안전.</strong></p>
+</details>
 <h3 id="-꼬리질문-2-정적-분석으로-cve를-어떻게-관리하나요" style="position:relative;"><a href="#-%EA%BC%AC%EB%A6%AC%EC%A7%88%EB%AC%B8-2-%EC%A0%95%EC%A0%81-%EB%B6%84%EC%84%9D%EC%9C%BC%EB%A1%9C-cve%EB%A5%BC-%EC%96%B4%EB%96%BB%EA%B2%8C-%EA%B4%80%EB%A6%AC%ED%95%98%EB%82%98%EC%9A%94" aria-label=" 꼬리질문 2 정적 분석으로 cve를 어떻게 관리하나요 permalink" class="anchor before"><svg aria-hidden="true" focusable="false" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>🔄 꼬리질문 2: 정적 분석으로 CVE를 어떻게 관리하나요?</h3>
 <p><strong>기대 답변:</strong></p>
 <ul>
@@ -507,6 +557,11 @@ kubectl debug <span class="token parameter variable">-it</span> pod/my-service-x
 <li>SBOM(Software Bill of Materials) 자동 생성</li>
 <li>베이스 이미지 갱신 PR을 봇이 주기적으로 올림</li>
 </ul>
+<details>
+<summary>📋 <b>사례</b></summary>
+<br/>
+<p>Renovate 봇이 <em>베이스 이미지 새 버전 PR을 매주</em> 자동 생성. Trivy 통과해야 머지. CVE 노출 시간 90일 → 7일. <strong>교훈: 패치 자동화는 <em>기본 의식주</em>.</strong></p>
+</details>
 <h3 id="-꼬리질문-3-distroless로-못-가는-케이스는" style="position:relative;"><a href="#-%EA%BC%AC%EB%A6%AC%EC%A7%88%EB%AC%B8-3-distroless%EB%A1%9C-%EB%AA%BB-%EA%B0%80%EB%8A%94-%EC%BC%80%EC%9D%B4%EC%8A%A4%EB%8A%94" aria-label=" 꼬리질문 3 distroless로 못 가는 케이스는 permalink" class="anchor before"><svg aria-hidden="true" focusable="false" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>🔄 꼬리질문 3: Distroless로 못 가는 케이스는?</h3>
 <p><strong>기대 답변:</strong></p>
 <ul>
@@ -515,6 +570,11 @@ kubectl debug <span class="token parameter variable">-it</span> pod/my-service-x
 <li>빌드 도구(JDK toolchain 등)가 런타임에 필요한 경우</li>
 </ul>
 <p>→ 빌드 스테이지는 fat 이미지, 런타임 스테이지만 distroless가 일반적.</p>
+<details>
+<summary>📋 <b>사례</b></summary>
+<br/>
+<p>레거시 결제 모듈이 <em>bash 기반 entrypoint</em> + 라이브러리 musl 비호환 → alpine 유지. 다른 50개는 distroless. <strong>교훈: <em>전부 distroless</em>가 정답 아님, 서비스별 트레이드오프.</strong></p>
+</details>
 <hr>
 <h2 id="5-pr-preview-환경-자동화" style="position:relative;"><a href="#5-pr-preview-%ED%99%98%EA%B2%BD-%EC%9E%90%EB%8F%99%ED%99%94" aria-label="5 pr preview 환경 자동화 permalink" class="anchor before"><svg aria-hidden="true" focusable="false" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>5. PR Preview 환경 자동화</h2>
 <h3 id="q5-pr마다-임시-환경을-자동-프로비저닝하려면" style="position:relative;"><a href="#q5-pr%EB%A7%88%EB%8B%A4-%EC%9E%84%EC%8B%9C-%ED%99%98%EA%B2%BD%EC%9D%84-%EC%9E%90%EB%8F%99-%ED%94%84%EB%A1%9C%EB%B9%84%EC%A0%80%EB%8B%9D%ED%95%98%EB%A0%A4%EB%A9%B4" aria-label="q5 pr마다 임시 환경을 자동 프로비저닝하려면 permalink" class="anchor before"><svg aria-hidden="true" focusable="false" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Q5. PR마다 임시 환경을 자동 프로비저닝하려면?</h3>
@@ -620,6 +680,11 @@ kubectl debug <span class="token parameter variable">-it</span> pod/my-service-x
 <li>스키마 마이그레이션은 PR 생성 시 자동 적용 (<code class="language-text">flyway migrate</code>)</li>
 <li>마이그레이션 실패는 PR check 실패로 노출</li>
 </ul>
+<details>
+<summary>📋 <b>사례</b></summary>
+<br/>
+<p>PR마다 <code class="language-text">CREATE DATABASE pr_${PR_NUM}</code> + flyway 자동 마이그레이션. 마이그레이션 실패 시 PR check fail. 스키마 회귀 0건. <strong>교훈: 스키마 변경은 <em>PR 격리 DB</em>에서 검증.</strong></p>
+</details>
 <h3 id="-꼬리질문-2-트래픽은-어떻게-라우팅하나요" style="position:relative;"><a href="#-%EA%BC%AC%EB%A6%AC%EC%A7%88%EB%AC%B8-2-%ED%8A%B8%EB%9E%98%ED%94%BD%EC%9D%80-%EC%96%B4%EB%96%BB%EA%B2%8C-%EB%9D%BC%EC%9A%B0%ED%8C%85%ED%95%98%EB%82%98%EC%9A%94" aria-label=" 꼬리질문 2 트래픽은 어떻게 라우팅하나요 permalink" class="anchor before"><svg aria-hidden="true" focusable="false" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>🔄 꼬리질문 2: 트래픽은 어떻게 라우팅하나요?</h3>
 <p><strong>기대 답변:</strong></p>
 <ul>
@@ -627,6 +692,11 @@ kubectl debug <span class="token parameter variable">-it</span> pod/my-service-x
 <li>Ingress controller가 호스트 헤더로 namespace 라우팅</li>
 <li>인증은 사내 SSO + IP 화이트리스트</li>
 </ul>
+<details>
+<summary>📋 <b>사례</b></summary>
+<br/>
+<p><code class="language-text">*.preview.example.com</code> 와일드카드 DNS + nginx Ingress가 호스트 헤더로 namespace 라우팅. 사내 SSO + IP 화이트리스트로 외부 차단. <strong>교훈: 와일드카드 DNS는 <em>PR Preview의 인프라 필수품</em>.</strong></p>
+</details>
 <h3 id="-꼬리질문-3-외부-의존성결제메일은" style="position:relative;"><a href="#-%EA%BC%AC%EB%A6%AC%EC%A7%88%EB%AC%B8-3-%EC%99%B8%EB%B6%80-%EC%9D%98%EC%A1%B4%EC%84%B1%EA%B2%B0%EC%A0%9C%EB%A9%94%EC%9D%BC%EC%9D%80" aria-label=" 꼬리질문 3 외부 의존성결제메일은 permalink" class="anchor before"><svg aria-hidden="true" focusable="false" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>🔄 꼬리질문 3: 외부 의존성(결제·메일)은?</h3>
 <p><strong>기대 답변:</strong></p>
 <ul>
@@ -634,6 +704,11 @@ kubectl debug <span class="token parameter variable">-it</span> pod/my-service-x
 <li>Webhook은 ngrok 같은 터널 또는 사내 stub 서버로 받음</li>
 <li>실제 결제는 절대 호출 안 되도록 정책 + 코드 가드</li>
 </ul>
+<details>
+<summary>📋 <b>사례</b></summary>
+<br/>
+<p>env 변수 <code class="language-text">ENV=preview</code> 시 PG sandbox 자동 사용. <em>실제 결제 URL이 코드에 하드코딩</em>된 사고 1회 — pre-commit hook + OPA로 검증 추가. <strong>교훈: PR 환경에선 <em>외부 호출 가드</em>가 다층.</strong></p>
+</details>
 <hr>
 <h2 id="마무리-8편-핵심-정리" style="position:relative;"><a href="#%EB%A7%88%EB%AC%B4%EB%A6%AC-8%ED%8E%B8-%ED%95%B5%EC%8B%AC-%EC%A0%95%EB%A6%AC" aria-label="마무리 8편 핵심 정리 permalink" class="anchor before"><svg aria-hidden="true" focusable="false" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>마무리: 8편 핵심 정리</h2>
 <ol>

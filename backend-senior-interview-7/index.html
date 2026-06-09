@@ -137,6 +137,11 @@
 <li>ORDER BY와 조합되면 정렬 컬럼도 인덱스 마지막에</li>
 </ul>
 <p><code class="language-text">(A=, B=, C BETWEEN)</code> 순서가 안정적입니다.</p>
+<details>
+<summary>📋 <b>사례</b></summary>
+<br/>
+<p><code class="language-text">(created_at, status)</code>로 만든 인덱스 → <code class="language-text">WHERE status='ACTIVE' AND created_at > ...</code> 쿼리에서 풀스캔. <code class="language-text">(status, created_at)</code> 순서로 재생성 → 3.2초 → 45ms. <strong>교훈: 등치 컬럼이 <em>항상</em> 인덱스 선두.</strong></p>
+</details>
 <h3 id="-꼬리질문-2-커버링-인덱스가-항상-좋은-건가요" style="position:relative;"><a href="#-%EA%BC%AC%EB%A6%AC%EC%A7%88%EB%AC%B8-2-%EC%BB%A4%EB%B2%84%EB%A7%81-%EC%9D%B8%EB%8D%B1%EC%8A%A4%EA%B0%80-%ED%95%AD%EC%83%81-%EC%A2%8B%EC%9D%80-%EA%B1%B4%EA%B0%80%EC%9A%94" aria-label=" 꼬리질문 2 커버링 인덱스가 항상 좋은 건가요 permalink" class="anchor before"><svg aria-hidden="true" focusable="false" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>🔄 꼬리질문 2: 커버링 인덱스가 항상 좋은 건가요?</h3>
 <p><strong>기대 답변:</strong>
 아닙니다.</p>
@@ -146,6 +151,11 @@
 <li>컬럼 변경 시 인덱스 재구성 비용</li>
 </ul>
 <p>자주 쓰이는 조회만 선별적으로 커버링.</p>
+<details>
+<summary>📋 <b>사례</b></summary>
+<br/>
+<p>페이징 쿼리에 커버링 인덱스 추가 → 40ms → 8ms, 그러나 인덱스 크기 1.2GB → 2.8GB로 <em>버퍼 풀 적중률 감소</em>. 핫 쿼리에만 선별 적용. <strong>교훈: 커버링은 <em>읽기 최적화</em>와 <em>쓰기·메모리 비용</em>의 trade-off.</strong></p>
+</details>
 <h3 id="-꼬리질문-3-jpa-n1과-인덱스의-관계는" style="position:relative;"><a href="#-%EA%BC%AC%EB%A6%AC%EC%A7%88%EB%AC%B8-3-jpa-n1%EA%B3%BC-%EC%9D%B8%EB%8D%B1%EC%8A%A4%EC%9D%98-%EA%B4%80%EA%B3%84%EB%8A%94" aria-label=" 꼬리질문 3 jpa n1과 인덱스의 관계는 permalink" class="anchor before"><svg aria-hidden="true" focusable="false" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>🔄 꼬리질문 3: JPA N+1과 인덱스의 관계는?</h3>
 <p><strong>기대 답변:</strong>
 N+1은 <em>쿼리 횟수</em> 문제지만 인덱스가 없으면 N개의 풀스캔이 폭주합니다.</p>
@@ -154,6 +164,11 @@ N+1은 <em>쿼리 횟수</em> 문제지만 인덱스가 없으면 N개의 풀스
 <li>ToMany는 <code class="language-text">default_batch_fetch_size</code>로 IN 쿼리 (카르테시안 곱 회피)</li>
 <li>FK 컬럼 인덱스는 기본으로 보장</li>
 </ul>
+<details>
+<summary>📋 <b>사례</b></summary>
+<br/>
+<p><code class="language-text">order.user</code>를 lazy로 두고 100건 조회 → 100번 SELECT + FK 인덱스 누락으로 매번 풀스캔. 페치 조인 + FK 인덱스 추가로 1쿼리 + 즉시 응답. <strong>교훈: N+1은 <em>쿼리 횟수 + 인덱스</em> 둘 다 영향.</strong></p>
+</details>
 <hr>
 <h2 id="2-read-committed-vs-repeatable-read" style="position:relative;"><a href="#2-read-committed-vs-repeatable-read" aria-label="2 read committed vs repeatable read permalink" class="anchor before"><svg aria-hidden="true" focusable="false" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>2. Read Committed vs Repeatable Read</h2>
 <h3 id="q2-두-격리-수준의-실제-차이를-시나리오로-설명해주세요" style="position:relative;"><a href="#q2-%EB%91%90-%EA%B2%A9%EB%A6%AC-%EC%88%98%EC%A4%80%EC%9D%98-%EC%8B%A4%EC%A0%9C-%EC%B0%A8%EC%9D%B4%EB%A5%BC-%EC%8B%9C%EB%82%98%EB%A6%AC%EC%98%A4%EB%A1%9C-%EC%84%A4%EB%AA%85%ED%95%B4%EC%A3%BC%EC%84%B8%EC%9A%94" aria-label="q2 두 격리 수준의 실제 차이를 시나리오로 설명해주세요 permalink" class="anchor before"><svg aria-hidden="true" focusable="false" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Q2. 두 격리 수준의 실제 차이를 시나리오로 설명해주세요.</h3>
@@ -231,6 +246,11 @@ T2: UPDATE (balance=90), COMMIT  // 80이어야 하는데 90으로 덮음</code>
 <li>MySQL/InnoDB: gap lock으로 막힘 (사실상 SERIALIZABLE 근접)</li>
 <li>PostgreSQL: RR(엄밀히 snapshot isolation)이라 phantom은 막지만 <em>write skew</em>는 발생 → 필요 시 SERIALIZABLE</li>
 </ul>
+<details>
+<summary>📋 <b>사례</b></summary>
+<br/>
+<p>PG에서 <em>의사가 동시에 휴가 신청해 응급실에 0명 남는</em> write skew 발생 → SERIALIZABLE로 격리 수준 상향, 충돌 시 재시도. <strong>교훈: RR(snapshot isolation)은 <em>완전한 직렬화 아님</em>, write skew 경계 필요.</strong></p>
+</details>
 <h3 id="-꼬리질문-2-mvcc가-어떻게-격리-수준을-보장하나요" style="position:relative;"><a href="#-%EA%BC%AC%EB%A6%AC%EC%A7%88%EB%AC%B8-2-mvcc%EA%B0%80-%EC%96%B4%EB%96%BB%EA%B2%8C-%EA%B2%A9%EB%A6%AC-%EC%88%98%EC%A4%80%EC%9D%84-%EB%B3%B4%EC%9E%A5%ED%95%98%EB%82%98%EC%9A%94" aria-label=" 꼬리질문 2 mvcc가 어떻게 격리 수준을 보장하나요 permalink" class="anchor before"><svg aria-hidden="true" focusable="false" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>🔄 꼬리질문 2: MVCC가 어떻게 격리 수준을 보장하나요?</h3>
 <p><strong>기대 답변:</strong></p>
 <ul>
@@ -239,6 +259,11 @@ T2: UPDATE (balance=90), COMMIT  // 80이어야 하는데 90으로 덮음</code>
 <li>읽기와 쓰기가 서로 블로킹하지 않음 (락 vs 락 충돌만 발생)</li>
 </ul>
 <p>비용은 <strong>Undo/Old version 누적</strong> → vacuum/cleanup 필요.</p>
+<details>
+<summary>📋 <b>사례</b></summary>
+<br/>
+<p>장기 실행 분석 쿼리 1시간 → Old version 누적으로 vacuum 못 함, dead tuple 폭증으로 쿼리 전체 느려짐. 분석 쿼리는 <em>read replica</em>로 분리. <strong>교훈: MVCC 비용은 <em>장기 트랜잭션</em>이 가장 큼.</strong></p>
+</details>
 <h3 id="-꼬리질문-3-일관성을-더-높이면-처리량은-어떻게-변하나요" style="position:relative;"><a href="#-%EA%BC%AC%EB%A6%AC%EC%A7%88%EB%AC%B8-3-%EC%9D%BC%EA%B4%80%EC%84%B1%EC%9D%84-%EB%8D%94-%EB%86%92%EC%9D%B4%EB%A9%B4-%EC%B2%98%EB%A6%AC%EB%9F%89%EC%9D%80-%EC%96%B4%EB%96%BB%EA%B2%8C-%EB%B3%80%ED%95%98%EB%82%98%EC%9A%94" aria-label=" 꼬리질문 3 일관성을 더 높이면 처리량은 어떻게 변하나요 permalink" class="anchor before"><svg aria-hidden="true" focusable="false" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>🔄 꼬리질문 3: 일관성을 더 높이면 처리량은 어떻게 변하나요?</h3>
 <p><strong>기대 답변:</strong></p>
 <ul>
@@ -246,6 +271,11 @@ T2: UPDATE (balance=90), COMMIT  // 80이어야 하는데 90으로 덮음</code>
 <li>처리량은 보통 RC > RR > SERIALIZABLE</li>
 <li>비즈니스가 진짜로 필요한 격리만 선택. <em>모든 트랜잭션을 SERIALIZABLE</em>은 안티패턴.</li>
 </ul>
+<details>
+<summary>📋 <b>사례</b></summary>
+<br/>
+<p>전체 트랜잭션 SERIALIZABLE → 충돌 retry 폭증으로 처리량 50% 감소. 결제만 SERIALIZABLE, 나머지 RC 복귀 → 처리량 복구 + 정합성 유지. <strong>교훈: 격리 수준은 <em>트랜잭션 단위</em>로 결정.</strong></p>
+</details>
 <hr>
 <h2 id="3-write-amplification" style="position:relative;"><a href="#3-write-amplification" aria-label="3 write amplification permalink" class="anchor before"><svg aria-hidden="true" focusable="false" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>3. Write Amplification</h2>
 <h3 id="q3-write-amplification이-뭐고-어디서-발생하나요" style="position:relative;"><a href="#q3-write-amplification%EC%9D%B4-%EB%AD%90%EA%B3%A0-%EC%96%B4%EB%94%94%EC%84%9C-%EB%B0%9C%EC%83%9D%ED%95%98%EB%82%98%EC%9A%94" aria-label="q3 write amplification이 뭐고 어디서 발생하나요 permalink" class="anchor before"><svg aria-hidden="true" focusable="false" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Q3. Write Amplification이 뭐고 어디서 발생하나요?</h3>
@@ -327,6 +357,11 @@ T2: UPDATE (balance=90), COMMIT  // 80이어야 하는데 90으로 덮음</code>
 <li><strong>Universal</strong>: 절충형</li>
 </ul>
 <p>쓰기가 많으면 Tiered, 읽기가 많으면 Leveled.</p>
+<details>
+<summary>📋 <b>사례</b></summary>
+<br/>
+<p>로그 적재(write-heavy)에 Leveled → WA 5배로 디스크 IO 한계. STCS로 전환 후 WA 2배, 디스크 처리량 회복. 단 읽기 latency 약간 증가. <strong>교훈: 워크로드(write/read 비율)로 Compaction 선택.</strong></p>
+</details>
 <h3 id="-꼬리질문-2-tombstone이-왜-비용이-되나요" style="position:relative;"><a href="#-%EA%BC%AC%EB%A6%AC%EC%A7%88%EB%AC%B8-2-tombstone%EC%9D%B4-%EC%99%9C-%EB%B9%84%EC%9A%A9%EC%9D%B4-%EB%90%98%EB%82%98%EC%9A%94" aria-label=" 꼬리질문 2 tombstone이 왜 비용이 되나요 permalink" class="anchor before"><svg aria-hidden="true" focusable="false" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>🔄 꼬리질문 2: Tombstone이 왜 비용이 되나요?</h3>
 <p><strong>기대 답변:</strong></p>
 <ul>
@@ -335,6 +370,11 @@ T2: UPDATE (balance=90), COMMIT  // 80이어야 하는데 90으로 덮음</code>
 <li>Cassandra에선 partition 안 tombstone이 일정 수 넘으면 쿼리 실패</li>
 </ul>
 <p>→ 데이터 모델 단계에서 <em>영구 삭제 vs 갱신</em> 정책을 결정해야 합니다.</p>
+<details>
+<summary>📋 <b>사례</b></summary>
+<br/>
+<p>채팅방에 tombstone 10만 개 → <code class="language-text">TombstoneOverwhelmingException</code>으로 읽기 자체 실패. 파티션 키에 <code class="language-text">day</code> 추가해 파티션 분할. <strong>교훈: tombstone 임계치는 <em>데이터 모델 설계의 신호</em>.</strong></p>
+</details>
 <h3 id="-꼬리질문-3-운영에서-amplification을-어떻게-모니터링하나요" style="position:relative;"><a href="#-%EA%BC%AC%EB%A6%AC%EC%A7%88%EB%AC%B8-3-%EC%9A%B4%EC%98%81%EC%97%90%EC%84%9C-amplification%EC%9D%84-%EC%96%B4%EB%96%BB%EA%B2%8C-%EB%AA%A8%EB%8B%88%ED%84%B0%EB%A7%81%ED%95%98%EB%82%98%EC%9A%94" aria-label=" 꼬리질문 3 운영에서 amplification을 어떻게 모니터링하나요 permalink" class="anchor before"><svg aria-hidden="true" focusable="false" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>🔄 꼬리질문 3: 운영에서 amplification을 어떻게 모니터링하나요?</h3>
 <p><strong>기대 답변:</strong></p>
 <ul>
@@ -343,6 +383,11 @@ T2: UPDATE (balance=90), COMMIT  // 80이어야 하는데 90으로 덮음</code>
 <li>SSD SMART의 wear leveling 지표</li>
 <li>알람은 <em>amp 비율 + 디스크 여유</em>로 조합</li>
 </ul>
+<details>
+<summary>📋 <b>사례</b></summary>
+<br/>
+<p>RocksDB metrics <code class="language-text">WRITE_AMP</code> Grafana 알람 — 5배 초과 시 알림. Compaction 정책 조정 트리거. SSD SMART 마모도 70%면 교체. <strong>교훈: WA 모니터링은 <em>디스크 수명·비용의 선행 지표</em>.</strong></p>
+</details>
 <hr>
 <h2 id="4-postgres-rls와-멀티테넌시" style="position:relative;"><a href="#4-postgres-rls%EC%99%80-%EB%A9%80%ED%8B%B0%ED%85%8C%EB%84%8C%EC%8B%9C" aria-label="4 postgres rls와 멀티테넌시 permalink" class="anchor before"><svg aria-hidden="true" focusable="false" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>4. Postgres RLS와 멀티테넌시</h2>
 <h3 id="q4-멀티테넌트-환경에서-row-level-security를-도입한-경험이-있나요" style="position:relative;"><a href="#q4-%EB%A9%80%ED%8B%B0%ED%85%8C%EB%84%8C%ED%8A%B8-%ED%99%98%EA%B2%BD%EC%97%90%EC%84%9C-row-level-security%EB%A5%BC-%EB%8F%84%EC%9E%85%ED%95%9C-%EA%B2%BD%ED%97%98%EC%9D%B4-%EC%9E%88%EB%82%98%EC%9A%94" aria-label="q4 멀티테넌트 환경에서 row level security를 도입한 경험이 있나요 permalink" class="anchor before"><svg aria-hidden="true" focusable="false" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Q4. 멀티테넌트 환경에서 Row-Level Security를 도입한 경험이 있나요?</h3>
@@ -431,6 +476,11 @@ WHERE 절 누락 사고를 막기 위해 DB 단에서 격리를 강제한 사례
 <li>HikariCP <code class="language-text">connectionInitSql</code> + <code class="language-text">connectionTestQuery</code> 활용</li>
 <li>풀 단위 검증 테스트 (다른 tenant ID로 회귀 테스트)</li>
 </ul>
+<details>
+<summary>📋 <b>사례</b></summary>
+<br/>
+<p>반납 시 RESET 누락 → 다음 tenant가 <em>이전 tenant 데이터</em> 조회 가능. CI에 <em>서로 다른 tenant ID로 풀 검증 테스트</em> 추가. 사고 0건. <strong>교훈: 세션 변수는 <em>반납 시점 격리</em>가 핵심.</strong></p>
+</details>
 <h3 id="-꼬리질문-2-성능-영향은-어떻게-측정하나요" style="position:relative;"><a href="#-%EA%BC%AC%EB%A6%AC%EC%A7%88%EB%AC%B8-2-%EC%84%B1%EB%8A%A5-%EC%98%81%ED%96%A5%EC%9D%80-%EC%96%B4%EB%96%BB%EA%B2%8C-%EC%B8%A1%EC%A0%95%ED%95%98%EB%82%98%EC%9A%94" aria-label=" 꼬리질문 2 성능 영향은 어떻게 측정하나요 permalink" class="anchor before"><svg aria-hidden="true" focusable="false" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>🔄 꼬리질문 2: 성능 영향은 어떻게 측정하나요?</h3>
 <p><strong>기대 답변:</strong></p>
 <ul>
@@ -438,6 +488,11 @@ WHERE 절 누락 사고를 막기 위해 DB 단에서 격리를 강제한 사례
 <li>정책 조건을 인덱스 첫 컬럼으로 두기</li>
 <li>통계 정보(extended statistics)로 옵티마이저 추정 보정</li>
 </ul>
+<details>
+<summary>📋 <b>사례</b></summary>
+<br/>
+<p>RLS 적용 직후 일부 쿼리 <em>풀스캔 회귀</em> — EXPLAIN ANALYZE로 인덱스가 tenant_id 포함 안 함 발견. 모든 인덱스 선두에 tenant_id 추가. <strong>교훈: RLS 도입 시 <em>인덱스 전수 재검토</em> 필수.</strong></p>
+</details>
 <h3 id="-꼬리질문-3-rls-vs-애플리케이션-필터-언제-어느-쪽" style="position:relative;"><a href="#-%EA%BC%AC%EB%A6%AC%EC%A7%88%EB%AC%B8-3-rls-vs-%EC%95%A0%ED%94%8C%EB%A6%AC%EC%BC%80%EC%9D%B4%EC%85%98-%ED%95%84%ED%84%B0-%EC%96%B8%EC%A0%9C-%EC%96%B4%EB%8A%90-%EC%AA%BD" aria-label=" 꼬리질문 3 rls vs 애플리케이션 필터 언제 어느 쪽 permalink" class="anchor before"><svg aria-hidden="true" focusable="false" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>🔄 꼬리질문 3: RLS vs 애플리케이션 필터, 언제 어느 쪽?</h3>
 <p><strong>기대 답변:</strong></p>
 <ul>
@@ -445,6 +500,11 @@ WHERE 절 누락 사고를 막기 위해 DB 단에서 격리를 강제한 사례
 <li>애플리케이션 필터: 단일 팀이 소유, 코드 리뷰로 충분</li>
 <li><strong>둘 다</strong>: 깊이 방어(defense in depth)가 필요한 경우</li>
 </ul>
+<details>
+<summary>📋 <b>사례</b></summary>
+<br/>
+<p>의료 데이터(HIPAA 준수)에 <em>RLS + 앱 필터 둘 다</em> 적용 — 한쪽 누락에도 안전. 일반 SaaS는 <em>앱 필터만</em>. <strong>교훈: 보안 요구사항이 <em>법적</em>이면 다층 방어, 그 외엔 단일 충분.</strong></p>
+</details>
 <hr>
 <h2 id="5-postgresql-쿼리-플랜-flip-대응" style="position:relative;"><a href="#5-postgresql-%EC%BF%BC%EB%A6%AC-%ED%94%8C%EB%9E%9C-flip-%EB%8C%80%EC%9D%91" aria-label="5 postgresql 쿼리 플랜 flip 대응 permalink" class="anchor before"><svg aria-hidden="true" focusable="false" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>5. PostgreSQL 쿼리 플랜 Flip 대응</h2>
 <h3 id="q5-잘-돌던-쿼리가-갑자기-느려진-경험이-있나요" style="position:relative;"><a href="#q5-%EC%9E%98-%EB%8F%8C%EB%8D%98-%EC%BF%BC%EB%A6%AC%EA%B0%80-%EA%B0%91%EC%9E%90%EA%B8%B0-%EB%8A%90%EB%A0%A4%EC%A7%84-%EA%B2%BD%ED%97%98%EC%9D%B4-%EC%9E%88%EB%82%98%EC%9A%94" aria-label="q5 잘 돌던 쿼리가 갑자기 느려진 경험이 있나요 permalink" class="anchor before"><svg aria-hidden="true" focusable="false" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Q5. 잘 돌던 쿼리가 갑자기 느려진 경험이 있나요?</h3>
@@ -537,6 +597,11 @@ WHERE 절 누락 사고를 막기 위해 DB 단에서 격리를 강제한 사례
 <li><code class="language-text">CREATE STATISTICS s1 ON col_a, col_b FROM tbl</code> 로 다변량 통계 수집</li>
 <li>추정 오류로 nested loop이 풀스캔으로 바뀌는 케이스에 결정적</li>
 </ul>
+<details>
+<summary>📋 <b>사례</b></summary>
+<br/>
+<p><code class="language-text">customer_id</code>와 <code class="language-text">status</code> 강한 상관관계 — 옵티마이저는 독립 가정으로 500만 추정 (실제 200). Extended Statistics 생성 후 정확한 추정 → plan flip 사라짐. <strong>교훈: 상관관계 있는 컬럼은 <em>명시적 통계</em>로 보완.</strong></p>
+</details>
 <h3 id="-꼬리질문-2-논리-복제-슬롯도-같이-다뤄본-적-있나요" style="position:relative;"><a href="#-%EA%BC%AC%EB%A6%AC%EC%A7%88%EB%AC%B8-2-%EB%85%BC%EB%A6%AC-%EB%B3%B5%EC%A0%9C-%EC%8A%AC%EB%A1%AF%EB%8F%84-%EA%B0%99%EC%9D%B4-%EB%8B%A4%EB%A4%84%EB%B3%B8-%EC%A0%81-%EC%9E%88%EB%82%98%EC%9A%94" aria-label=" 꼬리질문 2 논리 복제 슬롯도 같이 다뤄본 적 있나요 permalink" class="anchor before"><svg aria-hidden="true" focusable="false" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>🔄 꼬리질문 2: 논리 복제 슬롯도 같이 다뤄본 적 있나요?</h3>
 <p><strong>기대 답변:</strong></p>
 <ul>
@@ -544,6 +609,11 @@ WHERE 절 누락 사고를 막기 위해 DB 단에서 격리를 강제한 사례
 <li><code class="language-text">restart_lsn</code> 상시 모니터링, 미사용 슬롯 즉시 Drop</li>
 <li>Fail-over 시 슬롯이 대기 서버로 복제되지 않으므로 <strong>재생성 자동화 + LSN 정합성 검증</strong> 필요</li>
 </ul>
+<details>
+<summary>📋 <b>사례</b></summary>
+<br/>
+<p>CDC 컨슈머 중단 → 슬롯이 WAL 1주일치 보관, 디스크 95% 도달 후 알람. 자동 <em>미사용 슬롯 Drop</em> 스크립트로 회피. <strong>교훈: 슬롯은 <em>컨슈머 헬스체크</em>와 <em>디스크 알람</em> 두 가지가 필수.</strong></p>
+</details>
 <h3 id="-꼬리질문-3-통계-신선도를-어떻게-관리하나요" style="position:relative;"><a href="#-%EA%BC%AC%EB%A6%AC%EC%A7%88%EB%AC%B8-3-%ED%86%B5%EA%B3%84-%EC%8B%A0%EC%84%A0%EB%8F%84%EB%A5%BC-%EC%96%B4%EB%96%BB%EA%B2%8C-%EA%B4%80%EB%A6%AC%ED%95%98%EB%82%98%EC%9A%94" aria-label=" 꼬리질문 3 통계 신선도를 어떻게 관리하나요 permalink" class="anchor before"><svg aria-hidden="true" focusable="false" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>🔄 꼬리질문 3: 통계 신선도를 어떻게 관리하나요?</h3>
 <p><strong>기대 답변:</strong></p>
 <ul>
@@ -551,6 +621,11 @@ WHERE 절 누락 사고를 막기 위해 DB 단에서 격리를 강제한 사례
 <li>대량 적재 후 수동 <code class="language-text">ANALYZE</code></li>
 <li>통계 샘플 비율(<code class="language-text">default_statistics_target</code>)을 핫 컬럼만 100→1000 정도로 상향</li>
 </ul>
+<details>
+<summary>📋 <b>사례</b></summary>
+<br/>
+<p>마이그레이션 스크립트 끝에 <em>명시적 <code class="language-text">ANALYZE</code></em> 추가 — 다음 날 새벽 plan flip 사라짐. 핫 컬럼만 <code class="language-text">default_statistics_target=1000</code>로 상향. <strong>교훈: 통계 관리는 <em>마이그레이션 절차</em>의 일부.</strong></p>
+</details>
 <hr>
 <h2 id="마무리-7편-핵심-정리" style="position:relative;"><a href="#%EB%A7%88%EB%AC%B4%EB%A6%AC-7%ED%8E%B8-%ED%95%B5%EC%8B%AC-%EC%A0%95%EB%A6%AC" aria-label="마무리 7편 핵심 정리 permalink" class="anchor before"><svg aria-hidden="true" focusable="false" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>마무리: 7편 핵심 정리</h2>
 <ol>

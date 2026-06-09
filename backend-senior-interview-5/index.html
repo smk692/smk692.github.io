@@ -164,6 +164,11 @@
 <li>멱등키 기반 수동 재처리 콘솔</li>
 </ul>
 <p>핵심은 <strong>eventual consistency 윈도우를 명시적으로 정의</strong>하는 것입니다.</p>
+<details>
+<summary>📋 <b>사례</b></summary>
+<br/>
+<p>PG사 일시 장애로 환불 보상 실패 → DLQ에 격리, 운영 콘솔에서 사가 ID 조회 + 멱등키로 수동 재실행. 평균 회복 15분. <strong>교훈: 보상 실패까지 가정한 <em>운영 콘솔</em>이 SAGA의 절반.</strong></p>
+</details>
 <h3 id="-꼬리질문-2-choreography의-단점은" style="position:relative;"><a href="#-%EA%BC%AC%EB%A6%AC%EC%A7%88%EB%AC%B8-2-choreography%EC%9D%98-%EB%8B%A8%EC%A0%90%EC%9D%80" aria-label=" 꼬리질문 2 choreography의 단점은 permalink" class="anchor before"><svg aria-hidden="true" focusable="false" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>🔄 꼬리질문 2: Choreography의 단점은?</h3>
 <p><strong>기대 답변:</strong></p>
 <ul>
@@ -172,6 +177,11 @@
 <li>분산 트레이싱 없으면 디버깅 비용 폭증</li>
 </ul>
 <p>→ 흐름이 5단계 넘으면 Orchestration으로 전환 권장.</p>
+<details>
+<summary>📋 <b>사례</b></summary>
+<br/>
+<p>Choreography 7단계 흐름 디버깅에 <em>어디서 멈췄는지</em> 추적만 1시간. Orchestration으로 전환 + 사가 ID 기반 대시보드 → 1분 내 진단. <strong>교훈: 흐름 5단계 넘으면 <em>반드시</em> Orchestration.</strong></p>
+</details>
 <h3 id="-꼬리질문-3-saga-vs-outbox-패턴-차이는" style="position:relative;"><a href="#-%EA%BC%AC%EB%A6%AC%EC%A7%88%EB%AC%B8-3-saga-vs-outbox-%ED%8C%A8%ED%84%B4-%EC%B0%A8%EC%9D%B4%EB%8A%94" aria-label=" 꼬리질문 3 saga vs outbox 패턴 차이는 permalink" class="anchor before"><svg aria-hidden="true" focusable="false" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>🔄 꼬리질문 3: SAGA vs Outbox 패턴 차이는?</h3>
 <p><strong>기대 답변:</strong></p>
 <ul>
@@ -179,6 +189,11 @@
 <li><strong>Outbox</strong>: 로컬 트랜잭션과 이벤트 발행을 <em>원자적</em>으로 묶는 패턴</li>
 </ul>
 <p>둘은 보완 관계입니다. SAGA 각 단계에서 이벤트 발행의 신뢰성을 Outbox로 보장.</p>
+<details>
+<summary>📋 <b>사례</b></summary>
+<br/>
+<p>SAGA 도입 직후 <em>이벤트 유실</em>로 보상 안 됨 — Outbox 추가해 단계별 이벤트 원자성 보장. 유실 0건. <strong>교훈: SAGA의 신뢰성은 <em>Outbox로 받침</em>해야 완전.</strong></p>
+</details>
 <hr>
 <h2 id="2-cqrs" style="position:relative;"><a href="#2-cqrs" aria-label="2 cqrs permalink" class="anchor before"><svg aria-hidden="true" focusable="false" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>2. CQRS</h2>
 <h3 id="q2-cqrs는-언제-도입하시나요" style="position:relative;"><a href="#q2-cqrs%EB%8A%94-%EC%96%B8%EC%A0%9C-%EB%8F%84%EC%9E%85%ED%95%98%EC%8B%9C%EB%82%98%EC%9A%94" aria-label="q2 cqrs는 언제 도입하시나요 permalink" class="anchor before"><svg aria-hidden="true" focusable="false" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Q2. CQRS는 언제 도입하시나요?</h3>
@@ -254,6 +269,11 @@
 <li>외부 알림에는 프로젝션 완료 후 전송</li>
 <li>운영 메트릭으로 lag(p99) 지표화</li>
 </ul>
+<details>
+<summary>📋 <b>사례</b></summary>
+<br/>
+<p>상품 등록 직후 셀러 화면이 ClickHouse 프로젝션 lag 5초로 <em>빈 화면</em> 표시 → 본인 행동 직후는 OLTP fallback. 사용자 혼란 사라짐. <strong>교훈: Read Your Writes는 <em>본인 행동만 즉시 반영</em>하는 패턴.</strong></p>
+</details>
 <h3 id="-꼬리질문-2-event-sourcing과-같이-가야-하나요" style="position:relative;"><a href="#-%EA%BC%AC%EB%A6%AC%EC%A7%88%EB%AC%B8-2-event-sourcing%EA%B3%BC-%EA%B0%99%EC%9D%B4-%EA%B0%80%EC%95%BC-%ED%95%98%EB%82%98%EC%9A%94" aria-label=" 꼬리질문 2 event sourcing과 같이 가야 하나요 permalink" class="anchor before"><svg aria-hidden="true" focusable="false" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>🔄 꼬리질문 2: Event Sourcing과 같이 가야 하나요?</h3>
 <p><strong>기대 답변:</strong>
 아닙니다. CQRS는 <em>모델 분리</em>, Event Sourcing은 <em>상태 표현</em>입니다.</p>
@@ -262,6 +282,11 @@
 <li>ES까지 도입: 감사/재구성이 필요할 때만 (운영 부담 큼)</li>
 </ul>
 <p>대부분은 CQRS만 도입해도 효과가 충분합니다.</p>
+<details>
+<summary>📋 <b>사례</b></summary>
+<br/>
+<p>CQRS는 도입했지만 ES는 <em>명시적으로 거부</em> — 결제 외 도메인은 감사 요구 없음. 운영 단순성 유지. <strong>교훈: ES는 <em>진짜 감사 요구사항</em>이 있을 때만, 멋있어 보여서 도입은 안티패턴.</strong></p>
+</details>
 <h3 id="-꼬리질문-3-프로젝션-갱신은-어떻게-안정화하나요" style="position:relative;"><a href="#-%EA%BC%AC%EB%A6%AC%EC%A7%88%EB%AC%B8-3-%ED%94%84%EB%A1%9C%EC%A0%9D%EC%85%98-%EA%B0%B1%EC%8B%A0%EC%9D%80-%EC%96%B4%EB%96%BB%EA%B2%8C-%EC%95%88%EC%A0%95%ED%99%94%ED%95%98%EB%82%98%EC%9A%94" aria-label=" 꼬리질문 3 프로젝션 갱신은 어떻게 안정화하나요 permalink" class="anchor before"><svg aria-hidden="true" focusable="false" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>🔄 꼬리질문 3: 프로젝션 갱신은 어떻게 안정화하나요?</h3>
 <p><strong>기대 답변:</strong></p>
 <ul>
@@ -269,6 +294,11 @@
 <li>멱등 처리 + 순서 보장(파티션 키 = aggregate id)</li>
 <li>실패 시 재처리 가능하도록 오프셋·DLQ 관리</li>
 </ul>
+<details>
+<summary>📋 <b>사례</b></summary>
+<br/>
+<p>Debezium + Kafka로 CDC 파이프라인. 컨슈머 재시작 시에도 <em>오프셋 기반 재처리</em>로 데이터 정합성 보장. lag p99는 Datadog 알람. <strong>교훈: CDC는 <em>재처리 시나리오</em>까지 설계해야 운영 안정.</strong></p>
+</details>
 <hr>
 <h2 id="3-api-gateway-패턴" style="position:relative;"><a href="#3-api-gateway-%ED%8C%A8%ED%84%B4" aria-label="3 api gateway 패턴 permalink" class="anchor before"><svg aria-hidden="true" focusable="false" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>3. API Gateway 패턴</h2>
 <h3 id="q3-api-gateway에-어디까지-책임을-두시겠어요" style="position:relative;"><a href="#q3-api-gateway%EC%97%90-%EC%96%B4%EB%94%94%EA%B9%8C%EC%A7%80-%EC%B1%85%EC%9E%84%EC%9D%84-%EB%91%90%EC%8B%9C%EA%B2%A0%EC%96%B4%EC%9A%94" aria-label="q3 api gateway에 어디까지 책임을 두시겠어요 permalink" class="anchor before"><svg aria-hidden="true" focusable="false" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Q3. API Gateway에 어디까지 책임을 두시겠어요?</h3>
@@ -335,6 +365,11 @@
 <li>게이트웨이 자체에 서킷 브레이커</li>
 <li>인증 캐시(JWT 검증 결과)로 ID provider 의존도 축소</li>
 </ul>
+<details>
+<summary>📋 <b>사례</b></summary>
+<br/>
+<p>게이트웨이 2대 → 6대로 확장 + 무상태로 유지. 한 대 다운에도 트래픽 영향 0. JWT 검증 결과 Redis 5분 캐시로 ID provider 부하 90% 감소. <strong>교훈: 게이트웨이도 <em>마이크로서비스처럼</em> 다중화 + 캐시.</strong></p>
+</details>
 <h3 id="-꼬리질문-2-게이트웨이가-병목이-될-때-어떤-신호를-보나요" style="position:relative;"><a href="#-%EA%BC%AC%EB%A6%AC%EC%A7%88%EB%AC%B8-2-%EA%B2%8C%EC%9D%B4%ED%8A%B8%EC%9B%A8%EC%9D%B4%EA%B0%80-%EB%B3%91%EB%AA%A9%EC%9D%B4-%EB%90%A0-%EB%95%8C-%EC%96%B4%EB%96%A4-%EC%8B%A0%ED%98%B8%EB%A5%BC-%EB%B3%B4%EB%82%98%EC%9A%94" aria-label=" 꼬리질문 2 게이트웨이가 병목이 될 때 어떤 신호를 보나요 permalink" class="anchor before"><svg aria-hidden="true" focusable="false" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>🔄 꼬리질문 2: 게이트웨이가 병목이 될 때 어떤 신호를 보나요?</h3>
 <p><strong>기대 답변:</strong></p>
 <ul>
@@ -342,6 +377,11 @@
 <li>커넥션 풀 사용률, keep-alive 재사용률</li>
 <li>TLS 핸드셰이크 비율(0-RTT/session resumption 적용 효과)</li>
 </ul>
+<details>
+<summary>📋 <b>사례</b></summary>
+<br/>
+<p>백엔드 p99 100ms인데 게이트웨이 p99 800ms → reactor netty 이벤트 루프 100% → 라우트별 Bulkhead로 자원 격리. p99 동일화. <strong>교훈: <em>게이트웨이 vs 백엔드 격차</em>가 가장 명확한 병목 신호.</strong></p>
+</details>
 <h3 id="-꼬리질문-3-게이트웨이-vs-service-mesh-어떻게-나누나요" style="position:relative;"><a href="#-%EA%BC%AC%EB%A6%AC%EC%A7%88%EB%AC%B8-3-%EA%B2%8C%EC%9D%B4%ED%8A%B8%EC%9B%A8%EC%9D%B4-vs-service-mesh-%EC%96%B4%EB%96%BB%EA%B2%8C-%EB%82%98%EB%88%84%EB%82%98%EC%9A%94" aria-label=" 꼬리질문 3 게이트웨이 vs service mesh 어떻게 나누나요 permalink" class="anchor before"><svg aria-hidden="true" focusable="false" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>🔄 꼬리질문 3: 게이트웨이 vs Service Mesh, 어떻게 나누나요?</h3>
 <p><strong>기대 답변:</strong></p>
 <ul>
@@ -349,6 +389,11 @@
 <li><strong>Service Mesh</strong>: 내부 서비스 간 (east-west) — mTLS, 재시도, 트래픽 분할</li>
 </ul>
 <p>둘은 보완. 작은 조직은 게이트웨이만으로 시작, 서비스 50+ 넘으면 Mesh 검토.</p>
+<details>
+<summary>📋 <b>사례</b></summary>
+<br/>
+<p>서비스 60개 도달 시점에 Linkerd 도입 — 자동 mTLS + 재시도 + 트래픽 분할. 게이트웨이는 north-south만 담당. <strong>교훈: 50+ 서비스는 <em>Mesh가 운영 비용</em>보다 절감 효과가 큼.</strong></p>
+</details>
 <hr>
 <h2 id="4-ddd와-bounded-context" style="position:relative;"><a href="#4-ddd%EC%99%80-bounded-context" aria-label="4 ddd와 bounded context permalink" class="anchor before"><svg aria-hidden="true" focusable="false" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>4. DDD와 Bounded Context</h2>
 <h3 id="q4-bounded-context를-코드팀db에-어떻게-반영하시나요" style="position:relative;"><a href="#q4-bounded-context%EB%A5%BC-%EC%BD%94%EB%93%9C%ED%8C%80db%EC%97%90-%EC%96%B4%EB%96%BB%EA%B2%8C-%EB%B0%98%EC%98%81%ED%95%98%EC%8B%9C%EB%82%98%EC%9A%94" aria-label="q4 bounded context를 코드팀db에 어떻게 반영하시나요 permalink" class="anchor before"><svg aria-hidden="true" focusable="false" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Q4. Bounded Context를 코드·팀·DB에 어떻게 반영하시나요?</h3>
@@ -417,6 +462,11 @@
 <li>동기 호출은 <em>오픈 호스트 서비스</em> 형태의 명시적 계약</li>
 <li>직접 DB 조회는 금지 (Anti-Corruption Layer로 격리)</li>
 </ul>
+<details>
+<summary>📋 <b>사례</b></summary>
+<br/>
+<p>결제 → 정산 통신을 <em>결제 도메인 이벤트</em> (<code class="language-text">PaymentCompleted</code>)로 전환. 정산 모듈은 이벤트만 구독, 결제 내부 변경에 영향 없음. <strong>교훈: 이벤트는 <em>컨텍스트 간 결합도를 결정적으로 낮춤</em>.</strong></p>
+</details>
 <h3 id="-꼬리질문-2-도메인-모델과-orm-엔티티가-같아야-하나요" style="position:relative;"><a href="#-%EA%BC%AC%EB%A6%AC%EC%A7%88%EB%AC%B8-2-%EB%8F%84%EB%A9%94%EC%9D%B8-%EB%AA%A8%EB%8D%B8%EA%B3%BC-orm-%EC%97%94%ED%8B%B0%ED%8B%B0%EA%B0%80-%EA%B0%99%EC%95%84%EC%95%BC-%ED%95%98%EB%82%98%EC%9A%94" aria-label=" 꼬리질문 2 도메인 모델과 orm 엔티티가 같아야 하나요 permalink" class="anchor before"><svg aria-hidden="true" focusable="false" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>🔄 꼬리질문 2: 도메인 모델과 ORM 엔티티가 같아야 하나요?</h3>
 <p><strong>기대 답변:</strong>
 규모에 따라 다릅니다.</p>
@@ -424,6 +474,11 @@
 <li>작은 도메인: 같아도 OK (<code class="language-text">@Entity</code> = 도메인 객체)</li>
 <li>복잡 도메인: 분리 (도메인 객체 + 영속 엔티티 + 매핑). 운영 부담은 늘지만 도메인 규칙이 ORM에 오염되지 않음</li>
 </ul>
+<details>
+<summary>📋 <b>사례</b></summary>
+<br/>
+<p>결제 도메인은 분리(<code class="language-text">Payment</code> 도메인 + <code class="language-text">PaymentEntity</code> ORM + Mapper), 단순한 알림 도메인은 <code class="language-text">@Entity</code>만. 둘 다 정답. <strong>교훈: <em>도메인 복잡도에 비례한</em> 추상화가 비용 효율.</strong></p>
+</details>
 <h3 id="-꼬리질문-3-마이크로서비스로-분리하는-기준은" style="position:relative;"><a href="#-%EA%BC%AC%EB%A6%AC%EC%A7%88%EB%AC%B8-3-%EB%A7%88%EC%9D%B4%ED%81%AC%EB%A1%9C%EC%84%9C%EB%B9%84%EC%8A%A4%EB%A1%9C-%EB%B6%84%EB%A6%AC%ED%95%98%EB%8A%94-%EA%B8%B0%EC%A4%80%EC%9D%80" aria-label=" 꼬리질문 3 마이크로서비스로 분리하는 기준은 permalink" class="anchor before"><svg aria-hidden="true" focusable="false" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>🔄 꼬리질문 3: 마이크로서비스로 분리하는 기준은?</h3>
 <p><strong>기대 답변:</strong>
 컨텍스트 경계가 분명하고 다음 중 둘 이상이면 분리:</p>
@@ -433,6 +488,11 @@
 <li>장애 격리 SLO가 다름</li>
 </ul>
 <p>코드 모듈로 시작해 문제가 보일 때 분리하는 <em>모듈러 모놀리스 → MSA</em> 흐름이 안전합니다.</p>
+<details>
+<summary>📋 <b>사례</b></summary>
+<br/>
+<p>모듈러 모놀리스 1년 운영 후 결제만 MSA로 분리 — 배포 주기·스케일·장애 SLO 모두 다름. 다른 모듈은 모놀리스 유지. <strong>교훈: <em>전부 MSA</em>가 아니라 <em>진짜 필요한 도메인만</em> 분리.</strong></p>
+</details>
 <hr>
 <h2 id="5-모놀리스-내-도메인-이벤트와-아웃박스" style="position:relative;"><a href="#5-%EB%AA%A8%EB%86%80%EB%A6%AC%EC%8A%A4-%EB%82%B4-%EB%8F%84%EB%A9%94%EC%9D%B8-%EC%9D%B4%EB%B2%A4%ED%8A%B8%EC%99%80-%EC%95%84%EC%9B%83%EB%B0%95%EC%8A%A4" aria-label="5 모놀리스 내 도메인 이벤트와 아웃박스 permalink" class="anchor before"><svg aria-hidden="true" focusable="false" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>5. 모놀리스 내 도메인 이벤트와 아웃박스</h2>
 <h3 id="q5-같은-모놀리스-안-두-모듈을-직접-호출-대신-도메인-이벤트로-묶을-때-트랜잭션-경계는-어떻게-설계하나요" style="position:relative;"><a href="#q5-%EA%B0%99%EC%9D%80-%EB%AA%A8%EB%86%80%EB%A6%AC%EC%8A%A4-%EC%95%88-%EB%91%90-%EB%AA%A8%EB%93%88%EC%9D%84-%EC%A7%81%EC%A0%91-%ED%98%B8%EC%B6%9C-%EB%8C%80%EC%8B%A0-%EB%8F%84%EB%A9%94%EC%9D%B8-%EC%9D%B4%EB%B2%A4%ED%8A%B8%EB%A1%9C-%EB%AC%B6%EC%9D%84-%EB%95%8C-%ED%8A%B8%EB%9E%9C%EC%9E%AD%EC%85%98-%EA%B2%BD%EA%B3%84%EB%8A%94-%EC%96%B4%EB%96%BB%EA%B2%8C-%EC%84%A4%EA%B3%84%ED%95%98%EB%82%98%EC%9A%94" aria-label="q5 같은 모놀리스 안 두 모듈을 직접 호출 대신 도메인 이벤트로 묶을 때 트랜잭션 경계는 어떻게 설계하나요 permalink" class="anchor before"><svg aria-hidden="true" focusable="false" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Q5. 같은 모놀리스 안 두 모듈을 직접 호출 대신 도메인 이벤트로 묶을 때 트랜잭션 경계는 어떻게 설계하나요?</h3>
@@ -527,6 +587,11 @@
 <li>같은 트랜잭션 안 다른 작업의 lock과 경합</li>
 </ul>
 <p><code class="language-text">AFTER_COMMIT</code>이 기본, 단 커밋 후 발행 실패는 별도로 잡아 outbox로 보완.</p>
+<details>
+<summary>📋 <b>사례</b></summary>
+<br/>
+<p>커밋 전 발행 코드 → 트랜잭션 롤백 후 <em>알림은 발송된</em> 사고. 사용자에게 “주문 생성됨” SMS만 가고 실제 주문은 없음. AFTER_COMMIT으로 즉시 교체. <strong>교훈: 커밋 전 발행은 <em>데이터 정합성의 적</em>.</strong></p>
+</details>
 <h3 id="-꼬리질문-2-outbox-폴링의-db-부하는-어떻게-제어하나요" style="position:relative;"><a href="#-%EA%BC%AC%EB%A6%AC%EC%A7%88%EB%AC%B8-2-outbox-%ED%8F%B4%EB%A7%81%EC%9D%98-db-%EB%B6%80%ED%95%98%EB%8A%94-%EC%96%B4%EB%96%BB%EA%B2%8C-%EC%A0%9C%EC%96%B4%ED%95%98%EB%82%98%EC%9A%94" aria-label=" 꼬리질문 2 outbox 폴링의 db 부하는 어떻게 제어하나요 permalink" class="anchor before"><svg aria-hidden="true" focusable="false" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>🔄 꼬리질문 2: Outbox 폴링의 DB 부하는 어떻게 제어하나요?</h3>
 <p><strong>기대 답변:</strong></p>
 <ul>
@@ -534,6 +599,11 @@
 <li>발행 후 즉시 삭제 또는 status 업데이트</li>
 <li>규모가 커지면 CDC(Debezium)로 전환해 폴링 자체를 제거</li>
 </ul>
+<details>
+<summary>📋 <b>사례</b></summary>
+<br/>
+<p>Outbox 폴링 1초마다 → DB QPS 10% 추가. Debezium CDC로 전환해 폴링 제거, lag 1s → 50ms. <strong>교훈: Outbox는 <em>시작</em>이고 CDC는 <em>규모의 답</em>.</strong></p>
+</details>
 <h3 id="-꼬리질문-3-컨슈머-측-멱등성은-어떻게-보장하나요" style="position:relative;"><a href="#-%EA%BC%AC%EB%A6%AC%EC%A7%88%EB%AC%B8-3-%EC%BB%A8%EC%8A%88%EB%A8%B8-%EC%B8%A1-%EB%A9%B1%EB%93%B1%EC%84%B1%EC%9D%80-%EC%96%B4%EB%96%BB%EA%B2%8C-%EB%B3%B4%EC%9E%A5%ED%95%98%EB%82%98%EC%9A%94" aria-label=" 꼬리질문 3 컨슈머 측 멱등성은 어떻게 보장하나요 permalink" class="anchor before"><svg aria-hidden="true" focusable="false" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>🔄 꼬리질문 3: 컨슈머 측 멱등성은 어떻게 보장하나요?</h3>
 <p><strong>기대 답변:</strong></p>
 <ul>
@@ -541,6 +611,11 @@
 <li>처리 완료 후 ack</li>
 <li>멱등 키 보존 기간을 비즈니스 윈도우보다 길게</li>
 </ul>
+<details>
+<summary>📋 <b>사례</b></summary>
+<br/>
+<p>알림 컨슈머에 <code class="language-text">processed_events(event_id PK, processed_at)</code> 테이블 추가, INSERT 실패면 skip. Kafka rebalance로 중복 메시지가 와도 알림 중복 0건. <strong>교훈: 멱등성은 <em>공급자</em>보다 <em>소비자</em>가 책임지는 게 안전.</strong></p>
+</details>
 <hr>
 <h2 id="마무리-5편-핵심-정리" style="position:relative;"><a href="#%EB%A7%88%EB%AC%B4%EB%A6%AC-5%ED%8E%B8-%ED%95%B5%EC%8B%AC-%EC%A0%95%EB%A6%AC" aria-label="마무리 5편 핵심 정리 permalink" class="anchor before"><svg aria-hidden="true" focusable="false" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>마무리: 5편 핵심 정리</h2>
 <ol>
