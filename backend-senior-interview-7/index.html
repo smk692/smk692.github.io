@@ -138,9 +138,26 @@
 </ul>
 <p><code class="language-text">(A=, B=, C BETWEEN)</code> 순서가 안정적입니다.</p>
 <details>
-<summary>📋 <b>사례</b></summary>
+<summary>📋 <b>실제 사례</b></summary>
 <br/>
-<p><code class="language-text">(created_at, status)</code>로 만든 인덱스 → <code class="language-text">WHERE status='ACTIVE' AND created_at > ...</code> 쿼리에서 풀스캔. <code class="language-text">(status, created_at)</code> 순서로 재생성 → 3.2초 → 45ms. <strong>교훈: 등치 컬럼이 <em>항상</em> 인덱스 선두.</strong></p>
+<p><strong>상황:</strong> 주문 조회 쿼리(<code class="language-text">WHERE status='ACTIVE' AND created_at > '...' ORDER BY created_at DESC</code>)에 <code class="language-text">(created_at, status)</code> 인덱스가 있었는데 <em>풀스캔</em>으로 3.2초.</p>
+<p><strong>진단:</strong></p>
+<ul>
+<li>인덱스 선두가 <code class="language-text">created_at</code>(범위 조건) → 등치 조건 <code class="language-text">status</code>가 인덱스를 효율적으로 못 좁힘</li>
+<li><code class="language-text">EXPLAIN</code>상 <code class="language-text">created_at</code> 범위로 넓게 스캔 후 <code class="language-text">status</code>로 필터 → 비효율</li>
+</ul>
+<p><strong>조치 — 컬럼 순서 재배치:</strong></p>
+<ul>
+<li><code class="language-text">(created_at, status)</code> → <strong><code class="language-text">(status, created_at DESC)</code></strong></li>
+<li>등치 조건(<code class="language-text">status</code>)을 선두에 → 즉시 좁힌 후 <code class="language-text">created_at</code>은 <em>범위 + 정렬</em>을 동시 해결 (filesort도 제거)</li>
+<li>기존 인덱스는 <em>1주 모니터링 후</em> drop (다른 쿼리 회귀 방지)</li>
+</ul>
+<p><strong>결과:</strong></p>
+<ul>
+<li>3.2초 → 45ms</li>
+<li><code class="language-text">Using filesort</code>도 제거 (정렬 컬럼이 인덱스에 정렬돼 있어서)</li>
+</ul>
+<p><strong>교훈:</strong> 복합 인덱스는 <strong>등치 조건 컬럼을 선두, 범위·정렬 컬럼을 뒤</strong>(<code class="language-text">A=, B=, C BETWEEN/ORDER BY</code>)에 둔다. 범위 컬럼이 선두면 <em>그 뒤 컬럼들이 인덱스를 효율적으로 못 쓴다</em>. 정렬 컬럼을 인덱스 끝에 두면 filesort도 같이 제거된다.</p>
 </details>
 <h3 id="-꼬리질문-2-커버링-인덱스가-항상-좋은-건가요" style="position:relative;"><a href="#-%EA%BC%AC%EB%A6%AC%EC%A7%88%EB%AC%B8-2-%EC%BB%A4%EB%B2%84%EB%A7%81-%EC%9D%B8%EB%8D%B1%EC%8A%A4%EA%B0%80-%ED%95%AD%EC%83%81-%EC%A2%8B%EC%9D%80-%EA%B1%B4%EA%B0%80%EC%9A%94" aria-label=" 꼬리질문 2 커버링 인덱스가 항상 좋은 건가요 permalink" class="anchor before"><svg aria-hidden="true" focusable="false" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>🔄 꼬리질문 2: 커버링 인덱스가 항상 좋은 건가요?</h3>
 <p><strong>기대 답변:</strong>
@@ -152,9 +169,27 @@
 </ul>
 <p>자주 쓰이는 조회만 선별적으로 커버링.</p>
 <details>
-<summary>📋 <b>사례</b></summary>
+<summary>📋 <b>실제 사례</b></summary>
 <br/>
-<p>페이징 쿼리에 커버링 인덱스 추가 → 40ms → 8ms, 그러나 인덱스 크기 1.2GB → 2.8GB로 <em>버퍼 풀 적중률 감소</em>. 핫 쿼리에만 선별 적용. <strong>교훈: 커버링은 <em>읽기 최적화</em>와 <em>쓰기·메모리 비용</em>의 trade-off.</strong></p>
+<p><strong>상황:</strong> 조회 성능을 위해 <em>여러 테이블에 커버링 인덱스를 광범위하게</em> 추가(<code class="language-text">INCLUDE</code>에 컬럼 다수). 조회는 빨라졌으나 <em>쓰기 latency가 2배</em>가 되고, 버퍼 풀 적중률이 떨어져 <em>오히려 다른 쿼리들이 느려짐</em>.</p>
+<p><strong>진단:</strong></p>
+<ul>
+<li>커버링 인덱스가 <em>INCLUDE 컬럼만큼 인덱스 크기를 키움</em> → INSERT/UPDATE마다 <em>큰 인덱스 갱신</em> 비용</li>
+<li>인덱스가 커지니 <em>버퍼 풀에 들어갈 데이터·인덱스 페이지가 줄어</em> 적중률 하락</li>
+<li>write-heavy 테이블에 광범위 커버링 → 손해</li>
+</ul>
+<p><strong>조치 — 선별 적용:</strong></p>
+<ul>
+<li><em>읽기 빈도가 압도적으로 높고 쓰기가 적은</em> 소수 쿼리만 커버링 유지</li>
+<li>write-heavy 테이블의 커버링 인덱스는 <em>INCLUDE 컬럼 최소화</em> 또는 제거</li>
+<li>쓰기 latency·버퍼 풀 적중률을 적용 전후로 비교</li>
+</ul>
+<p><strong>결과:</strong></p>
+<ul>
+<li>쓰기 latency 정상화, 버퍼 풀 적중률 회복</li>
+<li>진짜 핫한 읽기 쿼리만 커버링 이득 유지</li>
+</ul>
+<p><strong>교훈:</strong> 커버링 인덱스는 <em>공짜가 아니다</em> — <strong>인덱스 크기 증가 → 쓰기 비용 + 버퍼 풀 압박</strong>. 무분별하게 INCLUDE를 늘리면 <em>읽기 이득보다 쓰기·메모리 손해</em>가 크다. <strong>읽기 핫 + 쓰기 적은 소수 쿼리에만 선별</strong> 적용한다.</p>
 </details>
 <h3 id="-꼬리질문-3-jpa-n1과-인덱스의-관계는" style="position:relative;"><a href="#-%EA%BC%AC%EB%A6%AC%EC%A7%88%EB%AC%B8-3-jpa-n1%EA%B3%BC-%EC%9D%B8%EB%8D%B1%EC%8A%A4%EC%9D%98-%EA%B4%80%EA%B3%84%EB%8A%94" aria-label=" 꼬리질문 3 jpa n1과 인덱스의 관계는 permalink" class="anchor before"><svg aria-hidden="true" focusable="false" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>🔄 꼬리질문 3: JPA N+1과 인덱스의 관계는?</h3>
 <p><strong>기대 답변:</strong>
@@ -165,9 +200,26 @@ N+1은 <em>쿼리 횟수</em> 문제지만 인덱스가 없으면 N개의 풀스
 <li>FK 컬럼 인덱스는 기본으로 보장</li>
 </ul>
 <details>
-<summary>📋 <b>사례</b></summary>
+<summary>📋 <b>실제 사례</b></summary>
 <br/>
-<p><code class="language-text">order.user</code>를 lazy로 두고 100건 조회 → 100번 SELECT + FK 인덱스 누락으로 매번 풀스캔. 페치 조인 + FK 인덱스 추가로 1쿼리 + 즉시 응답. <strong>교훈: N+1은 <em>쿼리 횟수 + 인덱스</em> 둘 다 영향.</strong></p>
+<p><strong>상황:</strong> 주문 목록(100건) 조회 시 각 주문의 <code class="language-text">order.user</code>를 lazy 로딩 → <em>100번의 추가 SELECT</em>(N+1). 게다가 <code class="language-text">orders.user_id</code> FK에 <em>인덱스가 없어</em> 각 SELECT가 풀스캔 → 100번의 풀스캔으로 응답 8초.</p>
+<p><strong>진단:</strong></p>
+<ul>
+<li>N+1: 주문 1쿼리 + 사용자 100쿼리 = 101쿼리</li>
+<li><em>결정타</em>: <code class="language-text">user_id</code> FK 인덱스 부재 → 각 사용자 조회가 <em>수백만 행 풀스캔</em> (N+1이 풀스캔 폭주로 증폭)</li>
+</ul>
+<p><strong>조치 — 쿼리 횟수 + 인덱스 동시 해결:</strong></p>
+<ul>
+<li>ToOne(<code class="language-text">order.user</code>)은 <em>페치 조인</em>으로 1쿼리화 (<code class="language-text">JOIN FETCH</code>)</li>
+<li>ToMany 컬렉션은 <code class="language-text">default_batch_fetch_size</code>로 IN 쿼리 (카르테시안 곱 회피)</li>
+<li><em>FK 컬럼(<code class="language-text">user_id</code>)에 인덱스 추가</em> (PG는 FK에 자동 인덱스 안 만듦)</li>
+</ul>
+<p><strong>결과:</strong></p>
+<ul>
+<li>101쿼리 → 1~2쿼리, 각 쿼리도 인덱스 스캔</li>
+<li>응답 8초 → 60ms</li>
+</ul>
+<p><strong>교훈:</strong> N+1은 <em>쿼리 횟수</em> 문제지만, <strong>FK 인덱스가 없으면 N번의 풀스캔으로 증폭</strong>되어 훨씬 치명적이다. ToOne은 페치 조인, ToMany는 batch fetch로 횟수를 줄이고, <strong>FK 컬럼 인덱스(PG는 자동 생성 안 함)</strong> 를 반드시 보장한다.</p>
 </details>
 <hr>
 <h2 id="2-read-committed-vs-repeatable-read" style="position:relative;"><a href="#2-read-committed-vs-repeatable-read" aria-label="2 read committed vs repeatable read permalink" class="anchor before"><svg aria-hidden="true" focusable="false" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>2. Read Committed vs Repeatable Read</h2>
@@ -247,9 +299,26 @@ T2: UPDATE (balance=90), COMMIT  // 80이어야 하는데 90으로 덮음</code>
 <li>PostgreSQL: RR(엄밀히 snapshot isolation)이라 phantom은 막지만 <em>write skew</em>는 발생 → 필요 시 SERIALIZABLE</li>
 </ul>
 <details>
-<summary>📋 <b>사례</b></summary>
+<summary>📋 <b>실제 사례</b></summary>
 <br/>
-<p>PG에서 <em>의사가 동시에 휴가 신청해 응급실에 0명 남는</em> write skew 발생 → SERIALIZABLE로 격리 수준 상향, 충돌 시 재시도. <strong>교훈: RR(snapshot isolation)은 <em>완전한 직렬화 아님</em>, write skew 경계 필요.</strong></p>
+<p><strong>상황:</strong> 병원 <em>온콜 스케줄</em> 시스템 — “응급실에 최소 1명은 남아야 한다”는 규칙. PostgreSQL RR(snapshot isolation)을 믿고 있었는데, <em>두 의사가 동시에 휴가 신청</em>하자 <em>둘 다 “나 말고 1명 더 있네”를 보고 둘 다 승인</em> → <strong>응급실에 0명</strong> 사고.</p>
+<p><strong>진단 — Write Skew:</strong></p>
+<ul>
+<li>PG RR은 <em>각자 트랜잭션 시작 시점 스냅샷</em>을 봄 → 둘 다 “남은 의사 2명” 스냅샷</li>
+<li>각자 자기만 빠지는 UPDATE → <em>서로의 변경을 못 봄</em> → 둘 다 통과</li>
+<li>Phantom은 막지만 <em>write skew</em>(서로 다른 row를 수정해 불변식 위반)는 RR에서 발생</li>
+</ul>
+<p><strong>조치:</strong></p>
+<ul>
+<li>해당 트랜잭션만 <strong><code class="language-text">SERIALIZABLE</code></strong> 격리로 상향 → PG가 <em>직렬화 이상 감지 시 한쪽을 abort</em></li>
+<li>abort된 쪽은 <em>재시도</em> (이번엔 “1명만 남음” 보고 거부)</li>
+</ul>
+<p><strong>결과:</strong></p>
+<ul>
+<li>“응급실 0명” 사고 0건</li>
+<li>SERIALIZABLE은 해당 핵심 트랜잭션에만 한정 (전체 성능 영향 최소화)</li>
+</ul>
+<p><strong>교훈:</strong> PostgreSQL RR은 <em>엄밀히 snapshot isolation</em>이라 <strong>Phantom은 막아도 write skew(불변식 위반)는 발생</strong>한다. “최소 N명 유지” 같은 <em>집합 불변식</em>이 걸린 트랜잭션은 <em>SERIALIZABLE + 재시도</em>가 필요하다. MySQL/InnoDB는 gap lock으로 더 강하게 막는 차이도 알아둔다.</p>
 </details>
 <h3 id="-꼬리질문-2-mvcc가-어떻게-격리-수준을-보장하나요" style="position:relative;"><a href="#-%EA%BC%AC%EB%A6%AC%EC%A7%88%EB%AC%B8-2-mvcc%EA%B0%80-%EC%96%B4%EB%96%BB%EA%B2%8C-%EA%B2%A9%EB%A6%AC-%EC%88%98%EC%A4%80%EC%9D%84-%EB%B3%B4%EC%9E%A5%ED%95%98%EB%82%98%EC%9A%94" aria-label=" 꼬리질문 2 mvcc가 어떻게 격리 수준을 보장하나요 permalink" class="anchor before"><svg aria-hidden="true" focusable="false" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>🔄 꼬리질문 2: MVCC가 어떻게 격리 수준을 보장하나요?</h3>
 <p><strong>기대 답변:</strong></p>
@@ -260,9 +329,26 @@ T2: UPDATE (balance=90), COMMIT  // 80이어야 하는데 90으로 덮음</code>
 </ul>
 <p>비용은 <strong>Undo/Old version 누적</strong> → vacuum/cleanup 필요.</p>
 <details>
-<summary>📋 <b>사례</b></summary>
+<summary>📋 <b>실제 사례</b></summary>
 <br/>
-<p>장기 실행 분석 쿼리 1시간 → Old version 누적으로 vacuum 못 함, dead tuple 폭증으로 쿼리 전체 느려짐. 분석 쿼리는 <em>read replica</em>로 분리. <strong>교훈: MVCC 비용은 <em>장기 트랜잭션</em>이 가장 큼.</strong></p>
+<p><strong>상황:</strong> 분석팀의 <em>1시간짜리 무거운 리포트 쿼리</em>가 OLTP DB에서 돌기 시작한 뒤, 무관한 주문 테이블 쿼리들이 전부 느려지고 디스크 사용량이 급증.</p>
+<p><strong>진단 — Long Transaction이 vacuum을 막음:</strong></p>
+<ul>
+<li>MVCC는 <em>Old version(이전 버전 row)</em> 을 보관 → 트랜잭션들이 자기 시점 버전을 봄</li>
+<li>1시간 트랜잭션이 <em>살아있는 동안</em> vacuum이 <em>그 시점 이후 dead tuple을 정리 못 함</em> (혹시 그 트랜잭션이 볼 수 있어서)</li>
+<li>dead tuple이 계속 쌓여 <em>테이블 bloat</em> → 인덱스·스캔 효율 급락</li>
+</ul>
+<p><strong>조치:</strong></p>
+<ul>
+<li>무거운 분석 쿼리를 <em>Read Replica</em>로 분리 (OLTP의 MVCC·vacuum과 격리)</li>
+<li>장기 트랜잭션 모니터링 알람 (<code class="language-text">pg_stat_activity</code>에서 <em>xact_start 오래된</em> 트랜잭션 탐지)</li>
+</ul>
+<p><strong>결과:</strong></p>
+<ul>
+<li>OLTP bloat·디스크 급증 소멸</li>
+<li>분석은 replica에서 자유롭게 (OLTP 영향 0)</li>
+</ul>
+<p><strong>교훈:</strong> MVCC는 <em>읽기/쓰기가 서로 안 막는</em> 대신 <strong>Old version 누적 비용</strong>이 있다. <strong>장기 트랜잭션은 vacuum을 막아 dead tuple bloat</strong>를 유발한다. 무거운 분석 쿼리는 <em>read replica로 분리</em>하고, <em>장기 트랜잭션을 모니터링</em>한다.</p>
 </details>
 <h3 id="-꼬리질문-3-일관성을-더-높이면-처리량은-어떻게-변하나요" style="position:relative;"><a href="#-%EA%BC%AC%EB%A6%AC%EC%A7%88%EB%AC%B8-3-%EC%9D%BC%EA%B4%80%EC%84%B1%EC%9D%84-%EB%8D%94-%EB%86%92%EC%9D%B4%EB%A9%B4-%EC%B2%98%EB%A6%AC%EB%9F%89%EC%9D%80-%EC%96%B4%EB%96%BB%EA%B2%8C-%EB%B3%80%ED%95%98%EB%82%98%EC%9A%94" aria-label=" 꼬리질문 3 일관성을 더 높이면 처리량은 어떻게 변하나요 permalink" class="anchor before"><svg aria-hidden="true" focusable="false" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>🔄 꼬리질문 3: 일관성을 더 높이면 처리량은 어떻게 변하나요?</h3>
 <p><strong>기대 답변:</strong></p>
@@ -272,9 +358,27 @@ T2: UPDATE (balance=90), COMMIT  // 80이어야 하는데 90으로 덮음</code>
 <li>비즈니스가 진짜로 필요한 격리만 선택. <em>모든 트랜잭션을 SERIALIZABLE</em>은 안티패턴.</li>
 </ul>
 <details>
-<summary>📋 <b>사례</b></summary>
+<summary>📋 <b>실제 사례</b></summary>
 <br/>
-<p>전체 트랜잭션 SERIALIZABLE → 충돌 retry 폭증으로 처리량 50% 감소. 결제만 SERIALIZABLE, 나머지 RC 복귀 → 처리량 복구 + 정합성 유지. <strong>교훈: 격리 수준은 <em>트랜잭션 단위</em>로 결정.</strong></p>
+<p><strong>상황:</strong> write skew 사고를 겪은 뒤 <em>“안전하게 가자”</em> 며 <strong>전체 트랜잭션을 SERIALIZABLE</strong>로 올림. 그러자 <em>직렬화 충돌 retry가 폭증</em>해 처리량이 50% 떨어지고 p99도 급등.</p>
+<p><strong>진단:</strong></p>
+<ul>
+<li>SERIALIZABLE은 <em>모든 트랜잭션에 직렬화 가능 충돌 감지 + 충돌 시 abort/재시도</em></li>
+<li>대부분의 트랜잭션은 <em>충돌 위험이 없는데도</em> 그 비용을 부담</li>
+<li>처리량 RC > RR > SERIALIZABLE 순으로 떨어짐</li>
+</ul>
+<p><strong>조치 — 필요한 곳만 격리 상향:</strong></p>
+<ul>
+<li>전체를 RC(기본)로 되돌림</li>
+<li><em>집합 불변식이 걸린 핵심 트랜잭션</em>(온콜 스케줄, 재고 등)만 SERIALIZABLE + 재시도</li>
+<li>나머지는 RC + 원자적 UPDATE/낙관적 락으로 충분</li>
+</ul>
+<p><strong>결과:</strong></p>
+<ul>
+<li>처리량 복구 (50% 손실 → 거의 원복)</li>
+<li>핵심 불변식은 여전히 SERIALIZABLE로 보호</li>
+</ul>
+<p><strong>교훈:</strong> <em>“안전하니까 전부 SERIALIZABLE”</em> 은 안티패턴이다 — <strong>충돌 없는 트랜잭션까지 retry 비용</strong>을 떠안아 처리량이 급락한다. 격리 수준은 <em>트랜잭션 단위</em>로, <em>진짜 필요한 곳(집합 불변식)만</em> 상향한다. 처리량은 RC > RR > SERIALIZABLE 순.</p>
 </details>
 <hr>
 <h2 id="3-write-amplification" style="position:relative;"><a href="#3-write-amplification" aria-label="3 write amplification permalink" class="anchor before"><svg aria-hidden="true" focusable="false" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>3. Write Amplification</h2>
@@ -358,9 +462,25 @@ T2: UPDATE (balance=90), COMMIT  // 80이어야 하는데 90으로 덮음</code>
 </ul>
 <p>쓰기가 많으면 Tiered, 읽기가 많으면 Leveled.</p>
 <details>
-<summary>📋 <b>사례</b></summary>
+<summary>📋 <b>실제 사례</b></summary>
 <br/>
-<p>로그 적재(write-heavy)에 Leveled → WA 5배로 디스크 IO 한계. STCS로 전환 후 WA 2배, 디스크 처리량 회복. 단 읽기 latency 약간 증가. <strong>교훈: 워크로드(write/read 비율)로 Compaction 선택.</strong></p>
+<p><strong>상황:</strong> 로그 적재용 Cassandra 테이블(write 99% / read 1%)에 기본인 <em>Leveled Compaction(LCS)</em> 을 그대로 사용. write amplification이 <em>5배</em>까지 치솟아 디스크 IO가 한계, 적재 처리량이 급락.</p>
+<p><strong>진단:</strong></p>
+<ul>
+<li>LCS는 <em>읽기 최적화</em>형 → SSTable 레벨을 촘촘히 유지하려 <em>쓰기마다 반복 compaction</em> → write amp 큼</li>
+<li>우리 워크로드는 <em>write가 99%</em> → LCS의 읽기 이점은 안 쓰면서 쓰기 비용만 떠안음</li>
+</ul>
+<p><strong>조치 — 워크로드에 맞는 Compaction:</strong></p>
+<ul>
+<li>LCS → <strong>STCS(Size-Tiered Compaction)</strong> 로 변경 → 비슷한 크기 SSTable을 모아 <em>덜 자주</em> compaction → write amp 감소</li>
+<li>read가 거의 없으니 STCS의 <em>읽기 amp 증가는 무해</em></li>
+</ul>
+<p><strong>결과:</strong></p>
+<ul>
+<li>write amplification 5배 → 2배, 디스크 IO 여유 회복</li>
+<li>적재 처리량 정상화</li>
+</ul>
+<p><strong>교훈:</strong> Compaction은 <em>워크로드(read/write 비율)로 선택</em>한다. <strong>Leveled = 읽기 최적화(쓰기 amp 큼), Tiered = 쓰기 최적화(읽기 amp 큼)</strong>. write-heavy 로그에 LCS를 쓰면 <em>안 쓰는 읽기 이점 대가로 쓰기 비용</em>만 떠안는다.</p>
 </details>
 <h3 id="-꼬리질문-2-tombstone이-왜-비용이-되나요" style="position:relative;"><a href="#-%EA%BC%AC%EB%A6%AC%EC%A7%88%EB%AC%B8-2-tombstone%EC%9D%B4-%EC%99%9C-%EB%B9%84%EC%9A%A9%EC%9D%B4-%EB%90%98%EB%82%98%EC%9A%94" aria-label=" 꼬리질문 2 tombstone이 왜 비용이 되나요 permalink" class="anchor before"><svg aria-hidden="true" focusable="false" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>🔄 꼬리질문 2: Tombstone이 왜 비용이 되나요?</h3>
 <p><strong>기대 답변:</strong></p>
@@ -371,9 +491,26 @@ T2: UPDATE (balance=90), COMMIT  // 80이어야 하는데 90으로 덮음</code>
 </ul>
 <p>→ 데이터 모델 단계에서 <em>영구 삭제 vs 갱신</em> 정책을 결정해야 합니다.</p>
 <details>
-<summary>📋 <b>사례</b></summary>
+<summary>📋 <b>실제 사례</b></summary>
 <br/>
-<p>채팅방에 tombstone 10만 개 → <code class="language-text">TombstoneOverwhelmingException</code>으로 읽기 자체 실패. 파티션 키에 <code class="language-text">day</code> 추가해 파티션 분할. <strong>교훈: tombstone 임계치는 <em>데이터 모델 설계의 신호</em>.</strong></p>
+<p><strong>상황:</strong> Cassandra 채팅 메시지 조회가 어느 순간 <code class="language-text">TombstoneOverwhelmingException</code>으로 <em>읽기 자체가 실패</em>. 특정 활발한 채팅방에서만 발생.</p>
+<p><strong>진단:</strong></p>
+<ul>
+<li>그 채팅방 파티션에 <em>tombstone(삭제 마커)이 10만 개</em> 누적 → Cassandra의 <code class="language-text">tombstone_failure_threshold(10만)</code> 초과 → 쿼리 거부</li>
+<li>원인: <code class="language-text">PRIMARY KEY (chatroom_id, message_id)</code> → <em>한 채팅방 = 한 파티션</em>에 7일치 삭제 메시지가 다 쌓임</li>
+<li>TTL 만료된 메시지가 <em>tombstone으로 남아 읽기 시 스캔 대상</em></li>
+</ul>
+<p><strong>조치 — 파티션 분할 + Compaction:</strong></p>
+<ul>
+<li>파티션 키에 <code class="language-text">day</code> 추가: <code class="language-text">((chatroom_id, day), message_id)</code> → 하루 단위로 파티션 분할 → 파티션당 tombstone 제한</li>
+<li>TimeWindow Compaction으로 <em>오래된 SSTable을 통째 삭제</em>(tombstone 스캔 회피)</li>
+</ul>
+<p><strong>결과:</strong></p>
+<ul>
+<li>tombstone 임계 초과 소멸, 읽기 정상 복구</li>
+<li>파티션 크기도 예측 가능해짐</li>
+</ul>
+<p><strong>교훈:</strong> Cassandra에서 <em>삭제는 쓰기(tombstone)</em> 이고, <strong>파티션당 tombstone이 임계를 넘으면 읽기 자체가 실패</strong>한다. “한 엔티티 = 한 파티션”에 <em>삭제가 잦은 데이터</em>를 몰면 터진다. 데이터 모델 단계에서 <em>파티션 분할(day 등)</em> 과 <em>TTL/Compaction 정책</em>을 함께 설계해야 한다.</p>
 </details>
 <h3 id="-꼬리질문-3-운영에서-amplification을-어떻게-모니터링하나요" style="position:relative;"><a href="#-%EA%BC%AC%EB%A6%AC%EC%A7%88%EB%AC%B8-3-%EC%9A%B4%EC%98%81%EC%97%90%EC%84%9C-amplification%EC%9D%84-%EC%96%B4%EB%96%BB%EA%B2%8C-%EB%AA%A8%EB%8B%88%ED%84%B0%EB%A7%81%ED%95%98%EB%82%98%EC%9A%94" aria-label=" 꼬리질문 3 운영에서 amplification을 어떻게 모니터링하나요 permalink" class="anchor before"><svg aria-hidden="true" focusable="false" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>🔄 꼬리질문 3: 운영에서 amplification을 어떻게 모니터링하나요?</h3>
 <p><strong>기대 답변:</strong></p>
@@ -384,9 +521,26 @@ T2: UPDATE (balance=90), COMMIT  // 80이어야 하는데 90으로 덮음</code>
 <li>알람은 <em>amp 비율 + 디스크 여유</em>로 조합</li>
 </ul>
 <details>
-<summary>📋 <b>사례</b></summary>
+<summary>📋 <b>실제 사례</b></summary>
 <br/>
-<p>RocksDB metrics <code class="language-text">WRITE_AMP</code> Grafana 알람 — 5배 초과 시 알림. Compaction 정책 조정 트리거. SSD SMART 마모도 70%면 교체. <strong>교훈: WA 모니터링은 <em>디스크 수명·비용의 선행 지표</em>.</strong></p>
+<p><strong>상황:</strong> SSD 기반 DB 클러스터에서 <em>예고 없이 SSD가 수명을 다해</em> 한 노드가 죽고, 백업·교체에 긴급 대응. “왜 미리 몰랐나”는 회고.</p>
+<p><strong>진단:</strong></p>
+<ul>
+<li>write amplification이 <em>조용히 누적</em>되어 SSD 마모를 가속했는데 <em>아무도 추적 안 함</em></li>
+<li>디스크 <em>용량</em>만 모니터링하고 <em>쓰기 증폭·SSD 마모도</em>는 안 봄</li>
+</ul>
+<p><strong>조치 — WA·마모도 상시 모니터링:</strong></p>
+<ul>
+<li>RocksDB <code class="language-text">WRITE_AMP</code> 메트릭을 Grafana에 → <em>5배 초과 시 알람</em> (Compaction 정책 재검토 트리거)</li>
+<li>SSD <em>SMART의 wear leveling(마모도)</em> 지표 수집 → <em>70% 도달 시 사전 교체</em></li>
+<li>알람을 <em>amp 비율 + 디스크 여유</em>로 조합 (둘 다 나빠지면 critical)</li>
+</ul>
+<p><strong>결과:</strong></p>
+<ul>
+<li>이후 SSD를 <em>예고된 시점에 사전 교체</em> (기습 사망 0건)</li>
+<li>WA 5배 알람으로 Compaction 정책 조기 조정</li>
+</ul>
+<p><strong>교훈:</strong> Write Amplification은 <em>디스크 용량이 아니라 SSD 수명</em>을 갉아먹는다. <strong>RocksDB <code class="language-text">WRITE_AMP</code> + SSD SMART 마모도</strong>를 상시 모니터링해야 <em>기습 SSD 사망</em>을 예방한다. WA 모니터링은 <em>디스크 비용·수명의 선행 지표</em>다.</p>
 </details>
 <hr>
 <h2 id="4-postgres-rls와-멀티테넌시" style="position:relative;"><a href="#4-postgres-rls%EC%99%80-%EB%A9%80%ED%8B%B0%ED%85%8C%EB%84%8C%EC%8B%9C" aria-label="4 postgres rls와 멀티테넌시 permalink" class="anchor before"><svg aria-hidden="true" focusable="false" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>4. Postgres RLS와 멀티테넌시</h2>
@@ -477,9 +631,27 @@ WHERE 절 누락 사고를 막기 위해 DB 단에서 격리를 강제한 사례
 <li>풀 단위 검증 테스트 (다른 tenant ID로 회귀 테스트)</li>
 </ul>
 <details>
-<summary>📋 <b>사례</b></summary>
+<summary>📋 <b>실제 사례</b></summary>
 <br/>
-<p>반납 시 RESET 누락 → 다음 tenant가 <em>이전 tenant 데이터</em> 조회 가능. CI에 <em>서로 다른 tenant ID로 풀 검증 테스트</em> 추가. 사고 0건. <strong>교훈: 세션 변수는 <em>반납 시점 격리</em>가 핵심.</strong></p>
+<p><strong>상황:</strong> RLS 도입 직후, <em>테넌트 A의 요청이 테넌트 B의 데이터</em>를 조회하는 <em>역대급 보안 사고</em> 직전까지 감 (QA에서 발견). 격리하려고 RLS를 넣었는데 오히려 <em>교차 노출</em>.</p>
+<p><strong>진단 — 커넥션 풀 세션 오염:</strong></p>
+<ul>
+<li>커넥션 대여 시 <code class="language-text">SET app.tenant_id = A</code>로 설정</li>
+<li>그런데 <em>반납 시 RESET을 안 함</em> → 같은 커넥션이 <em>테넌트 B 요청에 재사용</em>될 때 <em>A의 tenant_id가 남아있음</em></li>
+<li>B가 <em>A의 데이터</em>를 조회 (RLS 정책이 A 기준으로 동작)</li>
+</ul>
+<p><strong>조치:</strong></p>
+<ul>
+<li>커넥션 <em>반납 시점에 <code class="language-text">RESET app.tenant_id</code></em> (또는 <code class="language-text">DISCARD ALL</code>) 강제 (래퍼 Connection의 <code class="language-text">close()</code>에서)</li>
+<li>HikariCP <code class="language-text">connectionInitSql</code>로 대여 시에도 초기화</li>
+<li>CI에 <em>서로 다른 tenant ID로 커넥션 재사용 검증 테스트</em> 추가 (회귀 방지)</li>
+</ul>
+<p><strong>결과:</strong></p>
+<ul>
+<li>교차 노출 사고 0건</li>
+<li>커넥션 재사용에도 안전</li>
+</ul>
+<p><strong>교훈:</strong> 세션 변수 기반 RLS는 <em>커넥션 풀 재사용</em> 때문에 <strong>반납 시 RESET을 안 하면 역으로 데이터가 오염</strong>된다 (격리하려다 교차 노출). <em>대여 시 설정 + 반납 시 RESET</em> 양쪽을 강제하고, <em>다른 tenant로 커넥션 재사용하는 회귀 테스트</em>로 검증한다.</p>
 </details>
 <h3 id="-꼬리질문-2-성능-영향은-어떻게-측정하나요" style="position:relative;"><a href="#-%EA%BC%AC%EB%A6%AC%EC%A7%88%EB%AC%B8-2-%EC%84%B1%EB%8A%A5-%EC%98%81%ED%96%A5%EC%9D%80-%EC%96%B4%EB%96%BB%EA%B2%8C-%EC%B8%A1%EC%A0%95%ED%95%98%EB%82%98%EC%9A%94" aria-label=" 꼬리질문 2 성능 영향은 어떻게 측정하나요 permalink" class="anchor before"><svg aria-hidden="true" focusable="false" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>🔄 꼬리질문 2: 성능 영향은 어떻게 측정하나요?</h3>
 <p><strong>기대 답변:</strong></p>
@@ -489,9 +661,26 @@ WHERE 절 누락 사고를 막기 위해 DB 단에서 격리를 강제한 사례
 <li>통계 정보(extended statistics)로 옵티마이저 추정 보정</li>
 </ul>
 <details>
-<summary>📋 <b>사례</b></summary>
+<summary>📋 <b>실제 사례</b></summary>
 <br/>
-<p>RLS 적용 직후 일부 쿼리 <em>풀스캔 회귀</em> — EXPLAIN ANALYZE로 인덱스가 tenant_id 포함 안 함 발견. 모든 인덱스 선두에 tenant_id 추가. <strong>교훈: RLS 도입 시 <em>인덱스 전수 재검토</em> 필수.</strong></p>
+<p><strong>상황:</strong> RLS 적용 후 일부 조회가 <em>갑자기 풀스캔으로 회귀</em>해 응답이 수십 배 느려짐. “RLS가 느리다”는 불만이 나옴.</p>
+<p><strong>진단 — <code class="language-text">EXPLAIN (ANALYZE, BUFFERS)</code> 전후 비교:</strong></p>
+<ul>
+<li>RLS 적용 전: <code class="language-text">Index Scan using idx_owner</code></li>
+<li>RLS 적용 후: <code class="language-text">Seq Scan</code> — RLS가 추가한 <code class="language-text">tenant_id = ...</code> 조건이 <em>기존 <code class="language-text">(owner_id)</code> 인덱스에 없어</em> 인덱스를 못 탐</li>
+<li>즉, 모든 쿼리에 <em>암묵적으로 tenant_id 조건이 붙는데</em> 인덱스가 그걸 반영 안 함</li>
+</ul>
+<p><strong>조치:</strong></p>
+<ul>
+<li>모든 인덱스를 <strong><code class="language-text">tenant_id</code> 선두</strong>로 재구성 (<code class="language-text">(tenant_id, owner_id)</code> 등)</li>
+<li>extended statistics로 <em>tenant_id와 다른 컬럼의 상관관계</em> 보정</li>
+</ul>
+<p><strong>결과:</strong></p>
+<ul>
+<li>인덱스 정상 사용 → 풀스캔 회귀 소멸</li>
+<li><em>일부 쿼리는 오히려 더 빨라짐</em> (tenant_id 선두로 먼저 좁혀서)</li>
+</ul>
+<p><strong>교훈:</strong> RLS는 <em>모든 쿼리에 암묵적 조건(<code class="language-text">tenant_id</code>)을 추가</em>하므로, <strong>기존 인덱스가 그 조건을 포함 안 하면 풀스캔으로 회귀</strong>한다. <code class="language-text">EXPLAIN (ANALYZE, BUFFERS)</code>로 전후를 비교하고, <em>모든 인덱스를 tenant_id 선두로 재설계</em>해야 한다. “RLS가 느린 게 아니라 인덱스가 안 맞는 것”.</p>
 </details>
 <h3 id="-꼬리질문-3-rls-vs-애플리케이션-필터-언제-어느-쪽" style="position:relative;"><a href="#-%EA%BC%AC%EB%A6%AC%EC%A7%88%EB%AC%B8-3-rls-vs-%EC%95%A0%ED%94%8C%EB%A6%AC%EC%BC%80%EC%9D%B4%EC%85%98-%ED%95%84%ED%84%B0-%EC%96%B8%EC%A0%9C-%EC%96%B4%EB%8A%90-%EC%AA%BD" aria-label=" 꼬리질문 3 rls vs 애플리케이션 필터 언제 어느 쪽 permalink" class="anchor before"><svg aria-hidden="true" focusable="false" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>🔄 꼬리질문 3: RLS vs 애플리케이션 필터, 언제 어느 쪽?</h3>
 <p><strong>기대 답변:</strong></p>
@@ -501,9 +690,26 @@ WHERE 절 누락 사고를 막기 위해 DB 단에서 격리를 강제한 사례
 <li><strong>둘 다</strong>: 깊이 방어(defense in depth)가 필요한 경우</li>
 </ul>
 <details>
-<summary>📋 <b>사례</b></summary>
+<summary>📋 <b>실제 사례</b></summary>
 <br/>
-<p>의료 데이터(HIPAA 준수)에 <em>RLS + 앱 필터 둘 다</em> 적용 — 한쪽 누락에도 안전. 일반 SaaS는 <em>앱 필터만</em>. <strong>교훈: 보안 요구사항이 <em>법적</em>이면 다층 방어, 그 외엔 단일 충분.</strong></p>
+<p><strong>상황:</strong> 의료 데이터(HIPAA 준수)를 다루는 시스템에서, <em>애플리케이션 필터(<code class="language-text">WHERE org_id = ?</code>)만으로</em> 격리하다가 보안 감사에서 <em>“개발자 실수 한 번이면 환자 데이터가 교차 노출될 수 있다”</em> 는 지적.</p>
+<p><strong>판단 — 요구사항 강도로 결정:</strong></p>
+<ul>
+<li>의료 데이터 격리는 <em>법적 의무(HIPAA)</em> → 단일 메커니즘으론 부족, <em>깊이 방어</em> 필요</li>
+<li>일반 SaaS 협업 도구의 일부 테넌트 격리는 <em>코드 리뷰로 충분</em>했지만, 의료는 차원이 다름</li>
+</ul>
+<p><strong>조치 — 의료 도메인엔 RLS + 앱 필터 둘 다:</strong></p>
+<ul>
+<li><strong>RLS</strong>: DB 단에서 강제 (애플리케이션 WHERE 누락에도 안전망)</li>
+<li><strong>애플리케이션 필터</strong>: 1차 방어 (성능·명시성)</li>
+<li><em>한쪽이 뚫려도 다른 쪽이 막는</em> defense in depth</li>
+</ul>
+<p><strong>결과:</strong></p>
+<ul>
+<li>보안 감사 통과 (다층 방어 입증)</li>
+<li>일반 SaaS 도메인은 <em>앱 필터만</em> 유지 (과투자 회피)</li>
+</ul>
+<p><strong>교훈:</strong> RLS vs 앱 필터는 <em>데이터 격리의 요구 강도</em>로 결정한다. <strong>법적/계약적 의무(의료·금융)면 RLS + 앱 필터 둘 다(defense in depth), 단일 팀 소유의 일반 데이터면 앱 필터 + 코드 리뷰로 충분</strong>. 모든 곳에 RLS를 강제하면 <em>인덱스 재설계·운영 부담</em>만 늘어난다.</p>
 </details>
 <hr>
 <h2 id="5-postgresql-쿼리-플랜-flip-대응" style="position:relative;"><a href="#5-postgresql-%EC%BF%BC%EB%A6%AC-%ED%94%8C%EB%9E%9C-flip-%EB%8C%80%EC%9D%91" aria-label="5 postgresql 쿼리 플랜 flip 대응 permalink" class="anchor before"><svg aria-hidden="true" focusable="false" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>5. PostgreSQL 쿼리 플랜 Flip 대응</h2>
@@ -598,9 +804,28 @@ WHERE 절 누락 사고를 막기 위해 DB 단에서 격리를 강제한 사례
 <li>추정 오류로 nested loop이 풀스캔으로 바뀌는 케이스에 결정적</li>
 </ul>
 <details>
-<summary>📋 <b>사례</b></summary>
+<summary>📋 <b>실제 사례</b></summary>
 <br/>
-<p><code class="language-text">customer_id</code>와 <code class="language-text">status</code> 강한 상관관계 — 옵티마이저는 독립 가정으로 500만 추정 (실제 200). Extended Statistics 생성 후 정확한 추정 → plan flip 사라짐. <strong>교훈: 상관관계 있는 컬럼은 <em>명시적 통계</em>로 보완.</strong></p>
+<p><strong>상황:</strong> <code class="language-text">WHERE city = '서울' AND district = '강남구'</code> 쿼리가 <em>간헐적으로 플랜이 튀어</em> 풀스캔. 단일 컬럼 인덱스·통계는 다 정상인데 조합 쿼리만 오판.</p>
+<p><strong>진단 — 컬럼 상관관계 미인지:</strong></p>
+<ul>
+<li>옵티마이저는 <em>city와 district를 독립</em>으로 가정 → <code class="language-text">P(서울) × P(강남구)</code> = 매우 작은 확률로 추정 → “거의 없겠네” 하고 잘못된 플랜</li>
+<li>실제로는 <em>강남구는 무조건 서울</em> (강한 상관관계) → 실제 매칭 행이 추정보다 훨씬 많음</li>
+<li>추정-실제 괴리로 nested loop이 잘못 선택됨</li>
+</ul>
+<p><strong>조치 — Extended Statistics:</strong></p>
+<div class="gatsby-highlight" data-language="sql"><pre class="language-sql"><code class="language-sql"><span class="token keyword">CREATE</span> <span class="token keyword">STATISTICS</span> s_addr <span class="token punctuation">(</span>mcv<span class="token punctuation">,</span> dependencies<span class="token punctuation">)</span>
+<span class="token keyword">ON</span> city<span class="token punctuation">,</span> district <span class="token keyword">FROM</span> addresses<span class="token punctuation">;</span>
+<span class="token keyword">ANALYZE</span> addresses<span class="token punctuation">;</span></code></pre></div>
+<ul>
+<li>다변량 통계로 옵티마이저가 <em>city-district 함수적 종속성</em>을 학습 → 정확한 추정</li>
+</ul>
+<p><strong>결과:</strong></p>
+<ul>
+<li>플랜 flip 소멸, 일관되게 인덱스 스캔</li>
+<li>추정-실제 괴리 해소</li>
+</ul>
+<p><strong>교훈:</strong> 옵티마이저는 기본적으로 <em>컬럼을 독립으로 가정</em>한다. <strong>city-district, customer-status처럼 강한 상관관계가 있는 컬럼 조합</strong>은 추정이 크게 빗나가 plan flip을 유발한다. <strong><code class="language-text">CREATE STATISTICS ... (mcv, dependencies)</code></strong> 로 다변량 통계를 주면 정확해진다.</p>
 </details>
 <h3 id="-꼬리질문-2-논리-복제-슬롯도-같이-다뤄본-적-있나요" style="position:relative;"><a href="#-%EA%BC%AC%EB%A6%AC%EC%A7%88%EB%AC%B8-2-%EB%85%BC%EB%A6%AC-%EB%B3%B5%EC%A0%9C-%EC%8A%AC%EB%A1%AF%EB%8F%84-%EA%B0%99%EC%9D%B4-%EB%8B%A4%EB%A4%84%EB%B3%B8-%EC%A0%81-%EC%9E%88%EB%82%98%EC%9A%94" aria-label=" 꼬리질문 2 논리 복제 슬롯도 같이 다뤄본 적 있나요 permalink" class="anchor before"><svg aria-hidden="true" focusable="false" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>🔄 꼬리질문 2: 논리 복제 슬롯도 같이 다뤄본 적 있나요?</h3>
 <p><strong>기대 답변:</strong></p>
@@ -610,9 +835,27 @@ WHERE 절 누락 사고를 막기 위해 DB 단에서 격리를 강제한 사례
 <li>Fail-over 시 슬롯이 대기 서버로 복제되지 않으므로 <strong>재생성 자동화 + LSN 정합성 검증</strong> 필요</li>
 </ul>
 <details>
-<summary>📋 <b>사례</b></summary>
+<summary>📋 <b>실제 사례</b></summary>
 <br/>
-<p>CDC 컨슈머 중단 → 슬롯이 WAL 1주일치 보관, 디스크 95% 도달 후 알람. 자동 <em>미사용 슬롯 Drop</em> 스크립트로 회피. <strong>교훈: 슬롯은 <em>컨슈머 헬스체크</em>와 <em>디스크 알람</em> 두 가지가 필수.</strong></p>
+<p><strong>상황:</strong> CDC 컨슈머(Debezium)가 배포 이슈로 <em>3일간 중단</em>됐는데, 그 사이 PostgreSQL <em>디스크 사용량이 95%까지 차올라</em> DB가 멈출 뻔한 장애.</p>
+<p><strong>진단 — 복제 슬롯이 WAL을 붙잡음:</strong></p>
+<ul>
+<li>논리 복제 슬롯은 <em>컨슈머가 아직 안 읽은 WAL을 보관</em>해야 함 (재개 대비)</li>
+<li>컨슈머가 3일 중단 → 슬롯이 <em>3일치 WAL을 못 버리고 계속 쌓음</em> → 디스크 폭증</li>
+<li><code class="language-text">pg_replication_slots</code>의 <em><code class="language-text">restart_lsn</code>이 3일째 정지</em></li>
+</ul>
+<p><strong>조치:</strong></p>
+<ul>
+<li>즉시: <em>중단된 슬롯의 lag(<code class="language-text">restart_lsn</code> vs 현재 WAL)</em> 확인 → 컨슈머 복구 or <em>미사용 슬롯 Drop</em></li>
+<li>영구: <code class="language-text">pg_replication_slots</code> lag을 <em>상시 모니터링 알람</em> (lag > 임계 시) + <em>컨슈머 헬스체크</em></li>
+<li>Fail-over 시 슬롯이 <em>대기 서버로 복제 안 되므로</em>, 승격 후 <em>슬롯 재생성 + LSN 정합성 검증</em> 스크립트 마련</li>
+</ul>
+<p><strong>결과:</strong></p>
+<ul>
+<li>디스크 폭증 사전 차단 (lag 알람으로 조기 인지)</li>
+<li>Fail-over 시 슬롯 유실로 인한 CDC 중단도 자동 복구</li>
+</ul>
+<p><strong>교훈:</strong> 논리 복제 슬롯은 <em>컨슈머가 멈추면 WAL을 무한정 붙잡아</em> 디스크를 채운다. <strong><code class="language-text">restart_lsn</code> lag 상시 모니터링 + 컨슈머 헬스체크</strong>가 필수. Fail-over 시엔 <em>슬롯이 대기 서버로 복제 안 되므로</em> 재생성·LSN 검증 자동화가 필요하다.</p>
 </details>
 <h3 id="-꼬리질문-3-통계-신선도를-어떻게-관리하나요" style="position:relative;"><a href="#-%EA%BC%AC%EB%A6%AC%EC%A7%88%EB%AC%B8-3-%ED%86%B5%EA%B3%84-%EC%8B%A0%EC%84%A0%EB%8F%84%EB%A5%BC-%EC%96%B4%EB%96%BB%EA%B2%8C-%EA%B4%80%EB%A6%AC%ED%95%98%EB%82%98%EC%9A%94" aria-label=" 꼬리질문 3 통계 신선도를 어떻게 관리하나요 permalink" class="anchor before"><svg aria-hidden="true" focusable="false" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>🔄 꼬리질문 3: 통계 신선도를 어떻게 관리하나요?</h3>
 <p><strong>기대 답변:</strong></p>
@@ -622,9 +865,27 @@ WHERE 절 누락 사고를 막기 위해 DB 단에서 격리를 강제한 사례
 <li>통계 샘플 비율(<code class="language-text">default_statistics_target</code>)을 핫 컬럼만 100→1000 정도로 상향</li>
 </ul>
 <details>
-<summary>📋 <b>사례</b></summary>
+<summary>📋 <b>실제 사례</b></summary>
 <br/>
-<p>마이그레이션 스크립트 끝에 <em>명시적 <code class="language-text">ANALYZE</code></em> 추가 — 다음 날 새벽 plan flip 사라짐. 핫 컬럼만 <code class="language-text">default_statistics_target=1000</code>로 상향. <strong>교훈: 통계 관리는 <em>마이그레이션 절차</em>의 일부.</strong></p>
+<p><strong>상황:</strong> 매일 새벽 <em>대량 배치</em>(오래된 주문 상태 일괄 변경) 직후, <em>다음 날 아침마다 주문 검색이 plan flip으로 느려지는</em> 패턴이 반복. autovacuum이 <em>배치 변경량을 따라잡기 전</em>에 아침 트래픽이 시작.</p>
+<p><strong>진단:</strong></p>
+<ul>
+<li>autovacuum의 <code class="language-text">analyze_scale_factor</code>(기본 0.1) = “테이블의 10%가 바뀌어야 ANALYZE”</li>
+<li>대량 배치는 <em>밤사이 통계를 stale하게</em> 만드는데, autovacuum이 <em>아침까지 못 따라잡음</em></li>
+<li>stale 통계로 옵티마이저가 오판 → plan flip</li>
+</ul>
+<p><strong>조치 — 배치 절차에 통계 갱신 포함:</strong></p>
+<ul>
+<li><em>마이그레이션/배치 스크립트 마지막에 명시적 <code class="language-text">ANALYZE orders</code></em> 추가 (autovacuum 안 기다림)</li>
+<li>핫 테이블은 <code class="language-text">autovacuum_analyze_scale_factor = 0.02</code>로 더 공격적으로</li>
+<li>변동 큰 핫 컬럼만 <code class="language-text">default_statistics_target = 1000</code> 상향 (샘플 정밀도)</li>
+</ul>
+<p><strong>결과:</strong></p>
+<ul>
+<li>배치 다음 날 아침 plan flip 소멸 (3개월)</li>
+<li>“배치 후 통계 갱신”이 절차로 정착</li>
+</ul>
+<p><strong>교훈:</strong> 통계 신선도 관리의 핵심은 <em>autovacuum에만 맡기지 않는 것</em>이다. <strong>대량 배치/마이그레이션 끝에 명시적 <code class="language-text">ANALYZE</code></strong> 를 넣어야 <em>다음 트래픽 전에</em> 통계가 최신화된다. 핫 테이블은 <code class="language-text">analyze_scale_factor</code>를 공격적으로, 핫 컬럼은 <code class="language-text">statistics_target</code>을 상향한다. 통계 관리는 <em>마이그레이션 절차의 일부</em>다.</p>
 </details>
 <hr>
 <h2 id="마무리-7편-핵심-정리" style="position:relative;"><a href="#%EB%A7%88%EB%AC%B4%EB%A6%AC-7%ED%8E%B8-%ED%95%B5%EC%8B%AC-%EC%A0%95%EB%A6%AC" aria-label="마무리 7편 핵심 정리 permalink" class="anchor before"><svg aria-hidden="true" focusable="false" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>마무리: 7편 핵심 정리</h2>

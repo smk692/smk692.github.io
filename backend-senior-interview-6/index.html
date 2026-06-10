@@ -144,9 +144,26 @@ Retry-After: 32</code></pre></div>
 </ul>
 <p>Redis 클러스터에선 같은 키가 같은 슬롯에 떨어지도록 hashtag 사용.</p>
 <details>
-<summary>📋 <b>사례</b></summary>
+<summary>📋 <b>실제 사례</b></summary>
 <br/>
-<p>INCR + EXPIRE를 <em>2 호출로 분리</em>했더니 race condition으로 카운트 누락 발생 → Lua 스크립트 단일 호출로 원자화. 누락 0건. <strong>교훈: Rate Limit의 <em>모든 read-modify-write</em>는 Lua로 묶기.</strong></p>
+<p><strong>상황:</strong> Rate Limit을 <code class="language-text">GET count → 검사 → INCR</code> <em>두 번의 Redis 호출</em>로 구현. 평소엔 정확했는데, 같은 사용자가 <em>동시에 여러 요청</em>을 보내면 <em>둘 다 GET에서 같은 값을 읽고 둘 다 통과</em>시켜 한도를 초과하는 race condition 발생 (봇이 이를 악용).</p>
+<p><strong>진단:</strong></p>
+<ul>
+<li><code class="language-text">GET</code>과 <code class="language-text">INCR</code> 사이에 <em>다른 요청이 끼어드는</em> 시간 윈도우 존재</li>
+<li>분산 환경(여러 API 인스턴스)에선 이 윈도우가 더 빈번</li>
+<li>결과적으로 분당 60건 제한이 <em>동시 요청 시 80~100건까지</em> 새어나감</li>
+</ul>
+<p><strong>조치 — Lua 스크립트로 원자화:</strong></p>
+<ul>
+<li><code class="language-text">GET → 검사 → INCR → EXPIRE</code>를 <strong>단일 Lua 스크립트</strong>로 묶음 → Redis가 <em>원자적으로 실행</em> (중간 끼어듦 불가)</li>
+<li>Redis Cluster에선 <em>같은 사용자 키가 같은 슬롯</em>에 떨어지도록 hashtag(<code class="language-text">{user:123}:...</code>) 적용</li>
+</ul>
+<p><strong>결과:</strong></p>
+<ul>
+<li>동시 요청에도 한도 정확히 적용 (새어나감 0)</li>
+<li>봇의 race condition 악용 차단</li>
+</ul>
+<p><strong>교훈:</strong> Rate Limit의 모든 <em>read-modify-write</em>는 <strong>Lua 스크립트로 원자화</strong>해야 한다. <code class="language-text">GET → INCR</code> 분리는 동시 요청 시 <em>반드시 새어나간다</em>. Redis Cluster에선 <em>hashtag로 같은 슬롯 보장</em>까지 해야 Lua가 동작한다.</p>
 </details>
 <h3 id="-꼬리질문-2-sliding-window의-메모리-비용은-어떻게-관리하나요" style="position:relative;"><a href="#-%EA%BC%AC%EB%A6%AC%EC%A7%88%EB%AC%B8-2-sliding-window%EC%9D%98-%EB%A9%94%EB%AA%A8%EB%A6%AC-%EB%B9%84%EC%9A%A9%EC%9D%80-%EC%96%B4%EB%96%BB%EA%B2%8C-%EA%B4%80%EB%A6%AC%ED%95%98%EB%82%98%EC%9A%94" aria-label=" 꼬리질문 2 sliding window의 메모리 비용은 어떻게 관리하나요 permalink" class="anchor before"><svg aria-hidden="true" focusable="false" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>🔄 꼬리질문 2: Sliding Window의 메모리 비용은 어떻게 관리하나요?</h3>
 <p><strong>기대 답변:</strong></p>
@@ -156,9 +173,26 @@ Retry-After: 32</code></pre></div>
 <li>TTL을 짧게 둬 자동 정리</li>
 </ul>
 <details>
-<summary>📋 <b>사례</b></summary>
+<summary>📋 <b>실제 사례</b></summary>
 <br/>
-<p>완전 sliding으로 시작 → 1억 사용자 × 평균 60건 = Redis 메모리 24GB. Sliding Window Counter로 전환 후 100MB. 정확도 98% 유지. <strong>교훈: <em>완전 정확</em>보다 <em>비용 대비 충분</em>.</strong></p>
+<p><strong>상황:</strong> 정확한 Sliding Window Log(각 요청 타임스탬프를 Redis Sorted Set에 저장)로 구현. 정확도는 100%였으나, <em>1억 사용자 × 평균 60건 타임스탬프</em>가 Redis 메모리 <strong>24GB</strong>를 잡아먹어 비용 폭발 + Redis 메모리 압박으로 eviction 위험.</p>
+<p><strong>진단:</strong></p>
+<ul>
+<li>완전 정확한 sliding은 <em>모든 요청 타임스탬프를 보관</em>해야 함 → 메모리가 요청 수에 비례</li>
+<li>실제로 <em>분 단위 한도 검사</em>에 <em>밀리초 정확도</em>는 과잉</li>
+</ul>
+<p><strong>조치 — Sliding Window Counter로 절충:</strong></p>
+<ul>
+<li>타임스탬프 로그 대신 <em>현재 윈도우 카운트 + 이전 윈도우 카운트</em> 두 정수만 저장</li>
+<li>가중 평균(<code class="language-text">prev * (1-progress) + current</code>)으로 근사 → 메모리 사용자당 2개 정수</li>
+<li>TTL을 윈도우 2배로 짧게 둬 자동 정리</li>
+</ul>
+<p><strong>결과:</strong></p>
+<ul>
+<li>메모리: 24GB → 100MB (240배 절감)</li>
+<li>정확도 98% (분 단위 한도엔 충분)</li>
+</ul>
+<p><strong>교훈:</strong> <em>완전 정확한 Sliding Window Log</em>는 메모리가 요청 수에 비례해 폭발한다. <strong>Sliding Window Counter(두 윈도우 가중 평균)</strong> 로 <em>98% 정확도에 메모리 240배 절감</em>. “완전 정확”보다 <em>“비용 대비 충분히 정확”</em> 이 실용적이다.</p>
 </details>
 <h3 id="-꼬리질문-3-클라이언트가-한도-초과면-어떤-응답을-주나요" style="position:relative;"><a href="#-%EA%BC%AC%EB%A6%AC%EC%A7%88%EB%AC%B8-3-%ED%81%B4%EB%9D%BC%EC%9D%B4%EC%96%B8%ED%8A%B8%EA%B0%80-%ED%95%9C%EB%8F%84-%EC%B4%88%EA%B3%BC%EB%A9%B4-%EC%96%B4%EB%96%A4-%EC%9D%91%EB%8B%B5%EC%9D%84-%EC%A3%BC%EB%82%98%EC%9A%94" aria-label=" 꼬리질문 3 클라이언트가 한도 초과면 어떤 응답을 주나요 permalink" class="anchor before"><svg aria-hidden="true" focusable="false" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>🔄 꼬리질문 3: 클라이언트가 한도 초과면 어떤 응답을 주나요?</h3>
 <p><strong>기대 답변:</strong></p>
@@ -168,9 +202,26 @@ Retry-After: 32</code></pre></div>
 <li>큐 기반 비동기 백오프 권장 (지수 + jitter)</li>
 </ul>
 <details>
-<summary>📋 <b>사례</b></summary>
+<summary>📋 <b>실제 사례</b></summary>
 <br/>
-<p>429 + Retry-After 헤더 도입 후 클라이언트 SDK가 자동 백오프 → API 폭주 패턴 70% 감소. 헤더 <em>없을 때</em>는 클라이언트가 즉시 재시도해 더 망함. <strong>교훈: 헤더로 <em>클라이언트 협조</em>를 유도.</strong></p>
+<p><strong>상황:</strong> 한도 초과 시 <em>단순히 429만</em> 반환했더니, 클라이언트(모바일 앱·파트너 서버)들이 <em>언제 다시 시도할지 몰라 즉시 재시도</em>를 반복 → 차단된 요청이 <em>더 많은 트래픽</em>을 유발하는 악순환.</p>
+<p><strong>진단:</strong></p>
+<ul>
+<li>429만으로는 클라이언트가 <em>얼마나 기다려야 하는지</em> 알 수 없음</li>
+<li>결과적으로 <em>차단당한 클라이언트가 더 공격적으로 재시도</em> → 서버 부하 가중</li>
+</ul>
+<p><strong>조치 — 협조를 유도하는 응답:</strong></p>
+<ul>
+<li><code class="language-text">429</code> + <strong><code class="language-text">Retry-After: 32</code></strong> (정확한 대기 시간) + <code class="language-text">X-RateLimit-Remaining/Reset</code> 헤더</li>
+<li>파트너 SDK에 <em>Retry-After 기반 자동 백오프</em>(지수 + jitter) 가이드 배포</li>
+<li>문서에 “429 받으면 Retry-After만큼 대기” 명시</li>
+</ul>
+<p><strong>결과:</strong></p>
+<ul>
+<li>차단 후 <em>무분별 재시도 70% 감소</em> (클라이언트가 헤더 보고 대기)</li>
+<li>차단이 <em>더 큰 부하를 유발하던 악순환</em> 해소</li>
+</ul>
+<p><strong>교훈:</strong> Rate Limit 응답은 <em>차단으로 끝이 아니라 클라이언트 협조를 유도</em>해야 한다. <strong><code class="language-text">Retry-After</code> + <code class="language-text">X-RateLimit-*</code> 헤더</strong>로 “언제 다시 오라”를 알려주면 <em>무분별 재시도가 줄어</em> 서버를 보호한다. 헤더 없는 429는 오히려 부하를 키운다.</p>
 </details>
 <hr>
 <h2 id="2-bulkhead-패턴" style="position:relative;"><a href="#2-bulkhead-%ED%8C%A8%ED%84%B4" aria-label="2 bulkhead 패턴 permalink" class="anchor before"><svg aria-hidden="true" focusable="false" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>2. Bulkhead 패턴</h2>
@@ -248,9 +299,26 @@ Retry-After: 32</code></pre></div>
 <li>실험적으로 부하 테스트(k6, JMeter)로 검증</li>
 </ul>
 <details>
-<summary>📋 <b>사례</b></summary>
+<summary>📋 <b>실제 사례</b></summary>
 <br/>
-<p>평소 p99 동시성 18로 임계치 30 설정 → 평소 충분히 여유, 장애 시 <em>격리 효과 명확</em>. k6 부하 테스트로 knee point 검증. <strong>교훈: 1.5~2배가 <em>너무 적지도 너무 많지도 않은</em> 절충점.</strong></p>
+<p><strong>상황:</strong> Bulkhead 임계치를 <em>감으로</em> SMS 클라이언트에 100으로 설정. 막상 SMS 장애가 나니 100개 스레드가 다 묶여 <em>격리 효과가 거의 없었음</em> (전체 200개 중 100개가 한 의존성에).</p>
+<p><strong>진단:</strong></p>
+<ul>
+<li>임계치가 <em>평소 사용량보다 과도하게 큼</em> → 격리 경계가 사실상 무의미</li>
+<li>적정값을 <em>측정 없이 감으로</em> 잡은 게 원인</li>
+</ul>
+<p><strong>조치 — 측정 기반 산정:</strong></p>
+<ul>
+<li>APM에서 SMS 호출의 <em>평소 동시성 p99 = 18</em> 확인</li>
+<li>임계치 = p99 × 1.5 ≈ <strong>30</strong> 으로 설정 (평소엔 충분히 여유, 장애 시 30개만 묶임)</li>
+<li>k6 부하 테스트로 <em>throughput이 꺾이는 knee point</em>도 교차 검증</li>
+</ul>
+<p><strong>결과:</strong></p>
+<ul>
+<li>다음 SMS 장애 시 <em>30개만 묶이고 170개는 정상</em> → 격리 명확</li>
+<li>평소 트래픽엔 영향 0 (30 > 평소 p99 18)</li>
+</ul>
+<p><strong>교훈:</strong> Bulkhead 임계치는 <em>감이 아니라 측정</em>이다. <strong>평소 동시성 p99 × 1.5~2배</strong>가 안정점 — 너무 크면 격리가 무의미하고, 너무 작으면 평소 트래픽을 막는다. k6로 <em>knee point</em>를 교차 검증한다.</p>
 </details>
 <h3 id="-꼬리질문-2-풀-분리의-오버헤드는-없나요" style="position:relative;"><a href="#-%EA%BC%AC%EB%A6%AC%EC%A7%88%EB%AC%B8-2-%ED%92%80-%EB%B6%84%EB%A6%AC%EC%9D%98-%EC%98%A4%EB%B2%84%ED%97%A4%EB%93%9C%EB%8A%94-%EC%97%86%EB%82%98%EC%9A%94" aria-label=" 꼬리질문 2 풀 분리의 오버헤드는 없나요 permalink" class="anchor before"><svg aria-hidden="true" focusable="false" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>🔄 꼬리질문 2: 풀 분리의 오버헤드는 없나요?</h3>
 <p><strong>기대 답변:</strong></p>
@@ -261,9 +329,27 @@ Retry-After: 32</code></pre></div>
 </ul>
 <p>Virtual Thread 환경이면 스레드 풀 대신 <strong>세마포어</strong>로 동시성 상한.</p>
 <details>
-<summary>📋 <b>사례</b></summary>
+<summary>📋 <b>실제 사례</b></summary>
 <br/>
-<p>처음 15개 외부 호출 <em>전부 풀 분리</em> → 메모리 80% 사용. 핵심 5개만 분리, 나머지 공유로 재설계 → 메모리 40%. <strong>교훈: Bulkhead도 <em>과하면 자원 낭비</em>, 80/20 법칙으로 선별.</strong></p>
+<p><strong>상황:</strong> “격리는 좋은 것”이라며 <em>외부 호출 15개 전부를 별도 스레드 풀로 분리</em>. 그 결과 <em>스레드 풀 15개 × 각 수십 개 스레드</em> = 메모리 사용률 80%, 대부분 풀은 <em>거의 안 쓰여</em> 자원만 낭비.</p>
+<p><strong>진단:</strong></p>
+<ul>
+<li>스레드 풀마다 <em>최소 스레드·메모리·컨텍스트 스위치 비용</em></li>
+<li>트래픽이 거의 없는 의존성(예: 월 1회 호출하는 관리용 API)까지 전용 풀 → 낭비</li>
+<li>격리의 <em>이득보다 오버헤드</em>가 큰 의존성이 다수</li>
+</ul>
+<p><strong>조치 — 80/20 선별 격리:</strong></p>
+<ul>
+<li><em>장애 시 영향이 크고 호출량이 많은 핵심 5개</em>만 전용 풀(또는 세마포어) 격리</li>
+<li>나머지 10개는 <em>공유 풀</em> 사용 (격리 안 함)</li>
+<li>Virtual Thread 도입 후엔 스레드 풀 대신 <em>세마포어</em>로 동시성 상한 (메모리 부담 거의 0)</li>
+</ul>
+<p><strong>결과:</strong></p>
+<ul>
+<li>메모리 사용률 80% → 40%</li>
+<li>핵심 의존성 격리 효과는 그대로 유지</li>
+</ul>
+<p><strong>교훈:</strong> Bulkhead도 <em>과하면 자원 낭비</em>다. 스레드 풀 분리는 <em>메모리·컨텍스트 스위치 비용</em>이 든다. <strong>장애 영향 크고 호출 많은 핵심만 선별 격리</strong>(80/20)하고, 나머지는 공유 풀. Virtual Thread 환경이면 <em>세마포어</em>가 오버헤드 거의 없이 같은 격리를 준다.</p>
 </details>
 <h3 id="-꼬리질문-3-거절-전략은-어떻게-설계하나요" style="position:relative;"><a href="#-%EA%BC%AC%EB%A6%AC%EC%A7%88%EB%AC%B8-3-%EA%B1%B0%EC%A0%88-%EC%A0%84%EB%9E%B5%EC%9D%80-%EC%96%B4%EB%96%BB%EA%B2%8C-%EC%84%A4%EA%B3%84%ED%95%98%EB%82%98%EC%9A%94" aria-label=" 꼬리질문 3 거절 전략은 어떻게 설계하나요 permalink" class="anchor before"><svg aria-hidden="true" focusable="false" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>🔄 꼬리질문 3: 거절 전략은 어떻게 설계하나요?</h3>
 <p><strong>기대 답변:</strong></p>
@@ -273,9 +359,27 @@ Retry-After: 32</code></pre></div>
 <li>클라이언트에 <code class="language-text">503 Service Unavailable</code> + <code class="language-text">Retry-After</code></li>
 </ul>
 <details>
-<summary>📋 <b>사례</b></summary>
+<summary>📋 <b>실제 사례</b></summary>
 <br/>
-<p>SMS Bulkhead 가득 시 <em>즉시 거절</em> + “발송 지연 안내” UI. 큐 대기로 30초 hang 대신 즉시 응답 → 사용자 경험·시스템 회복력 둘 다 개선. <strong>교훈: 빠른 실패가 <em>느린 성공보다</em> 시스템 친화적.</strong></p>
+<p><strong>상황:</strong> SMS Bulkhead가 가득 찼을 때 *대기 큐(max-wait 5초)*를 뒀더니, SMS 장애 시 <em>모든 요청이 5초씩 대기</em>하다 결국 실패 → 사용자가 <em>5초 hang 후 에러</em>를 보고 더 나쁜 경험.</p>
+<p><strong>진단:</strong></p>
+<ul>
+<li>“조금 기다리면 자리가 날 것”이라는 가정으로 대기 큐를 뒀으나</li>
+<li><em>장애는 일시적 폭주가 아니라 지속</em>이라 대기해도 자리가 안 남 → 5초 낭비 후 실패</li>
+<li>대기하는 동안 <em>스레드·자원이 묶여</em> 회복도 느려짐</li>
+</ul>
+<p><strong>조치 — 빠른 거절(fail-fast):</strong></p>
+<ul>
+<li><code class="language-text">max-wait-duration: 0ms</code> → 가득 차면 <em>즉시 <code class="language-text">BulkheadFullException</code></em></li>
+<li>즉시 fallback: 사용자에게 <em>“SMS 발송 지연, 잠시 후 재시도” 안내</em> (hang 없이 바로)</li>
+<li>SMS는 큐로 보내 <em>비동기 재전송</em> (사용자는 안 기다림)</li>
+</ul>
+<p><strong>결과:</strong></p>
+<ul>
+<li>5초 hang → 즉시 응답 (사용자 경험 개선)</li>
+<li>대기로 묶이던 자원이 풀려 <em>시스템 회복도 빨라짐</em></li>
+</ul>
+<p><strong>교훈:</strong> 자원이 가득 찼을 때 <strong>빠른 거절(fail-fast)이 대기보다 낫다</strong>. 장애는 <em>일시 폭주가 아니라 지속</em>인 경우가 많아 대기는 <em>자원만 묶고 결국 실패</em>한다. 즉시 거절 + fallback(안내·비동기 큐)이 <em>사용자 경험과 시스템 회복력</em>을 동시에 지킨다.</p>
 </details>
 <hr>
 <h2 id="3-circuit-breaker" style="position:relative;"><a href="#3-circuit-breaker" aria-label="3 circuit breaker permalink" class="anchor before"><svg aria-hidden="true" focusable="false" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>3. Circuit Breaker</h2>
@@ -384,9 +488,26 @@ Retry-After: 32</code></pre></div>
 <li>실패하면 다시 Open + 대기 시간 지수 증가</li>
 </ul>
 <details>
-<summary>📋 <b>사례</b></summary>
+<summary>📋 <b>실제 사례</b></summary>
 <br/>
-<p>Half-Open에서 5건 테스트, 3건 이상 성공 + p99 &#x3C; 1s를 복구 기준화. 실패 시 wait 60s·120s·240s 지수 증가. ML 모델 <em>부분 복구</em> 상황에서 <em>너무 빨리 Closed</em> 방지. <strong>교훈: 복구 판단은 <em>건수 + 지연</em>을 같이 봐야 안전.</strong></p>
+<p><strong>상황:</strong> 서킷이 Open 후 30초 뒤 Half-Open으로 가서 <em>테스트 1건 성공하자마자 Closed</em>로 복귀했는데, 외부 서비스는 <em>부분 복구</em> 상태였음 → 다시 트래픽이 몰리자 즉시 재장애 → Open ↔ Closed가 <em>수 초 간격으로 진동</em>(flapping).</p>
+<p><strong>진단:</strong></p>
+<ul>
+<li>복구 판단을 <em>단 1건 성공</em>으로 한 게 성급</li>
+<li>외부가 <em>완전 복구가 아니라 부분 복구</em>였는데 1건만 보고 전체 트래픽을 흘려보냄</li>
+<li>Open/Closed 진동으로 사용자 경험이 더 불안정</li>
+</ul>
+<p><strong>조치 — 보수적 복구 기준:</strong></p>
+<ul>
+<li>Half-Open에서 <em>5건 테스트</em> → <strong>3건 이상 성공 + p99 &#x3C; 1s</strong> 둘 다 만족해야 Closed</li>
+<li>실패 시 <em>wait 시간을 지수 증가</em>(30s → 60s → 120s)해 flapping 방지</li>
+</ul>
+<p><strong>결과:</strong></p>
+<ul>
+<li>부분 복구 상태에서 <em>성급한 Closed</em> 방지</li>
+<li>Open/Closed 진동 소멸, 안정적 복구</li>
+</ul>
+<p><strong>교훈:</strong> Half-Open 복구는 <em>단 1건 성공</em>으로 판단하면 <strong>부분 복구 상태에서 성급히 열려 재장애·flapping</strong>이 난다. <strong>건수(3/5 이상) + 지연(p99)</strong> 을 함께 보고, 실패 시 <em>wait를 지수 증가</em>시켜 진동을 막는다.</p>
 </details>
 <h3 id="-꼬리질문-2-fallback의-데이터-품질은-어떻게-다루나요" style="position:relative;"><a href="#-%EA%BC%AC%EB%A6%AC%EC%A7%88%EB%AC%B8-2-fallback%EC%9D%98-%EB%8D%B0%EC%9D%B4%ED%84%B0-%ED%92%88%EC%A7%88%EC%9D%80-%EC%96%B4%EB%96%BB%EA%B2%8C-%EB%8B%A4%EB%A3%A8%EB%82%98%EC%9A%94" aria-label=" 꼬리질문 2 fallback의 데이터 품질은 어떻게 다루나요 permalink" class="anchor before"><svg aria-hidden="true" focusable="false" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>🔄 꼬리질문 2: Fallback의 데이터 품질은 어떻게 다루나요?</h3>
 <p><strong>기대 답변:</strong></p>
@@ -396,9 +517,27 @@ Retry-After: 32</code></pre></div>
 <li>사용자 경험에서 <em>오답</em>과 <em>지연</em>의 비용 비교</li>
 </ul>
 <details>
-<summary>📋 <b>사례</b></summary>
+<summary>📋 <b>실제 사례</b></summary>
 <br/>
-<p>추천: stale OK (이전 추천 + 인기상품 fallback), 결제 잔액: stale 금지 (정확한 값 또는 에러). 도메인별 다른 정책. <strong>교훈: Fallback은 <em>기술 결정</em>이 아니라 <em>비즈니스 결정</em>.</strong></p>
+<p><strong>상황:</strong> 외부 환율 API 장애 시, 추천 도메인 감각으로 <em>결제 화면에 캐시된 옛 환율(stale)</em> 을 fallback으로 보여줬더니, 사용자가 <em>옛 환율로 결제 금액을 오인</em>해 클레임 + 회계 정합성 문제.</p>
+<p><strong>진단:</strong></p>
+<ul>
+<li>“stale이라도 보여주는 게 낫다”는 추천 도메인 원칙을 <em>결제에 잘못 적용</em></li>
+<li>추천은 <em>틀려도 무해</em>하지만, 결제 금액은 <em>틀리면 직접 손해</em></li>
+<li>도메인마다 <em>“오답 비용 vs 지연 비용”</em> 이 정반대</li>
+</ul>
+<p><strong>조치 — 도메인별 Fallback 정책 분리:</strong></p>
+<ul>
+<li><strong>추천·콘텐츠</strong>: stale 허용 (이전 데이터 + “방금 전 기준” 표시)</li>
+<li><strong>결제·환율·잔액</strong>: stale 금지 → <em>정확한 값 또는 명시적 에러</em>(“환율 조회 실패, 잠시 후 재시도”)</li>
+<li>정책을 도메인 코드에 <em>명문화</em></li>
+</ul>
+<p><strong>결과:</strong></p>
+<ul>
+<li>결제 금액 오인 클레임 0건</li>
+<li>추천은 여전히 stale fallback으로 매끄러운 UX 유지</li>
+</ul>
+<p><strong>교훈:</strong> Fallback 데이터 품질은 <em>기술이 아니라 비즈니스 결정</em>이다. <strong>추천처럼 오답이 무해한 곳은 stale 허용, 결제처럼 오답이 직접 손해인 곳은 빈 응답/명시적 에러</strong>. “stale이 항상 낫다”는 도메인을 무시한 위험한 일반화다. 핵심은 <em>“오답 비용 vs 지연 비용”</em> 비교.</p>
 </details>
 <h3 id="-꼬리질문-3-서킷-브레이커와-재시도를-같이-쓸-때-주의점은" style="position:relative;"><a href="#-%EA%BC%AC%EB%A6%AC%EC%A7%88%EB%AC%B8-3-%EC%84%9C%ED%82%B7-%EB%B8%8C%EB%A0%88%EC%9D%B4%EC%BB%A4%EC%99%80-%EC%9E%AC%EC%8B%9C%EB%8F%84%EB%A5%BC-%EA%B0%99%EC%9D%B4-%EC%93%B8-%EB%95%8C-%EC%A3%BC%EC%9D%98%EC%A0%90%EC%9D%80" aria-label=" 꼬리질문 3 서킷 브레이커와 재시도를 같이 쓸 때 주의점은 permalink" class="anchor before"><svg aria-hidden="true" focusable="false" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>🔄 꼬리질문 3: 서킷 브레이커와 재시도를 같이 쓸 때 주의점은?</h3>
 <p><strong>기대 답변:</strong></p>
@@ -408,9 +547,26 @@ Retry-After: 32</code></pre></div>
 <li>재시도는 idempotent 호출에만</li>
 </ul>
 <details>
-<summary>📋 <b>사례</b></summary>
+<summary>📋 <b>실제 사례</b></summary>
 <br/>
-<p>재시도가 서킷 실패 카운트에 가산되어 <em>정상보다 빠르게 Open</em>되는 사고 → 재시도 메트릭과 서킷 메트릭 분리. <strong>교훈: 재시도 = 분산, 서킷 = 차단, <em>역할 분리</em> 필수.</strong></p>
+<p><strong>상황:</strong> 외부 호출에 <em>재시도 3회 + 서킷 브레이커</em>를 같이 적용했는데, 서킷이 <em>정상보다 훨씬 빨리 Open</em>되어 멀쩡한 의존성을 자꾸 차단. 또 서킷이 Open인데도 <em>재시도가 계속 호출</em>을 시도.</p>
+<p><strong>진단:</strong></p>
+<ul>
+<li><strong>재시도 실패가 서킷 실패 카운트에 가산</strong> → 1번 호출이 (재시도 포함) 3번 실패로 집계 → 서킷이 3배 빨리 열림</li>
+<li>데코레이터 순서가 잘못돼 <em>서킷 Open 상태에서도 재시도</em>가 호출을 시도 (즉시 fallback 안 됨)</li>
+</ul>
+<p><strong>조치 — 역할 분리 + 순서 정렬:</strong></p>
+<ul>
+<li>데코레이터 순서: <strong>CircuitBreaker가 바깥, Retry가 안쪽</strong> (서킷 Open이면 재시도 자체를 차단)</li>
+<li>서킷 카운트는 <em>최종 결과(재시도 다 소진 후)</em> 만 반영하도록 분리</li>
+<li>재시도·서킷 메트릭을 <em>Micrometer로 각각</em> 노출해 구분</li>
+</ul>
+<p><strong>결과:</strong></p>
+<ul>
+<li>서킷이 정상 임계에서 열림 (재시도로 인한 조기 Open 소멸)</li>
+<li>서킷 Open 시 재시도 없이 즉시 fallback</li>
+</ul>
+<p><strong>교훈:</strong> 서킷 브레이커와 재시도는 <strong>역할이 다르다 — 서킷=차단, 재시도=분산</strong>. 둘을 같이 쓸 때 <em>(1) 데코레이터 순서(서킷 바깥/재시도 안쪽), (2) 재시도 실패가 서킷 카운트를 오염시키지 않게 분리</em> 해야 한다. 안 그러면 <em>재시도가 서킷을 조기에 열고</em>, <em>Open 상태에서도 재시도</em>하는 모순이 생긴다.</p>
 </details>
 <hr>
 <h2 id="4-timeout-cascade" style="position:relative;"><a href="#4-timeout-cascade" aria-label="4 timeout cascade permalink" class="anchor before"><svg aria-hidden="true" focusable="false" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>4. Timeout Cascade</h2>
@@ -486,9 +642,27 @@ webClient<span class="token punctuation">.</span><span class="token function">ge
 <li>클라이언트가 끊겨도 서버는 계속 작업 → 자원 낭비</li>
 </ul>
 <details>
-<summary>📋 <b>사례</b></summary>
+<summary>📋 <b>실제 사례</b></summary>
 <br/>
-<p>일률 5s timeout → 상위가 <em>이미 4s에 timeout 했는데</em> 하위는 5s까지 작업 계속. 좀비 작업 일 1만 건. Deadline 전파로 0건. <strong>교훈: 일률 timeout은 <em>자원 낭비의 주범</em>.</strong></p>
+<p><strong>상황:</strong> 모든 서비스에 <em>일률 5초 timeout</em>. 외부 vendor가 지연되자, 상위 주문 API는 <em>이미 4초(클라이언트 SLO)에 끊겼는데도</em> 하위 체인은 <em>5초까지 계속 작업</em>. 끊긴 요청의 작업이 <em>좀비</em>로 누적되어 일 평균 1만 건의 헛작업이 자원을 잡아먹음.</p>
+<p><strong>진단:</strong></p>
+<ul>
+<li>클라이언트는 4초에 타임아웃 → 응답을 안 받음</li>
+<li>그런데 백엔드는 <em>그 사실을 모르고</em> 5초까지 DB·외부 호출 계속 수행</li>
+<li>“아무도 안 받을 응답”을 만드느라 자원 낭비 (좀비 작업)</li>
+</ul>
+<p><strong>조치 — Deadline Propagation:</strong></p>
+<ul>
+<li>상위에서 <em>남은 deadline</em>을 헤더(<code class="language-text">X-Deadline-Ms</code>)로 전파</li>
+<li>각 하위 서비스가 <em>남은 시간이 200ms 미만이면 즉시 중단</em>(이미 늦었으니 헛작업 안 함)</li>
+<li>클라이언트 cancel도 백엔드까지 전파 (HTTP/2 RST_STREAM)</li>
+</ul>
+<p><strong>결과:</strong></p>
+<ul>
+<li>좀비 작업 일 1만 건 → 0건</li>
+<li>끊긴 요청의 자원이 즉시 회수되어 <em>전체 처리량 개선</em></li>
+</ul>
+<p><strong>교훈:</strong> 일률 timeout은 <em>“이미 늦은 작업을 계속하는”</em> 자원 낭비를 만든다. 상위가 끊겼는데 하위가 모르고 작업하면 <em>좀비</em>가 쌓인다. <strong>남은 deadline을 전파</strong>해 <em>이미 늦었으면 즉시 중단</em>하게 해야 자원이 회수된다.</p>
 </details>
 <h3 id="-꼬리질문-2-deadline-propagation을-어떻게-구현하나요" style="position:relative;"><a href="#-%EA%BC%AC%EB%A6%AC%EC%A7%88%EB%AC%B8-2-deadline-propagation%EC%9D%84-%EC%96%B4%EB%96%BB%EA%B2%8C-%EA%B5%AC%ED%98%84%ED%95%98%EB%82%98%EC%9A%94" aria-label=" 꼬리질문 2 deadline propagation을 어떻게 구현하나요 permalink" class="anchor before"><svg aria-hidden="true" focusable="false" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>🔄 꼬리질문 2: deadline propagation을 어떻게 구현하나요?</h3>
 <p><strong>기대 답변:</strong></p>
@@ -498,9 +672,28 @@ webClient<span class="token punctuation">.</span><span class="token function">ge
 <li>컨텍스트(Spring <code class="language-text">WebClient</code>의 <code class="language-text">responseTimeout</code>)에 남은 deadline 반영</li>
 </ul>
 <details>
-<summary>📋 <b>사례</b></summary>
+<summary>📋 <b>실제 사례</b></summary>
 <br/>
-<p>HTTP 환경에서 <code class="language-text">X-Deadline-Ms</code> 헤더 + Servlet Filter로 남은 시간 계산. 모든 외부 호출에 자동 적용. gRPC 전환 없이도 cascade 차단. <strong>교훈: HTTP에서도 <em>deadline 전파는 직접 구현 가능</em>.</strong></p>
+<p><strong>상황:</strong> “deadline propagation은 gRPC에서만 되는 것”이라 생각해, HTTP 기반 레거시 서비스 체인은 <em>일률 timeout</em>을 못 벗어나고 있었음. gRPC 전면 전환은 비용이 커서 보류.</p>
+<p><strong>조치 — HTTP에서 직접 구현:</strong></p>
+<ul>
+<li>진입점에서 <code class="language-text">X-Deadline-Ms = now + SLO</code> 헤더 생성</li>
+<li><strong>공통 Servlet Filter / WebClient 인터셉터</strong>:
+<ul>
+<li>들어온 요청의 <code class="language-text">X-Deadline-Ms</code> 읽기</li>
+<li><em>남은 시간 = deadline - now - 네트워크 마진(100ms)</em> 계산</li>
+<li>남은 시간이 임계 미만이면 <em>즉시 504</em> (헛작업 차단)</li>
+<li>하위 호출 timeout을 <em>남은 시간</em>으로 동적 설정 + 헤더 전파</li>
+</ul>
+</li>
+<li>모든 서비스에 <em>공통 라이브러리</em>로 배포 (서비스별 코드 변경 최소화)</li>
+</ul>
+<p><strong>결과:</strong></p>
+<ul>
+<li>gRPC 전환 없이 <em>HTTP 체인 전체에 deadline propagation</em> 적용</li>
+<li>cascade·좀비 작업 차단 (gRPC와 동등 효과)</li>
+</ul>
+<p><strong>교훈:</strong> deadline propagation은 <em>gRPC 전유물이 아니다</em>. <strong>HTTP에서도 커스텀 헤더(<code class="language-text">X-Deadline-Ms</code>) + 공통 Filter/인터셉터</strong>로 충분히 구현 가능하다. gRPC는 표준으로 제공할 뿐, <em>공통 라이브러리 하나</em>면 레거시 HTTP 체인도 cascade를 끊을 수 있다.</p>
 </details>
 <h3 id="-꼬리질문-3-클라이언트-cancel을-백엔드까지-어떻게-전파하나요" style="position:relative;"><a href="#-%EA%BC%AC%EB%A6%AC%EC%A7%88%EB%AC%B8-3-%ED%81%B4%EB%9D%BC%EC%9D%B4%EC%96%B8%ED%8A%B8-cancel%EC%9D%84-%EB%B0%B1%EC%97%94%EB%93%9C%EA%B9%8C%EC%A7%80-%EC%96%B4%EB%96%BB%EA%B2%8C-%EC%A0%84%ED%8C%8C%ED%95%98%EB%82%98%EC%9A%94" aria-label=" 꼬리질문 3 클라이언트 cancel을 백엔드까지 어떻게 전파하나요 permalink" class="anchor before"><svg aria-hidden="true" focusable="false" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>🔄 꼬리질문 3: 클라이언트 cancel을 백엔드까지 어떻게 전파하나요?</h3>
 <p><strong>기대 답변:</strong></p>
@@ -511,9 +704,26 @@ webClient<span class="token punctuation">.</span><span class="token function">ge
 <li>백엔드에서 DB 쿼리도 cancel(<code class="language-text">pg_cancel_backend</code>)까지 연결</li>
 </ul>
 <details>
-<summary>📋 <b>사례</b></summary>
+<summary>📋 <b>실제 사례</b></summary>
 <br/>
-<p>WebFlux + R2DBC 환경에서 클라이언트 cancel이 <em>DB 쿼리까지 자동 전파</em> — 30초 분석 쿼리도 즉시 중단. PG 부하 30% 감소. <strong>교훈: cancel 전파는 <em>말단까지 연결</em>되어야 효과.</strong></p>
+<p><strong>상황:</strong> 대시보드의 <em>무거운 분석 쿼리</em>(30초 소요)를 사용자가 <em>기다리다 페이지를 닫아도</em>, 백엔드는 <em>그 쿼리를 끝까지 수행</em>. 사용자들이 “느리다고 새로고침 연타”하면 <em>끝낼 수 없는 쿼리가 PG에 누적</em>되어 DB가 마비.</p>
+<p><strong>진단:</strong></p>
+<ul>
+<li>클라이언트가 <em>연결을 끊어도(cancel)</em> 백엔드·DB는 그 사실을 모르고 작업 계속</li>
+<li>새로고침 연타 = <em>버려질 30초 쿼리가 계속 쌓임</em> → PG 커넥션·CPU 고갈</li>
+</ul>
+<p><strong>조치 — Cancel 말단까지 전파 (WebFlux + R2DBC):</strong></p>
+<ul>
+<li>WebFlux로 전환 → 클라이언트 연결 끊김이 <em>Publisher cancel</em>로 전파</li>
+<li>R2DBC는 <em>cancel 시 진행 중 DB 쿼리도 중단</em> (<code class="language-text">Statement.cancel</code>까지 연결)</li>
+<li>즉, 사용자가 페이지 닫으면 <em>DB 쿼리까지 즉시 중단</em></li>
+</ul>
+<p><strong>결과:</strong></p>
+<ul>
+<li>버려질 분석 쿼리가 <em>즉시 취소</em>되어 PG 부하 30% 감소</li>
+<li>새로고침 연타로 인한 DB 마비 소멸</li>
+</ul>
+<p><strong>교훈:</strong> 클라이언트 cancel은 <em>말단(DB 쿼리)까지 전파</em>되어야 효과가 있다. <strong>HTTP/2 RST_STREAM·WebFlux Publisher cancel·R2DBC가 연결</strong>되면, 사용자가 끊은 순간 <em>DB 쿼리까지 즉시 취소</em>된다. Cancel이 <em>중간에 끊기면</em> 백엔드는 여전히 버려질 작업을 수행한다.</p>
 </details>
 <hr>
 <h2 id="5-멱등성과-재시도-jitter" style="position:relative;"><a href="#5-%EB%A9%B1%EB%93%B1%EC%84%B1%EA%B3%BC-%EC%9E%AC%EC%8B%9C%EB%8F%84-jitter" aria-label="5 멱등성과 재시도 jitter permalink" class="anchor before"><svg aria-hidden="true" focusable="false" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>5. 멱등성과 재시도 Jitter</h2>
@@ -618,9 +828,42 @@ webClient<span class="token punctuation">.</span><span class="token function">ge
 </ul>
 <p>대부분의 케이스에서 <strong>Full Jitter</strong>가 thundering herd를 가장 잘 막습니다.</p>
 <details>
-<summary>📋 <b>사례</b></summary>
+<summary>📋 <b>실제 사례</b></summary>
 <br/>
-<p>Equal Jitter로 시작 → 복구 직후 1초간 38% 재시도, 여전히 PG사 다운. Full Jitter로 전환 후 12%까지 평탄화. <strong>교훈: Full Jitter는 <em>그냥 기본값으로</em> 채택해도 무방.</strong></p>
+<p><strong>상황:</strong> Thundering herd를 막으려 <em>Equal Jitter</em>(고정분 + 랜덤분)를 도입. 효과는 있었지만 PG사 복구 직후 <em>여전히 1초간 38%가 몰려</em> 또 한 번 휘청. “jitter를 줬는데 왜 아직도?”</p>
+<p><strong>진단 — 시뮬레이션으로 분포 비교:</strong></p>
+<ul>
+<li>Equal Jitter는 <code class="language-text">base*2^n / 2 + random(0, base*2^n / 2)</code> → <em>고정분(절반)이 있어</em> 재시도가 <em>특정 구간에 여전히 뭉침</em></li>
+<li>Full Jitter는 <code class="language-text">random(0, base*2^n)</code> → <em>0부터 cap까지 완전 균등</em> → 가장 평탄</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>전략</th>
+<th>복구 직후 1초 재시도</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Equal Jitter</td>
+<td>38% (뭉침 잔존)</td>
+</tr>
+<tr>
+<td>Full Jitter</td>
+<td>12% (평탄)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>조치:</strong></p>
+<ul>
+<li>Equal → <strong>Full Jitter</strong>로 변경 (<code class="language-text">Random.nextLong(0, cap)</code>)</li>
+</ul>
+<p><strong>결과:</strong></p>
+<ul>
+<li>복구 직후 재시도가 <em>12%로 평탄화</em> → PG사 재장애 소멸</li>
+<li>재시도 후 성공률 향상</li>
+</ul>
+<p><strong>교훈:</strong> Jitter도 종류가 다르다. <strong>Equal Jitter는 고정분 때문에 여전히 뭉치고, Full Jitter(0~cap 완전 균등)가 가장 평탄</strong>하다. AWS Architecture Blog 권장대로 <em>특별한 이유 없으면 Full Jitter를 기본값</em>으로 쓴다.</p>
 </details>
 <h3 id="-꼬리질문-2-멱등성이-보장-안-된-호출도-재시도하나요" style="position:relative;"><a href="#-%EA%BC%AC%EB%A6%AC%EC%A7%88%EB%AC%B8-2-%EB%A9%B1%EB%93%B1%EC%84%B1%EC%9D%B4-%EB%B3%B4%EC%9E%A5-%EC%95%88-%EB%90%9C-%ED%98%B8%EC%B6%9C%EB%8F%84-%EC%9E%AC%EC%8B%9C%EB%8F%84%ED%95%98%EB%82%98%EC%9A%94" aria-label=" 꼬리질문 2 멱등성이 보장 안 된 호출도 재시도하나요 permalink" class="anchor before"><svg aria-hidden="true" focusable="false" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>🔄 꼬리질문 2: 멱등성이 보장 안 된 호출도 재시도하나요?</h3>
 <p><strong>기대 답변:</strong>
@@ -631,9 +874,27 @@ webClient<span class="token punctuation">.</span><span class="token function">ge
 </ul>
 <p>서버가 멱등키를 받아 처리 이력을 저장하면 클라이언트는 안심하고 재시도 가능합니다.</p>
 <details>
-<summary>📋 <b>사례</b></summary>
+<summary>📋 <b>실제 사례</b></summary>
 <br/>
-<p>PG 결제 호출에 <code class="language-text">Idempotency-Key</code> 헤더 도입 (Stripe 패턴). 같은 키 재요청은 서버가 기존 응답 반환. 중복 결제 사고 0건. <strong>교훈: 멱등키는 <em>클라이언트 재시도 안전망</em>.</strong></p>
+<p><strong>상황:</strong> 결제 호출에 <em>타임아웃 시 자동 재시도</em>를 걸었음. 그런데 PG사가 <em>결제는 처리했지만 응답이 네트워크 지연으로 늦게</em> 온 경우, 클라이언트가 timeout으로 판단해 <em>재시도 → 이중 결제</em> 사고.</p>
+<p><strong>진단:</strong></p>
+<ul>
+<li>“타임아웃 = 실패”라고 가정하고 재시도했지만, <em>타임아웃은 “결과를 모름”</em> 이지 실패가 아님</li>
+<li>결제는 <em>멱등성이 없으면</em> 재시도가 곧 중복 청구</li>
+<li>멱등키 없는 POST(생성)는 <em>재시도하면 안 되는</em> 호출이었음</li>
+</ul>
+<p><strong>조치 — 멱등키 기반 안전 재시도:</strong></p>
+<ul>
+<li>결제 요청에 <em>클라이언트가 생성한 <code class="language-text">Idempotency-Key</code></em> 첨부</li>
+<li>서버는 <em>(key, 결과)</em> 를 저장 → 같은 키 재요청 시 <em>처리 안 하고 저장된 결과 반환</em></li>
+<li>멱등키가 있으니 <em>재시도가 안전</em>해짐 (중복 처리 불가)</li>
+</ul>
+<p><strong>결과:</strong></p>
+<ul>
+<li>이중 결제 사고 0건</li>
+<li>멱등키 덕에 <em>타임아웃 시 안심하고 재시도</em> 가능 (결제 성공률도 상승)</li>
+</ul>
+<p><strong>교훈:</strong> <em>타임아웃은 “실패”가 아니라 “결과 모름”</em> 이다. <strong>멱등성이 없는 호출(멱등키 없는 결제/주문 생성)을 재시도하면 중복 처리</strong>된다. 재시도가 필요하면 <em>먼저 멱등키를 설계</em>해서 <em>서버가 중복을 무해화</em>하게 만든다.</p>
 </details>
 <h3 id="-꼬리질문-3-서킷-브레이커와-재시도-jitter를-어떻게-조합하나요" style="position:relative;"><a href="#-%EA%BC%AC%EB%A6%AC%EC%A7%88%EB%AC%B8-3-%EC%84%9C%ED%82%B7-%EB%B8%8C%EB%A0%88%EC%9D%B4%EC%BB%A4%EC%99%80-%EC%9E%AC%EC%8B%9C%EB%8F%84-jitter%EB%A5%BC-%EC%96%B4%EB%96%BB%EA%B2%8C-%EC%A1%B0%ED%95%A9%ED%95%98%EB%82%98%EC%9A%94" aria-label=" 꼬리질문 3 서킷 브레이커와 재시도 jitter를 어떻게 조합하나요 permalink" class="anchor before"><svg aria-hidden="true" focusable="false" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>🔄 꼬리질문 3: 서킷 브레이커와 재시도 jitter를 어떻게 조합하나요?</h3>
 <p><strong>기대 답변:</strong></p>
@@ -643,9 +904,26 @@ webClient<span class="token punctuation">.</span><span class="token function">ge
 <li>재시도 횟수는 서킷 카운트에서 분리해 별도 메트릭으로 관측</li>
 </ul>
 <details>
-<summary>📋 <b>사례</b></summary>
+<summary>📋 <b>실제 사례</b></summary>
 <br/>
-<p><code class="language-text">@CircuitBreaker</code> + <code class="language-text">@Retry</code>(Full Jitter) 조합. 서킷 Open은 즉시 Fallback, Closed/Half-Open만 jitter retry. 재시도 카운트와 서킷 카운트 Micrometer로 분리. <strong>교훈: 두 도구는 <em>역할이 다름</em>, 같이 쓰되 메트릭은 분리.</strong></p>
+<p><strong>상황:</strong> PG사 장애 시, 서킷이 이미 Open인데도 <em>재시도 로직이 계속 5번씩 재시도</em>를 돌려 <em>이미 죽은 PG사에 헛된 폭격</em>을 가하고, 그 재시도들이 <em>서킷 복구(Half-Open) 판단까지 교란</em>.</p>
+<p><strong>진단:</strong></p>
+<ul>
+<li>데코레이터 순서가 <em>Retry 바깥 / CircuitBreaker 안쪽</em> → 서킷이 Open이어도 재시도가 먼저 돌고 매번 서킷에 막힘 (헛수고)</li>
+<li>재시도 실패가 서킷 메트릭을 오염</li>
+</ul>
+<p><strong>조치 — 순서·역할 정렬:</strong></p>
+<ul>
+<li>데코레이터 순서: <strong>CircuitBreaker(바깥) → Retry(안쪽)</strong> → 서킷 Open이면 <em>재시도 시도조차 안 하고 즉시 Fallback</em></li>
+<li>서킷 Closed/Half-Open에서만 <em>Full Jitter 재시도</em> 동작</li>
+<li>재시도 카운트와 서킷 카운트를 <em>Micrometer로 분리</em> 관측 (서로 오염 안 되게)</li>
+</ul>
+<p><strong>결과:</strong></p>
+<ul>
+<li>서킷 Open 시 <em>재시도 없이 즉시 fallback</em> (죽은 PG사 폭격 중단)</li>
+<li>서킷 복구 판단이 재시도에 교란되지 않음</li>
+</ul>
+<p><strong>교훈:</strong> 서킷 브레이커와 재시도 jitter는 <strong>순서가 핵심 — CircuitBreaker가 바깥, Retry가 안쪽</strong>이다. 그래야 <em>Open 시 재시도 자체가 차단</em>된다. 반대로 두면 <em>죽은 의존성에 헛된 재시도 폭격</em> + <em>서킷 복구 판단 교란</em>. 메트릭도 분리해 서로 오염을 막는다.</p>
 </details>
 <hr>
 <h2 id="마무리-6편-핵심-정리" style="position:relative;"><a href="#%EB%A7%88%EB%AC%B4%EB%A6%AC-6%ED%8E%B8-%ED%95%B5%EC%8B%AC-%EC%A0%95%EB%A6%AC" aria-label="마무리 6편 핵심 정리 permalink" class="anchor before"><svg aria-hidden="true" focusable="false" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>마무리: 6편 핵심 정리</h2>

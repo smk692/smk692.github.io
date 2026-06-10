@@ -120,9 +120,26 @@ clicks<span class="token punctuation">.</span><span class="token function">incre
 </ul>
 <p>경합이 심해지면 retry 폭주로 락보다 느려집니다.</p>
 <details>
-<summary>📋 <b>사례</b></summary>
+<summary>📋 <b>실제 사례</b></summary>
 <br/>
-<p><code class="language-text">AtomicReference</code> 기반 lock-free 큐가 NUMA 노드 간에서 30% 느림 → <code class="language-text">@Contended</code>로 64바이트 패딩 추가 → false sharing 제거, 처리량 회복. <strong>교훈: lock-free 자료구조는 <em>캐시 라인 정렬</em>까지 신경 써야 진가.</strong></p>
+<p><strong>상황:</strong> lock-free 큐(<code class="language-text">ConcurrentLinkedQueue</code> 기반)로 만든 작업 디스패처가, 64코어 듀얼 소켓 서버로 옮긴 뒤 <em>오히려 30% 느려짐</em>. 코어가 늘었는데 성능이 떨어지는 역설.</p>
+<p><strong>진단:</strong></p>
+<ul>
+<li><code class="language-text">perf stat</code>으로 <strong>cache-misses(특히 LLC-miss)</strong> 가 급증한 것 확인</li>
+<li>head/tail 포인터가 <em>같은 64바이트 캐시 라인</em>에 인접 → 서로 다른 코어가 각각 갱신하며 <em>false sharing</em></li>
+<li>듀얼 소켓이라 NUMA 노드 간 캐시 라인 무효화 비용이 단일 소켓보다 큼</li>
+</ul>
+<p><strong>조치:</strong></p>
+<ul>
+<li>핫 필드(head/tail/counter)에 <code class="language-text">@Contended</code> 적용 → 64바이트 패딩으로 캐시 라인 분리</li>
+<li>가능한 작업은 <em>같은 NUMA 노드 스레드</em>에 배치</li>
+</ul>
+<p><strong>결과:</strong></p>
+<ul>
+<li>false sharing 제거로 처리량 회복 + 코어 수 비례 확장</li>
+<li>cache-miss 율 정상화</li>
+</ul>
+<p><strong>교훈:</strong> lock-free라고 자동으로 빠른 게 아니다. <strong>false sharing(캐시 라인 공유)과 NUMA 토폴로지</strong>가 lock-free의 실제 성능을 좌우한다. 핫 필드는 <code class="language-text">@Contended</code>로 캐시 라인을 분리하고, <code class="language-text">perf</code>의 cache-miss를 봐야 한다.</p>
 </details>
 <h3 id="-꼬리질문-2-aba-문제는-어떻게-막나요" style="position:relative;"><a href="#-%EA%BC%AC%EB%A6%AC%EC%A7%88%EB%AC%B8-2-aba-%EB%AC%B8%EC%A0%9C%EB%8A%94-%EC%96%B4%EB%96%BB%EA%B2%8C-%EB%A7%89%EB%82%98%EC%9A%94" aria-label=" 꼬리질문 2 aba 문제는 어떻게 막나요 permalink" class="anchor before"><svg aria-hidden="true" focusable="false" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>🔄 꼬리질문 2: ABA 문제는 어떻게 막나요?</h3>
 <p><strong>기대 답변:</strong>
@@ -134,9 +151,27 @@ clicks<span class="token punctuation">.</span><span class="token function">incre
 </ul>
 <p>GC가 있는 자바라도 객체 풀에선 ABA가 나옵니다.</p>
 <details>
-<summary>📋 <b>사례</b></summary>
+<summary>📋 <b>실제 사례</b></summary>
 <br/>
-<p>객체 풀 기반 lock-free 스택에서 ABA로 <em>해제된 노드 재참조</em> 사고 → 디버깅 1주. <code class="language-text">AtomicStampedReference</code>로 버전 태깅 추가 후 재발 0건. <strong>교훈: GC 있다고 ABA 안전 X, 객체 풀 패턴은 별도 보호.</strong></p>
+<p><strong>상황:</strong> 메모리 할당을 줄이려고 <em>객체 풀 기반 lock-free 스택</em>을 직접 구현. 간헐적으로 <em>이미 해제된(풀에 반납된) 노드를 다시 참조</em>해 데이터가 깨지는 사고. 재현이 안 돼 디버깅에 1주 소요.</p>
+<p><strong>진단:</strong></p>
+<ul>
+<li>스택 pop 중 스레드 A가 top 노드(=A)를 읽음 → 잠시 멈춤</li>
+<li>그 사이 다른 스레드가 A를 pop → 풀에 반납 → <em>재사용해서 다시 push</em> (top이 다시 A)</li>
+<li>A가 깨어나 <code class="language-text">CAS(top, A, A.next)</code> 성공 → 하지만 <em>A.next는 이미 바뀐 값</em> → 깨짐</li>
+<li>GC가 있어도 <em>객체 풀 재사용</em> 때문에 ABA가 발생</li>
+</ul>
+<p><strong>조치:</strong></p>
+<ul>
+<li><code class="language-text">AtomicReference</code> → <strong><code class="language-text">AtomicStampedReference</code></strong> 로 교체</li>
+<li>노드 참조에 <em>버전 스탬프</em>를 함께 묶어 CAS → A→B→A라도 <em>스탬프가 달라</em> 실패 처리</li>
+</ul>
+<p><strong>결과:</strong></p>
+<ul>
+<li>ABA로 인한 데이터 깨짐 0건</li>
+<li>객체 풀 재사용은 유지하면서 안전성 확보</li>
+</ul>
+<p><strong>교훈:</strong> “자바는 GC가 있어서 ABA 안전”은 <strong>객체 풀·재사용 패턴에선 거짓</strong>이다. 풀로 노드를 재사용하면 ABA가 부활한다. <code class="language-text">AtomicStampedReference</code>로 <strong>버전 태깅</strong>을 하면 값이 같아도 스탬프로 구분된다.</p>
 </details>
 <h3 id="-꼬리질문-3-경합이-심해지면-어떤-운영-신호를-봐야-하나요" style="position:relative;"><a href="#-%EA%BC%AC%EB%A6%AC%EC%A7%88%EB%AC%B8-3-%EA%B2%BD%ED%95%A9%EC%9D%B4-%EC%8B%AC%ED%95%B4%EC%A7%80%EB%A9%B4-%EC%96%B4%EB%96%A4-%EC%9A%B4%EC%98%81-%EC%8B%A0%ED%98%B8%EB%A5%BC-%EB%B4%90%EC%95%BC-%ED%95%98%EB%82%98%EC%9A%94" aria-label=" 꼬리질문 3 경합이 심해지면 어떤 운영 신호를 봐야 하나요 permalink" class="anchor before"><svg aria-hidden="true" focusable="false" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>🔄 꼬리질문 3: 경합이 심해지면 어떤 운영 신호를 봐야 하나요?</h3>
 <p><strong>기대 답변:</strong></p>
@@ -147,9 +182,26 @@ clicks<span class="token punctuation">.</span><span class="token function">incre
 </ul>
 <p>대응으로 adaptive spinning이나 <code class="language-text">LongAdder</code> 같은 striping으로 핫 키 자체를 분산합니다.</p>
 <details>
-<summary>📋 <b>사례</b></summary>
+<summary>📋 <b>실제 사례</b></summary>
 <br/>
-<p>광고 클릭 시스템에서 CPU 95%인데 throughput 감소 → <code class="language-text">vmstat</code>로 context switch 폭증 확인, JFR로 retry 비율 78% 확인. striping 전환으로 해결. <strong>교훈: 세 지표를 <em>조합해서 봐야</em> 진단 가능.</strong></p>
+<p><strong>상황:</strong> 광고 클릭 카운터가 캠페인 시작 직후 <em>CPU 95%인데 처리량은 오히려 떨어지는</em> 이상 현상. “CPU를 쓰는데 일을 안 하는” 상태.</p>
+<p><strong>진단 — 세 지표 조합:</strong></p>
+<ul>
+<li><strong>CPU 95% + throughput 감소</strong>: CPU를 <em>스핀(CAS retry)에 태우고</em> 있다는 신호</li>
+<li><code class="language-text">vmstat</code>의 <strong>context-switch가 평소 8천 → 3.4만/s 폭증</strong>: OS가 스핀하는 스레드를 강제로 깨우는 중</li>
+<li>애플리케이션 메트릭에서 <strong>CAS retry 비율 78%</strong> (성공보다 실패가 많음)</li>
+</ul>
+<p><strong>조치:</strong></p>
+<ul>
+<li>단일 핫 키 <code class="language-text">AtomicLong</code> → <code class="language-text">LongAdder</code>로 striping (경합 자체를 여러 cell로 분산)</li>
+<li>또는 <em>짧은 스핀 후 백오프</em>하는 adaptive 전략 고려</li>
+</ul>
+<p><strong>결과:</strong></p>
+<ul>
+<li>CPU 95% → 35%, throughput 3.5배</li>
+<li>context-switch·retry 비율 정상화</li>
+</ul>
+<p><strong>교훈:</strong> 경합 진단은 <em>한 지표로는 안 된다</em>. <strong>CPU vs throughput 곡선(역전) + context-switch 폭증 + CAS retry 비율</strong> 을 조합해서 봐야 “스핀 폭주”를 식별할 수 있다. 해법은 보통 <em>경합 자체를 striping으로 분산</em>하는 것.</p>
 </details>
 <hr>
 <h2 id="2-happens-before와-자바-메모리-모델" style="position:relative;"><a href="#2-happens-before%EC%99%80-%EC%9E%90%EB%B0%94-%EB%A9%94%EB%AA%A8%EB%A6%AC-%EB%AA%A8%EB%8D%B8" aria-label="2 happens before와 자바 메모리 모델 permalink" class="anchor before"><svg aria-hidden="true" focusable="false" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>2. Happens-Before와 자바 메모리 모델</h2>
@@ -217,9 +269,26 @@ clicks<span class="token punctuation">.</span><span class="token function">incre
 </ul>
 <p>성능은 <code class="language-text">volatile</code>이 가볍지만 보호 범위가 좁습니다.</p>
 <details>
-<summary>📋 <b>사례</b></summary>
+<summary>📋 <b>실제 사례</b></summary>
 <br/>
-<p><code class="language-text">volatile counter++</code> 패턴이 한 곳에서 누적 누락 — read-modify-write가 atomic 아님. <code class="language-text">AtomicInteger</code>로 교체 후 누락 0건. <strong>교훈: volatile은 <em>단일 read/write</em>만 보장, 복합 연산은 별도 도구.</strong></p>
+<p><strong>상황:</strong> 실시간 집계 모듈에서 <code class="language-text">volatile long counter</code>를 두고 <code class="language-text">counter++</code>로 카운트했는데, 부하 테스트에서 <em>총합이 실제 이벤트 수보다 적게</em> 집계됨 (누락).</p>
+<p><strong>진단:</strong></p>
+<ul>
+<li><code class="language-text">counter++</code>는 사실 <strong>read → modify → write 3단계</strong> (원자적이지 않음)</li>
+<li><code class="language-text">volatile</code>은 <em>각 read/write의 가시성</em>만 보장할 뿐, 세 단계 사이에 다른 스레드가 끼어드는 <em>lost update</em>는 못 막음</li>
+<li>두 스레드가 동시에 같은 값을 읽고 +1 → 한 번의 증가만 반영</li>
+</ul>
+<p><strong>조치:</strong></p>
+<ul>
+<li><code class="language-text">volatile long</code> → <strong><code class="language-text">AtomicLong</code> / <code class="language-text">LongAdder</code></strong> 로 교체</li>
+<li>read-modify-write를 <em>원자적 CAS</em>로 처리</li>
+</ul>
+<p><strong>결과:</strong></p>
+<ul>
+<li>집계 누락 0건</li>
+<li>(고경합이라 최종적으로 <code class="language-text">LongAdder</code>로 striping까지 적용)</li>
+</ul>
+<p><strong>교훈:</strong> <code class="language-text">volatile</code>은 <em>단일 read 또는 단일 write의 가시성</em>만 보장한다. <strong>복합 연산(<code class="language-text">++</code>, check-then-act)은 보호하지 못한다.</strong> 원자성이 필요하면 <code class="language-text">synchronized</code> 또는 <code class="language-text">Atomic*</code>을 써야 한다. “가시성”과 “원자성”은 다른 문제.</p>
 </details>
 <h3 id="-꼬리질문-2-컴파일러-재정렬이-문제가-되는-케이스는" style="position:relative;"><a href="#-%EA%BC%AC%EB%A6%AC%EC%A7%88%EB%AC%B8-2-%EC%BB%B4%ED%8C%8C%EC%9D%BC%EB%9F%AC-%EC%9E%AC%EC%A0%95%EB%A0%AC%EC%9D%B4-%EB%AC%B8%EC%A0%9C%EA%B0%80-%EB%90%98%EB%8A%94-%EC%BC%80%EC%9D%B4%EC%8A%A4%EB%8A%94" aria-label=" 꼬리질문 2 컴파일러 재정렬이 문제가 되는 케이스는 permalink" class="anchor before"><svg aria-hidden="true" focusable="false" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>🔄 꼬리질문 2: 컴파일러 재정렬이 문제가 되는 케이스는?</h3>
 <p><strong>기대 답변:</strong>
@@ -227,9 +296,26 @@ clicks<span class="token punctuation">.</span><span class="token function">incre
 <p>해결: 필드에 <code class="language-text">volatile</code> 추가, 또는 static holder 패턴(클래스 초기화의 happens-before)을 사용.</p>
 <p>x86은 정렬이 강해 안 보이지만, ARM/PowerPC에선 실측에서 잡힙니다.</p>
 <details>
-<summary>📋 <b>사례</b></summary>
+<summary>📋 <b>실제 사례</b></summary>
 <br/>
-<p>ARM 기반 Graviton 인스턴스로 일부 옮기자 <em>재현 안 되던 NPE</em>가 매일 등장 → DCL 버그였음. volatile 추가로 해결. <strong>교훈: 멀티 아키텍처 환경에선 <em>weak memory model</em> 가정으로 코드 작성.</strong></p>
+<p><strong>상황:</strong> x86 인스턴스에서 <em>수년간 멀쩡하던</em> 싱글톤 초기화 코드가, 비용 절감으로 일부 워크로드를 <strong>ARM 기반 Graviton 인스턴스</strong>로 옮기자 <em>매일 수천 건 NPE</em>가 발생.</p>
+<p><strong>진단:</strong></p>
+<ul>
+<li>문제의 DCL 코드에 <code class="language-text">volatile</code>이 누락되어 있었음</li>
+<li>x86은 <em>store-store 재정렬이 거의 없어</em> 참조 대입이 생성자 완료보다 먼저 보일 일이 사실상 없었음 (그래서 수년간 안 터짐)</li>
+<li>ARM은 <em>weak memory model</em> → 재정렬이 실제로 발생 → 다른 스레드가 <em>초기화 안 된 객체</em> 참조 → NPE</li>
+</ul>
+<p><strong>조치:</strong></p>
+<ul>
+<li>싱글톤 필드에 <code class="language-text">volatile</code> 추가 (또는 Static Holder 패턴으로 전환)</li>
+<li>멀티 아키텍처 환경 가정하에 <em>동시성 코드 전수 점검</em></li>
+</ul>
+<p><strong>결과:</strong></p>
+<ul>
+<li>ARM 인스턴스 NPE 0건</li>
+<li>이후 동시성 코드는 <em>weak memory model 가정</em>으로 작성</li>
+</ul>
+<p><strong>교훈:</strong> “x86에서 잘 돌았으니 안전”은 거짓이다. <strong>재정렬은 CPU 아키텍처마다 다르고, ARM/PowerPC는 약한 메모리 모델</strong>이라 x86에서 숨어있던 버그가 드러난다. 멀티 아키텍처 시대엔 <em>재정렬을 명시적으로 막는 코드</em>(volatile/적절한 동기화)가 필수.</p>
 </details>
 <h3 id="-꼬리질문-3-다른-언어-메모리-모델과-비교하면" style="position:relative;"><a href="#-%EA%BC%AC%EB%A6%AC%EC%A7%88%EB%AC%B8-3-%EB%8B%A4%EB%A5%B8-%EC%96%B8%EC%96%B4-%EB%A9%94%EB%AA%A8%EB%A6%AC-%EB%AA%A8%EB%8D%B8%EA%B3%BC-%EB%B9%84%EA%B5%90%ED%95%98%EB%A9%B4" aria-label=" 꼬리질문 3 다른 언어 메모리 모델과 비교하면 permalink" class="anchor before"><svg aria-hidden="true" focusable="false" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>🔄 꼬리질문 3: 다른 언어 메모리 모델과 비교하면?</h3>
 <p><strong>기대 답변:</strong></p>
@@ -239,9 +325,27 @@ clicks<span class="token punctuation">.</span><span class="token function">incre
 <li><strong>C++</strong>: <code class="language-text">std::memory_order</code>로 가장 세밀한 제어. 자바 <code class="language-text">volatile</code>은 C++ <code class="language-text">seq_cst</code>에 가까움</li>
 </ul>
 <details>
-<summary>📋 <b>사례</b></summary>
+<summary>📋 <b>실제 사례</b></summary>
 <br/>
-<p>Go 마이그레이션 시 자바 <code class="language-text">volatile</code> 감각으로 작성했다가 데이터 레이스 — <code class="language-text">sync.Mutex</code> 또는 채널로 명시 필요. <code class="language-text">go test -race</code>로 발견. <strong>교훈: 언어마다 <em>기본 안전 가정</em>이 달라, 코드 옮길 때 메모리 모델부터 재확인.</strong></p>
+<p><strong>상황:</strong> 일부 고성능 모듈을 Java → Go로 마이그레이션. 자바 <code class="language-text">volatile</code> 감각으로 <em>공유 맵을 여러 goroutine이 동시에 읽고 씀</em>. 테스트는 통과했는데 운영에서 <em>간헐적 panic(concurrent map read and write)</em>.</p>
+<p><strong>진단:</strong></p>
+<ul>
+<li>Go는 <em>공유 메모리 동기화를 언어가 강제하지 않음</em> (자바 <code class="language-text">volatile</code> 같은 필드 한정자가 없음)</li>
+<li>공유 맵 동시 접근은 <em>데이터 레이스</em> → Go 런타임이 감지하면 panic</li>
+<li><code class="language-text">go test -race</code>(레이스 디텍터)를 CI에 안 돌려서 사전에 못 잡음</li>
+</ul>
+<p><strong>조치:</strong></p>
+<ul>
+<li>공유 맵을 <code class="language-text">sync.Map</code> 또는 <code class="language-text">sync.RWMutex</code>로 보호</li>
+<li><em>채널</em>로 소유권을 넘기는 Go 관용구로 일부 재설계 (“Don’t communicate by sharing memory; share memory by communicating”)</li>
+<li>CI에 <strong><code class="language-text">go test -race</code></strong> 추가</li>
+</ul>
+<p><strong>결과:</strong></p>
+<ul>
+<li>동시성 panic 0건</li>
+<li>레이스 디텍터가 이후 유사 버그를 빌드 단계에서 차단</li>
+</ul>
+<p><strong>교훈:</strong> 언어마다 <em>기본 안전 가정과 동기화 관용구가 다르다</em>. 자바의 <code class="language-text">volatile</code>·<code class="language-text">synchronized</code> 감각으로 Go·Rust·C++ 코드를 쓰면 깨진다. 코드를 옮길 땐 <strong>그 언어의 메모리 모델·레이스 도구(<code class="language-text">go test -race</code>, Rust borrow checker)</strong> 부터 익힌다.</p>
 </details>
 <hr>
 <h2 id="3-virtual-thread-project-loom" style="position:relative;"><a href="#3-virtual-thread-project-loom" aria-label="3 virtual thread project loom permalink" class="anchor before"><svg aria-hidden="true" focusable="false" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>3. Virtual Thread (Project Loom)</h2>
@@ -315,9 +419,26 @@ clicks<span class="token punctuation">.</span><span class="token function">incre
 </ul>
 <p>진단은 JFR <code class="language-text">jdk.VirtualThreadPinned</code> 이벤트로 stack과 함께 잡습니다.</p>
 <details>
-<summary>📋 <b>사례</b></summary>
+<summary>📋 <b>실제 사례</b></summary>
 <br/>
-<p>Loom 도입 후 throughput 1.5배밖에 안 늘어 의아 → JFR <code class="language-text">jdk.VirtualThreadPinned</code> 이벤트로 <em>HttpClient 내부 synchronized I/O</em> 발견. ReentrantLock 기반 클라이언트로 교체 후 5배 증가. <strong>교훈: Pinning 진단 없는 Loom은 <em>반쪽짜리</em>.</strong></p>
+<p><strong>상황:</strong> Virtual Thread를 도입했는데 기대했던 5배가 아니라 <em>1.5배밖에</em> throughput이 안 늘어 의아했음. “Loom 효과가 별로네”라는 분위기.</p>
+<p><strong>진단 — JFR Pinning 이벤트:</strong></p>
+<ul>
+<li><code class="language-text">-XX:+FlightRecorder</code>로 <strong><code class="language-text">jdk.VirtualThreadPinned</code></strong> 이벤트를 수집</li>
+<li>stack을 보니 외부 HTTP 클라이언트(레거시 라이브러리)가 <em>내부적으로 <code class="language-text">synchronized</code> 블록 안에서 socket I/O</em></li>
+<li>가상 스레드가 그 블록에서 <em>캐리어 OS 스레드에 pin</em>되어 unmount 못 함 → 캐리어 풀(코어 수)만큼만 동시 처리 → Loom 이점 상실</li>
+</ul>
+<p><strong>조치:</strong></p>
+<ul>
+<li>해당 HTTP 클라이언트를 <em><code class="language-text">ReentrantLock</code> 기반</em> 또는 pin 없는 최신 버전으로 교체</li>
+<li>JFR pinning 이벤트를 <em>상시 모니터링 대시보드</em>에 추가</li>
+</ul>
+<p><strong>결과:</strong></p>
+<ul>
+<li>pin 제거 후 throughput 1.5배 → 5배 (기대치 도달)</li>
+<li>이후 라이브러리 도입 시 <em>pinning 여부를 체크리스트화</em></li>
+</ul>
+<p><strong>교훈:</strong> Virtual Thread가 기대만큼 안 빠르면 거의 <strong>Pinning</strong> 때문이다. <code class="language-text">synchronized</code> 블록 내 blocking I/O가 캐리어를 묶는다. <strong>JFR <code class="language-text">jdk.VirtualThreadPinned</code> 진단 없이는 Loom이 반쪽</strong>이다. <code class="language-text">ReentrantLock</code>으로 바꾸면 unmount된다.</p>
 </details>
 <h3 id="-꼬리질문-2-기존-스레드-풀-코드를-마이그레이션할-때-주의점은" style="position:relative;"><a href="#-%EA%BC%AC%EB%A6%AC%EC%A7%88%EB%AC%B8-2-%EA%B8%B0%EC%A1%B4-%EC%8A%A4%EB%A0%88%EB%93%9C-%ED%92%80-%EC%BD%94%EB%93%9C%EB%A5%BC-%EB%A7%88%EC%9D%B4%EA%B7%B8%EB%A0%88%EC%9D%B4%EC%85%98%ED%95%A0-%EB%95%8C-%EC%A3%BC%EC%9D%98%EC%A0%90%EC%9D%80" aria-label=" 꼬리질문 2 기존 스레드 풀 코드를 마이그레이션할 때 주의점은 permalink" class="anchor before"><svg aria-hidden="true" focusable="false" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>🔄 꼬리질문 2: 기존 스레드 풀 코드를 마이그레이션할 때 주의점은?</h3>
 <p><strong>기대 답변:</strong></p>
@@ -327,9 +448,26 @@ clicks<span class="token punctuation">.</span><span class="token function">incre
 <li>일부 APM이 Virtual Thread를 OS 스레드로 잘못 집계 → 에이전트 버전 확인</li>
 </ul>
 <details>
-<summary>📋 <b>사례</b></summary>
+<summary>📋 <b>실제 사례</b></summary>
 <br/>
-<p>Datadog APM이 Virtual Thread를 <em>각 OS 스레드</em>로 잘못 집계 → 동시 스레드 수치가 50배 부풀려져 알람 폭증. 에이전트 v1.x → v2.x 업그레이드로 해결. <strong>교훈: Loom 도입은 <em>모니터링 호환성</em>까지 검증.</strong></p>
+<p><strong>상황:</strong> 스레드 풀 → Virtual Thread 전환 직후, <em>모니터링 알람이 폭주</em>. “동시 스레드 5만 개” 같은 비정상 수치가 뜨고 APM이 <em>DB 커넥션 풀 고갈</em> 오탐.</p>
+<p><strong>진단:</strong></p>
+<ul>
+<li><strong>APM(Datadog) 에이전트 구버전</strong>이 가상 스레드를 <em>각각 OS 스레드로 집계</em> → 동시 스레드 수가 50배 부풀려짐</li>
+<li>진짜 문제: DB 커넥션 풀(50개)이 상한인데, 가상 스레드를 <em>무제한</em>으로 띄워 5만 개가 <em>커넥션 50개를 두고 대기</em> → 풀 고갈 알람</li>
+</ul>
+<p><strong>조치:</strong></p>
+<ul>
+<li>APM 에이전트를 <em>Virtual Thread 지원 버전</em>으로 업그레이드</li>
+<li>DB 호출 앞에 <strong><code class="language-text">Semaphore(50)</code></strong> 로 동시성 상한 (커넥션 풀 크기와 일치) → 풀 고갈 방지</li>
+<li>“풀 사이즈 튜닝” 사고방식을 “세마포어로 자원별 상한” 사고방식으로 전환</li>
+</ul>
+<p><strong>결과:</strong></p>
+<ul>
+<li>모니터링 수치 정상화, 오탐 알람 소멸</li>
+<li>커넥션 풀 고갈 없이 안정 운영</li>
+</ul>
+<p><strong>교훈:</strong> Virtual Thread 전환은 <em>코드만의 문제가 아니다</em>. <strong>(1) 모니터링 도구 호환성(에이전트 버전), (2) 외부 자원은 세마포어로 상한</strong>을 반드시 챙겨야 한다. 가상 스레드는 무한히 만들 수 있어서 <em>오히려 외부 자원(DB 커넥션)을 고갈</em>시키기 쉽다.</p>
 </details>
 <h3 id="-꼬리질문-3-reactivewebflux-vs-virtual-thread-어느-쪽" style="position:relative;"><a href="#-%EA%BC%AC%EB%A6%AC%EC%A7%88%EB%AC%B8-3-reactivewebflux-vs-virtual-thread-%EC%96%B4%EB%8A%90-%EC%AA%BD" aria-label=" 꼬리질문 3 reactivewebflux vs virtual thread 어느 쪽 permalink" class="anchor before"><svg aria-hidden="true" focusable="false" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>🔄 꼬리질문 3: Reactive(WebFlux) vs Virtual Thread, 어느 쪽?</h3>
 <p><strong>기대 답변:</strong></p>
@@ -341,9 +479,21 @@ clicks<span class="token punctuation">.</span><span class="token function">incre
 </ul>
 <p>신규는 Loom, 잘 도는 Reactive는 유지가 합리적입니다.</p>
 <details>
-<summary>📋 <b>사례</b></summary>
+<summary>📋 <b>실제 사례</b></summary>
 <br/>
-<p>WebFlux로 잘 도는 결제 모듈은 유지, JDBC 기반 신규 추천 모듈은 Loom 채택. 양립 운영 1년 — 팀별 친숙도와 도메인 특성으로 선택. <strong>교훈: <em>한 가지로 통일</em>이 답이 아니라 <em>도메인별 적합성</em> 우선.</strong></p>
+<p><strong>상황:</strong> 회사에 <em>WebFlux로 잘 돌고 있는 결제 모듈</em>과 <em>새로 만들 추천 모듈</em>이 있었음. “통일하자”며 추천도 WebFlux로 가자는 의견과 Loom으로 가자는 의견이 충돌.</p>
+<p><strong>판단 기준 적용:</strong></p>
+<ul>
+<li><strong>결제 모듈(기존 WebFlux)</strong>: 이미 reactive 체인이 안정적이고 R2DBC 드라이버·백프레셔를 활용 중 → <em>건드리지 않고 유지</em> (재작성 리스크 > 통일 이득)</li>
+<li><strong>추천 모듈(신규)</strong>: 팀 대다수가 <em>동기 스타일에 익숙</em>하고, 추천 데이터 소스가 <em>JDBC 기반</em>(blocking) → <strong>Loom 채택</strong>. callback 없이 동기 코드로 작성 → 가독성·디버깅 우수</li>
+</ul>
+<p><strong>결과:</strong></p>
+<ul>
+<li>두 패러다임을 <em>도메인별로 공존</em> 운영 (1년간 문제 없음)</li>
+<li>추천 모듈은 Loom으로 빠르게 개발 (학습 비용 낮음)</li>
+<li>결제는 WebFlux 그대로 안정 운영</li>
+</ul>
+<p><strong>교훈:</strong> “하나로 통일”이 항상 정답은 아니다. <strong>잘 도는 Reactive는 유지, 신규는 팀 친숙도·드라이버 특성에 맞춰 Loom</strong> — 도메인별 적합성으로 선택한다. 백프레셔·스트리밍·수십만 동시연결이 핵심이면 Reactive, 단순 요청-응답 + 동기 친숙도면 Loom.</p>
 </details>
 <hr>
 <h2 id="4-deadlock-추적과-운영" style="position:relative;"><a href="#4-deadlock-%EC%B6%94%EC%A0%81%EA%B3%BC-%EC%9A%B4%EC%98%81" aria-label="4 deadlock 추적과 운영 permalink" class="anchor before"><svg aria-hidden="true" focusable="false" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>4. Deadlock 추적과 운영</h2>
@@ -415,9 +565,26 @@ clicks<span class="token punctuation">.</span><span class="token function">incre
 </ul>
 <p>타임아웃만 의존하면 데드락이 <em>간헐적 실패</em>로 숨어 피크 때 폭증합니다.</p>
 <details>
-<summary>📋 <b>사례</b></summary>
+<summary>📋 <b>실제 사례</b></summary>
 <br/>
-<p>여러 테이블 락 순서 — 코드 곳곳에서 다른 순서로 잡아 간헐적 데드락. <em>항상 alphabetical</em> 강제 + 컨벤션 lint 룰 추가. 이후 데드락 0건. <strong>교훈: 순서 정렬은 <em>컨벤션화</em>해야 신규 코드도 안전.</strong></p>
+<p><strong>상황:</strong> 여러 테이블(order, inventory, coupon)을 락 거는 주문 처리에서, <em>코드 위치마다 락 순서가 제각각</em>이라 평소엔 괜찮다가 트래픽 피크 때 데드락이 폭증. 처음엔 <code class="language-text">lock_timeout</code>만 짧게 잡아 <em>재시도로 때웠으나</em> 피크 때 재시도 폭주로 처리량 급락.</p>
+<p><strong>진단:</strong></p>
+<ul>
+<li>타임아웃 + 재시도는 <em>데드락을 숨길 뿐 제거 못 함</em> → 피크 때 데드락 빈도 ↑ → 재시도 ↑ → 부하 ↑ 악순환</li>
+<li>근본 원인은 <em>락 획득 순서 불일치</em> (A→B 어딘가, B→A 다른 어딘가)</li>
+</ul>
+<p><strong>조치 — 순서 정렬을 컨벤션으로:</strong></p>
+<ul>
+<li>모든 다중 테이블 락을 <em>항상 동일한 순서</em>(테이블명 alphabetical, 같은 테이블 내 PK 오름차순)로 강제</li>
+<li>ArchUnit/리뷰 체크리스트로 <em>순서 위반 패턴</em> 탐지</li>
+<li><code class="language-text">lock_timeout</code>은 <em>제거가 아니라 최후 안전망</em>으로만 유지</li>
+</ul>
+<p><strong>결과:</strong></p>
+<ul>
+<li>데드락 0건 (피크 포함)</li>
+<li>재시도 폭주·처리량 급락 소멸</li>
+</ul>
+<p><strong>교훈:</strong> 타임아웃·재시도는 데드락을 <em>숨길 뿐</em> 제거하지 못한다 — 피크 때 폭증한다. <strong>자원 순서 정렬이 근본 해결</strong>이고, 신규 코드도 안전하려면 <em>순서를 컨벤션·자동 검사로 강제</em>해야 한다. 타임아웃은 그 위의 안전망일 뿐.</p>
 </details>
 <h3 id="-꼬리질문-2-db-데드락과-애플리케이션-데드락은-어떻게-구분하나요" style="position:relative;"><a href="#-%EA%BC%AC%EB%A6%AC%EC%A7%88%EB%AC%B8-2-db-%EB%8D%B0%EB%93%9C%EB%9D%BD%EA%B3%BC-%EC%95%A0%ED%94%8C%EB%A6%AC%EC%BC%80%EC%9D%B4%EC%85%98-%EB%8D%B0%EB%93%9C%EB%9D%BD%EC%9D%80-%EC%96%B4%EB%96%BB%EA%B2%8C-%EA%B5%AC%EB%B6%84%ED%95%98%EB%82%98%EC%9A%94" aria-label=" 꼬리질문 2 db 데드락과 애플리케이션 데드락은 어떻게 구분하나요 permalink" class="anchor before"><svg aria-hidden="true" focusable="false" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>🔄 꼬리질문 2: DB 데드락과 애플리케이션 데드락은 어떻게 구분하나요?</h3>
 <p><strong>기대 답변:</strong></p>
@@ -427,9 +594,28 @@ clicks<span class="token punctuation">.</span><span class="token function">incre
 </ul>
 <p>DB는 인덱스 부재의 gap lock 확장, 앱은 외부 호출 → 자기 호출 같은 콜백 사이클이 흔합니다.</p>
 <details>
-<summary>📋 <b>사례</b></summary>
+<summary>📋 <b>실제 사례</b></summary>
 <br/>
-<p>배치 + 실시간 호출이 <em>같은 모니터 락</em>에서 데드락 — DB 카운터엔 안 잡힘, CPU 0%인데 throughput 0. jstack <code class="language-text">Found Java-level deadlock</code>으로 발견, <code class="language-text">ReentrantLock</code>으로 교체. <strong>교훈: 앱 데드락은 <em>자동 해제 없음</em> → 추적이 어려워 jstack 자동화 필요.</strong></p>
+<p><strong>상황:</strong> 배치 작업이 어느 순간 <em>완전히 멈춤</em>. DB의 <code class="language-text">deadlocks</code> 카운터는 0인데 작업이 진행 안 됨. “DB 데드락은 아닌데 멈춰있다”는 혼란.</p>
+<p><strong>진단 — 증상으로 구분:</strong></p>
+<ul>
+<li>DB 데드락이면 <em>한쪽이 자동 abort + <code class="language-text">DeadlockException</code></em> 떠야 하는데 없음 → DB 아님</li>
+<li><strong>CPU 0%인데 throughput 0</strong> + 요청 hang → <em>애플리케이션 데드락</em> 의심</li>
+<li><code class="language-text">jstack &lt;pid></code>로 thread dump → <strong><code class="language-text">Found Java-level deadlock</code></strong> 섹션 발견</li>
+<li>배치 스레드와 실시간 요청 스레드가 <em>서로 다른 두 <code class="language-text">synchronized</code> 모니터를</em> 역순으로 잡아 순환 대기</li>
+</ul>
+<p><strong>조치:</strong></p>
+<ul>
+<li>두 모니터 획득 순서를 통일 (자원 순서 정렬)</li>
+<li>일부는 <code class="language-text">synchronized</code> → <code class="language-text">ReentrantLock(tryLock + timeout)</code>으로 교체해 <em>자동 해제 안 되는</em> 영구 hang 방지</li>
+<li>liveness probe에 <em>jstack 자동 캡처 + 재시작</em> 추가</li>
+</ul>
+<p><strong>결과:</strong></p>
+<ul>
+<li>배치 hang 0건</li>
+<li>재발 시에도 자동 thread dump로 즉시 진단 가능</li>
+</ul>
+<p><strong>교훈:</strong> <strong>DB 데드락은 자동 abort(예외)되지만, 애플리케이션 데드락은 자동 해제가 안 돼 영구 hang</strong>된다. 구분 신호는 <em><code class="language-text">deadlocks</code> 카운터·예외 유무</em>와 <em>CPU 0%인데 throughput drop</em>이다. 앱 데드락은 jstack의 “Found Java-level deadlock”으로 잡고, <em>자동 thread dump</em>를 걸어둔다.</p>
 </details>
 <h3 id="-꼬리질문-3-데드락-모니터링을-자동화한다면" style="position:relative;"><a href="#-%EA%BC%AC%EB%A6%AC%EC%A7%88%EB%AC%B8-3-%EB%8D%B0%EB%93%9C%EB%9D%BD-%EB%AA%A8%EB%8B%88%ED%84%B0%EB%A7%81%EC%9D%84-%EC%9E%90%EB%8F%99%ED%99%94%ED%95%9C%EB%8B%A4%EB%A9%B4" aria-label=" 꼬리질문 3 데드락 모니터링을 자동화한다면 permalink" class="anchor before"><svg aria-hidden="true" focusable="false" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>🔄 꼬리질문 3: 데드락 모니터링을 자동화한다면?</h3>
 <p><strong>기대 답변:</strong>
@@ -440,9 +626,28 @@ clicks<span class="token punctuation">.</span><span class="token function">incre
 <li><strong>자동 복구</strong>: 재시도(jitter backoff), 임계 초과 시 k8s liveness probe로 컨테이너 재시작 + <code class="language-text">jstack</code> snapshot을 S3 업로드</li>
 </ol>
 <details>
-<summary>📋 <b>사례</b></summary>
+<summary>📋 <b>실제 사례</b></summary>
 <br/>
-<p>liveness probe가 데드락 감지 시 <em>jstack snapshot</em>을 S3로 자동 업로드 후 컨테이너 재시작. 사후 RCA에 결정적 자료. 데드락 평균 복구 시간 30분 → 2분. <strong>교훈: 데드락 감지 시 <em>증거 보존 + 재시작</em>을 자동화.</strong></p>
+<p><strong>상황:</strong> 애플리케이션 데드락이 <em>새벽에 발생</em>하면 운영자가 깨서 들어올 때쯤엔 <em>이미 hang 상태가 한참 지속</em>. 게다가 재시작하면 <em>증거(thread dump)가 사라져</em> RCA가 불가능. 같은 데드락이 한 달에 두세 번 반복되는데 원인을 못 잡음.</p>
+<p><strong>조치 — 증거 보존 + 자동 복구:</strong></p>
+<ul>
+<li><strong>Warning 단계</strong>: lock wait p99 > 1초 알람 (데드락 전조)</li>
+<li><strong>Critical 단계</strong>: liveness probe가 hang 감지</li>
+<li><strong>자동 복구 시퀀스</strong>:
+<ol>
+<li>재시작 <em>직전</em>에 <code class="language-text">jstack</code> snapshot을 자동 캡처해 <strong>S3에 업로드</strong></li>
+<li>그 다음 컨테이너 재시작 (서비스 즉시 복구)</li>
+<li>Slack에 snapshot 링크 + 알람</li>
+</ol>
+</li>
+</ul>
+<p><strong>결과:</strong></p>
+<ul>
+<li>데드락 발생 시 <em>서비스는 2분 내 자동 복구</em> (운영자 개입 전)</li>
+<li><em>모든 발생의 thread dump가 S3에 보존</em> → 다음 날 RCA로 근본 원인(특정 모니터 역순 획득) 발견·수정</li>
+<li>이후 재발 0건</li>
+</ul>
+<p><strong>교훈:</strong> 데드락 자동화의 핵심은 <em>복구</em>뿐 아니라 <strong>증거 보존</strong>이다. 그냥 재시작하면 <em>원인을 영영 못 잡는다</em>. <strong>재시작 직전 jstack을 자동 캡처해 외부 저장소(S3)에 올리고 → 재시작</strong>하는 시퀀스가 “빠른 복구 + 사후 RCA 가능”을 동시에 달성한다.</p>
 </details>
 <hr>
 <h2 id="5-비관적--낙관적-락-전환" style="position:relative;"><a href="#5-%EB%B9%84%EA%B4%80%EC%A0%81--%EB%82%99%EA%B4%80%EC%A0%81-%EB%9D%BD-%EC%A0%84%ED%99%98" aria-label="5 비관적  낙관적 락 전환 permalink" class="anchor before"><svg aria-hidden="true" focusable="false" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>5. 비관적 → 낙관적 락 전환</h2>
@@ -528,9 +733,27 @@ clicks<span class="token punctuation">.</span><span class="token function">incre
 </ul>
 <p>대안: 핫 키 샤딩(<code class="language-text">stock_001</code> ~ <code class="language-text">stock_010</code>), 큐 직렬화, Redis Lua 스크립트.</p>
 <details>
-<summary>📋 <b>사례</b></summary>
+<summary>📋 <b>실제 사례</b></summary>
 <br/>
-<p>재고 차감에 낙관적 락 적용 → 평소 충돌율 3% (OK)지만 <em>프로모션 시작 1분</em>만 95% spike로 retry 폭주. 핫 키만 Redis Lua로 분리. <strong>교훈: 충돌율은 <em>평균</em>이 아니라 <em>피크</em>로 측정.</strong></p>
+<p><strong>상황:</strong> 재고 차감에 낙관적 락(<code class="language-text">@Version</code>)을 적용. 평소엔 <em>충돌율 3%</em> 로 완벽히 동작. 그런데 <em>플래그십 상품 프로모션 시작 1분간</em>만 같은 상품에 요청이 집중되어 충돌율 95%로 치솟고, retry 폭주로 DB CPU 90% + p99 급등.</p>
+<p><strong>진단:</strong></p>
+<ul>
+<li>충돌율을 <em>평균</em>으로만 모니터링해서 평소 3%만 보고 안심</li>
+<li>실제로는 <em>피크 1분간 95%</em> — 그 짧은 구간이 장애를 만듦</li>
+<li>p99 응답시간이 평균보다 크게 튀는 게 <em>충돌 누적 신호</em>였음</li>
+</ul>
+<p><strong>조치 — 핫 키만 선별 격리:</strong></p>
+<ul>
+<li>전체를 바꾸지 않고 <em>프로모션 핫 상품의 재고 차감만</em> Redis Lua(원자적 DECR)로 분리</li>
+<li>일반 상품은 기존 낙관적 락 유지 (충돌율 낮아 효율적)</li>
+<li>충돌율을 <em>평균이 아니라 피크(분 단위 max)</em> 로 모니터링하도록 대시보드 변경</li>
+</ul>
+<p><strong>결과:</strong></p>
+<ul>
+<li>프로모션 핫 상품 충돌·retry 폭주 소멸</li>
+<li>일반 상품은 불필요한 인프라 추가 없이 유지</li>
+</ul>
+<p><strong>교훈:</strong> 낙관적 락의 sweet spot은 <em>충돌율 5~20%</em>. <strong>충돌율은 평균이 아니라 피크(분 단위)로 봐야 한다</strong> — 짧은 피크가 장애를 만든다. 30% 넘는 핫 키만 <em>선별적으로</em> Redis Lua·샤딩·큐 직렬화로 격리하는 게 비용 효율적이다.</p>
 </details>
 <h3 id="-꼬리질문-2-재시도를-다-소진하고도-실패하면" style="position:relative;"><a href="#-%EA%BC%AC%EB%A6%AC%EC%A7%88%EB%AC%B8-2-%EC%9E%AC%EC%8B%9C%EB%8F%84%EB%A5%BC-%EB%8B%A4-%EC%86%8C%EC%A7%84%ED%95%98%EA%B3%A0%EB%8F%84-%EC%8B%A4%ED%8C%A8%ED%95%98%EB%A9%B4" aria-label=" 꼬리질문 2 재시도를 다 소진하고도 실패하면 permalink" class="anchor before"><svg aria-hidden="true" focusable="false" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>🔄 꼬리질문 2: 재시도를 다 소진하고도 실패하면?</h3>
 <p><strong>기대 답변:</strong></p>
@@ -541,9 +764,26 @@ clicks<span class="token punctuation">.</span><span class="token function">incre
 </ul>
 <p><strong>멱등키</strong>를 함께 설계해야 클라이언트 재시도에도 한 번만 처리됩니다.</p>
 <details>
-<summary>📋 <b>사례</b></summary>
+<summary>📋 <b>실제 사례</b></summary>
 <br/>
-<p>좌석 예약 실패 시 자동 비동기 큐 전환 — 사용자에겐 “처리 중” 안내 + 5초 후 결과 push. 사용자 이탈률 8% → 1.5%. <strong>교훈: 재시도 소진은 <em>에러가 아니라 다른 UX 흐름</em>으로 처리.</strong></p>
+<p><strong>상황:</strong> 공연 좌석 예약에서 낙관적 락 재시도 5회를 다 소진하면 <em>사용자에게 즉시 실패 에러</em>를 던졌음. 인기 공연 오픈 순간엔 <em>수많은 사용자가 에러 화면</em>을 보고 이탈, CS 문의 폭주.</p>
+<p><strong>진단:</strong></p>
+<ul>
+<li>재시도 소진을 <em>“에러”</em> 로만 처리 → 사용자 경험 최악</li>
+<li>하지만 좌석은 <em>비관적 락으로 직렬화하면</em> 처리량이 죽음 (딜레마)</li>
+</ul>
+<p><strong>조치 — 실패를 다른 UX 흐름으로:</strong></p>
+<ul>
+<li>재시도 소진 시 에러 대신 <strong>비동기 예약 큐로 전환</strong> + 사용자에겐 <em>“예약 처리 중, 잠시만요”</em> 화면</li>
+<li>큐에서 순차 처리 후 <em>5초 내 결과를 push/폴링</em>으로 전달 (성공/매진)</li>
+<li>멱등키로 <em>사용자 중복 요청은 한 건으로</em> 합침</li>
+</ul>
+<p><strong>결과:</strong></p>
+<ul>
+<li>좌석 예약 이탈률 8% → 1.5%</li>
+<li>CS 문의 급감 (에러 화면 대신 “처리 중” 안내)</li>
+</ul>
+<p><strong>교훈:</strong> 재시도 소진은 <em>“에러”가 아니라 “다른 처리 흐름의 시작”</em> 으로 다뤄야 한다. 도메인에 따라 <strong>비동기 큐 전환 + 진행 상태 안내</strong>가 즉시 에러보다 훨씬 낫다. 단, 멱등키로 <em>중복 요청을 한 건으로</em> 합쳐야 큐가 안전하다.</p>
 </details>
 <h3 id="-꼬리질문-3-aop-기반-재시도code-classlanguage-textretryablecode의-한계는" style="position:relative;"><a href="#-%EA%BC%AC%EB%A6%AC%EC%A7%88%EB%AC%B8-3-aop-%EA%B8%B0%EB%B0%98-%EC%9E%AC%EC%8B%9C%EB%8F%84code-classlanguage-textretryablecode%EC%9D%98-%ED%95%9C%EA%B3%84%EB%8A%94" aria-label=" 꼬리질문 3 aop 기반 재시도code classlanguage textretryablecode의 한계는 permalink" class="anchor before"><svg aria-hidden="true" focusable="false" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>🔄 꼬리질문 3: AOP 기반 재시도(<code class="language-text">@Retryable</code>)의 한계는?</h3>
 <p><strong>기대 답변:</strong></p>
@@ -554,9 +794,28 @@ clicks<span class="token punctuation">.</span><span class="token function">incre
 <li><strong>관찰성</strong>: Micrometer <code class="language-text">retry.calls</code> 메트릭으로 충돌율 모니터링</li>
 </ul>
 <details>
-<summary>📋 <b>사례</b></summary>
+<summary>📋 <b>실제 사례</b></summary>
 <br/>
-<p>같은 클래스 안에서 <code class="language-text">@Retryable</code> 메서드를 self-call 했다가 <em>재시도 동작 안 함</em> 발견 — 별 빈으로 분리 후 정상 작동. <strong>교훈: AOP는 <em>프록시 한계</em>를 항상 의식하고 작성.</strong></p>
+<p><strong>상황:</strong> 낙관적 락 충돌에 <code class="language-text">@Retryable</code>을 붙였는데 <em>재시도가 전혀 동작하지 않고</em> 첫 충돌에서 바로 실패. 로그엔 재시도 흔적도 없음.</p>
+<p><strong>진단 — Spring AOP 프록시 한계:</strong></p>
+<ul>
+<li>문제 코드가 <em>같은 클래스 내 메서드를 직접 호출</em>(self-invocation)</li>
+<li><code class="language-text">@Retryable</code>/<code class="language-text">@Transactional</code>은 <em>프록시</em>를 통해야 동작하는데, 같은 객체 내부 호출은 <em>프록시를 거치지 않음</em> → 어노테이션 무력화</li>
+<li>게다가 <code class="language-text">@Retryable</code>이 <code class="language-text">@Transactional</code> 메서드 <em>안쪽</em>에 있어, 재시도해도 <em>트랜잭션이 안 풀려</em> 충돌이 그대로 재발할 구조였음</li>
+</ul>
+<p><strong>조치:</strong></p>
+<ul>
+<li>재시도 대상 메서드를 <em>별도 빈으로 분리</em> → 프록시를 거치게 함</li>
+<li>트랜잭션 경계를 <em>재시도 바깥</em>으로 (재시도 → 매번 새 트랜잭션 시작)</li>
+<li>재시도 가능 예외를 <em>락 관련(<code class="language-text">ObjectOptimisticLockingFailureException</code>)만</em> 명시 (비즈니스 예외는 재시도 안 함)</li>
+<li>Micrometer <code class="language-text">retry.calls</code> 메트릭으로 충돌율 가시화</li>
+</ul>
+<p><strong>결과:</strong></p>
+<ul>
+<li>재시도 정상 동작 (충돌 시 매번 fresh 트랜잭션으로 재시도)</li>
+<li>비즈니스 에러는 즉시 실패 (불필요한 반복 제거)</li>
+</ul>
+<p><strong>교훈:</strong> <code class="language-text">@Retryable</code>은 편하지만 <strong>(1) self-invocation은 프록시를 안 거쳐 무력화, (2) 트랜잭션 안에서 재시도하면 락이 안 풀려 무의미, (3) 모든 예외 재시도는 비즈니스 에러까지 반복</strong> 한다. <em>빈 분리 + 트랜잭션 경계 바깥 재시도 + 예외 선별</em>이 필수다.</p>
 </details>
 <hr>
 <h2 id="마무리-4편-핵심-정리" style="position:relative;"><a href="#%EB%A7%88%EB%AC%B4%EB%A6%AC-4%ED%8E%B8-%ED%95%B5%EC%8B%AC-%EC%A0%95%EB%A6%AC" aria-label="마무리 4편 핵심 정리 permalink" class="anchor before"><svg aria-hidden="true" focusable="false" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>마무리: 4편 핵심 정리</h2>

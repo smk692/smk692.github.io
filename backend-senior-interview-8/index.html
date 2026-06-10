@@ -157,9 +157,25 @@ mTLS ON (zero-copy 우회):
 </ul>
 <p>전송만 하면 sendfile, 일부 가공이 필요하면 mmap.</p>
 <details>
-<summary>📋 <b>사례</b></summary>
+<summary>📋 <b>실제 사례</b></summary>
 <br/>
-<p>nginx 정적 자산 서빙에 sendfile 활성화 → CPU 35% → 12%. 동영상 변환 서비스는 mmap으로 부분 가공. <strong>교훈: <em>순수 전송</em>이면 sendfile, <em>부분 가공</em>이면 mmap.</strong></p>
+<p><strong>상황:</strong> 정적 자산(이미지·동영상) 서빙 서버의 CPU가 35%로 높았음. 단순히 <em>파일을 읽어 소켓에 쓰는</em> 작업인데 CPU를 많이 씀.</p>
+<p><strong>진단:</strong></p>
+<ul>
+<li>기존 코드가 <em>파일 → 유저 공간 버퍼 read → 소켓 write</em> (전통적 4-copy 경로)</li>
+<li>파일 내용을 <em>가공하지 않고 그대로 전송</em>하는데 유저 공간을 거치는 게 낭비</li>
+</ul>
+<p><strong>조치 — 작업 성격에 맞는 API:</strong></p>
+<ul>
+<li><em>순수 전송</em>(정적 자산)은 nginx <code class="language-text">sendfile on</code> → 커널이 <em>파일→소켓 직결</em>, 유저 공간 우회</li>
+<li><em>부분 가공</em>이 필요한 동영상 트랜스코딩 입력은 <code class="language-text">mmap</code>으로 메모리 매핑 후 처리</li>
+</ul>
+<p><strong>결과:</strong></p>
+<ul>
+<li>정적 서빙 CPU 35% → 12% (sendfile zero-copy)</li>
+<li>가공 필요한 부분만 mmap으로 유연성 확보</li>
+</ul>
+<p><strong>교훈:</strong> <strong>순수 전송이면 <code class="language-text">sendfile</code>(유저 공간 우회), 부분 가공이 필요하면 <code class="language-text">mmap</code>(매핑 후 접근)</strong>. 둘 다 zero-copy 계열이지만 <em>가공 필요 여부</em>가 선택 기준이다. 그냥 전송에 유저 공간 버퍼를 거치면 CPU 낭비.</p>
 </details>
 <h3 id="-꼬리질문-2-kafka는-어떻게-zero-copy를-활용하나요" style="position:relative;"><a href="#-%EA%BC%AC%EB%A6%AC%EC%A7%88%EB%AC%B8-2-kafka%EB%8A%94-%EC%96%B4%EB%96%BB%EA%B2%8C-zero-copy%EB%A5%BC-%ED%99%9C%EC%9A%A9%ED%95%98%EB%82%98%EC%9A%94" aria-label=" 꼬리질문 2 kafka는 어떻게 zero copy를 활용하나요 permalink" class="anchor before"><svg aria-hidden="true" focusable="false" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>🔄 꼬리질문 2: Kafka는 어떻게 zero-copy를 활용하나요?</h3>
 <p><strong>기대 답변:</strong></p>
@@ -169,9 +185,26 @@ mTLS ON (zero-copy 우회):
 <li>운영에서는 mTLS 강제 시 네트워크 처리량 30%+ 감소를 미리 예측</li>
 </ul>
 <details>
-<summary>📋 <b>사례</b></summary>
+<summary>📋 <b>실제 사례</b></summary>
 <br/>
-<p>mTLS 도입 사전 부하 테스트 — 컨슈머 throughput 30% 감소 예측, 인스턴스 1단계 업그레이드 사전 결정. <em>기습 다운 사고 0건</em>. <strong>교훈: 보안 강화 변경은 <em>항상 성능 사전 측정</em>.</strong></p>
+<p><strong>상황:</strong> 보안팀이 <em>“모든 Kafka 통신에 mTLS 의무화”</em> 를 공지. 운영팀은 “그냥 설정 켜면 되는 것”으로 가볍게 생각하고 적용하려 함.</p>
+<p><strong>진단 — 사전 부하 테스트:</strong></p>
+<ul>
+<li>적용 전 <em>스테이징에서 부하 테스트</em> → mTLS 켜자 컨슈머 throughput <em>30% 감소</em> 확인</li>
+<li>원인: Kafka는 평소 <em>디스크 세그먼트를 <code class="language-text">sendfile</code>로 컨슈머에 직결</em>하는데, mTLS는 <em>페이로드 암호화</em> 때문에 그 경로를 우회 → CPU 부담</li>
+<li>그냥 켰으면 <em>운영에서 기습 처리량 저하 + 컨슈머 lag 폭증</em>이 났을 상황</li>
+</ul>
+<p><strong>조치:</strong></p>
+<ul>
+<li>처리량 30% 감소를 <em>사전 capacity 계획</em>에 반영 → 브로커 인스턴스 1단계 업그레이드</li>
+<li>외부 노출 구간만 mTLS, <em>내부 브로커 간</em>은 Network Policy로 대체해 zero-copy 유지</li>
+</ul>
+<p><strong>결과:</strong></p>
+<ul>
+<li>mTLS 적용 후에도 <em>기습 lag·처리량 저하 0</em> (사전 대비)</li>
+<li>보안 요구 충족 + 성능 영향 최소화</li>
+</ul>
+<p><strong>교훈:</strong> Kafka의 zero-copy(<code class="language-text">sendfile</code>)는 <em>TLS를 켜면 페이로드 암호화 때문에 우회</em>되어 처리량이 30%+ 떨어진다. <strong>보안 변경(mTLS)은 반드시 사전 부하 테스트로 성능 영향을 측정</strong>하고 capacity에 반영해야 한다. “설정만 켜면 됨”이 아니다.</p>
 </details>
 <h3 id="-꼬리질문-3-운영에서-zero-copy-효과를-어떻게-측정하나요" style="position:relative;"><a href="#-%EA%BC%AC%EB%A6%AC%EC%A7%88%EB%AC%B8-3-%EC%9A%B4%EC%98%81%EC%97%90%EC%84%9C-zero-copy-%ED%9A%A8%EA%B3%BC%EB%A5%BC-%EC%96%B4%EB%96%BB%EA%B2%8C-%EC%B8%A1%EC%A0%95%ED%95%98%EB%82%98%EC%9A%94" aria-label=" 꼬리질문 3 운영에서 zero copy 효과를 어떻게 측정하나요 permalink" class="anchor before"><svg aria-hidden="true" focusable="false" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>🔄 꼬리질문 3: 운영에서 zero-copy 효과를 어떻게 측정하나요?</h3>
 <p><strong>기대 답변:</strong></p>
@@ -181,9 +214,23 @@ mTLS ON (zero-copy 우회):
 <li>컨테이너 memory cgroup의 page cache 활용도</li>
 </ul>
 <details>
-<summary>📋 <b>사례</b></summary>
+<summary>📋 <b>실제 사례</b></summary>
 <br/>
-<p><code class="language-text">perf stat -e syscalls:sys_enter_sendfile</code>로 sendfile 호출 수 측정. mTLS 도입 후 0으로 떨어진 것 확인. <strong>교훈: zero-copy 효과는 <em>syscall 카운트</em>로 직접 검증 가능.</strong></p>
+<p><strong>상황:</strong> “zero-copy가 정말 동작하는지” 확신이 없어, mTLS 도입 후 <em>체감상 느려진 게 진짜 zero-copy 우회 때문인지</em> 검증이 필요했음.</p>
+<p><strong>조치 — syscall 카운트로 직접 검증:</strong></p>
+<div class="gatsby-highlight" data-language="bash"><pre class="language-bash"><code class="language-bash"><span class="token comment"># sendfile 호출 수 측정</span>
+perf <span class="token function">stat</span> <span class="token parameter variable">-e</span> syscalls:sys_enter_sendfile <span class="token parameter variable">-p</span> <span class="token operator">&lt;</span>broker_pid<span class="token operator">></span> <span class="token function">sleep</span> <span class="token number">10</span></code></pre></div>
+<ul>
+<li>mTLS <em>적용 전</em>: <code class="language-text">sendfile</code> 12,000/s (zero-copy 활성)</li>
+<li>mTLS <em>적용 후</em>: <code class="language-text">sendfile</code> <strong>0</strong> (완전히 우회됨)</li>
+<li>동시에 <code class="language-text">context-switches</code>가 8천 → 3.4만/s로 증가 (유저 공간 경유 증거)</li>
+</ul>
+<p><strong>결과:</strong></p>
+<ul>
+<li>“체감”이 아니라 <em>syscall 카운트로 zero-copy 우회를 객관 입증</em></li>
+<li>데이터로 capacity 의사결정 근거 마련</li>
+</ul>
+<p><strong>교훈:</strong> zero-copy 효과는 <em>체감이 아니라 측정</em>으로 확인한다. <strong><code class="language-text">perf stat -e syscalls:sys_enter_sendfile</code></strong> 로 sendfile 호출 수를 직접 세면, zero-copy 활성/우회를 객관적으로 입증할 수 있다. context-switch 증가도 유저 공간 경유의 증거다.</p>
 </details>
 <hr>
 <h2 id="2-helm-base-chart-통합" style="position:relative;"><a href="#2-helm-base-chart-%ED%86%B5%ED%95%A9" aria-label="2 helm base chart 통합 permalink" class="anchor before"><svg aria-hidden="true" focusable="false" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>2. Helm Base Chart 통합</h2>
@@ -212,27 +259,19 @@ mTLS ON (zero-copy 우회):
   <span class="token key atrule">repository</span><span class="token punctuation">:</span> <span class="token string">""</span>
   <span class="token key atrule">tag</span><span class="token punctuation">:</span> <span class="token string">""</span>
   <span class="token key atrule">pullPolicy</span><span class="token punctuation">:</span> IfNotPresent
-
 <span class="token key atrule">replicas</span><span class="token punctuation">:</span> <span class="token number">2</span>
-
 <span class="token key atrule">resources</span><span class="token punctuation">:</span>
   <span class="token key atrule">requests</span><span class="token punctuation">:</span> <span class="token punctuation">{</span> <span class="token key atrule">cpu</span><span class="token punctuation">:</span> 100m<span class="token punctuation">,</span> <span class="token key atrule">memory</span><span class="token punctuation">:</span> 256Mi <span class="token punctuation">}</span>
   <span class="token key atrule">limits</span><span class="token punctuation">:</span> <span class="token punctuation">{</span> <span class="token key atrule">cpu</span><span class="token punctuation">:</span> 1000m<span class="token punctuation">,</span> <span class="token key atrule">memory</span><span class="token punctuation">:</span> 1Gi <span class="token punctuation">}</span>
-
 <span class="token key atrule">probes</span><span class="token punctuation">:</span>
   <span class="token key atrule">liveness</span><span class="token punctuation">:</span>
     <span class="token key atrule">path</span><span class="token punctuation">:</span> /actuator/health/liveness
     <span class="token key atrule">initialDelaySeconds</span><span class="token punctuation">:</span> <span class="token number">30</span>
-  <span class="token key atrule">readiness</span><span class="token punctuation">:</span>
-    <span class="token key atrule">path</span><span class="token punctuation">:</span> /actuator/health/readiness
-    <span class="token key atrule">initialDelaySeconds</span><span class="token punctuation">:</span> <span class="token number">10</span>
-
 <span class="token key atrule">autoscaling</span><span class="token punctuation">:</span>
   <span class="token key atrule">enabled</span><span class="token punctuation">:</span> <span class="token boolean important">false</span>
   <span class="token key atrule">minReplicas</span><span class="token punctuation">:</span> <span class="token number">2</span>
   <span class="token key atrule">maxReplicas</span><span class="token punctuation">:</span> <span class="token number">10</span>
   <span class="token key atrule">targetCPU</span><span class="token punctuation">:</span> <span class="token number">70</span>
-
 <span class="token comment"># values.schema.json으로 입력 검증</span></code></pre></div>
 <p><strong>서비스 차트는 base를 의존:</strong></p>
 <div class="gatsby-highlight" data-language="yaml"><pre class="language-yaml"><code class="language-yaml"><span class="token comment"># my-service/Chart.yaml</span>
@@ -246,18 +285,15 @@ mTLS ON (zero-copy 우회):
   <span class="token key atrule">repository</span><span class="token punctuation">:</span> my<span class="token punctuation">-</span>service
 <span class="token key atrule">probes</span><span class="token punctuation">:</span>
   <span class="token key atrule">liveness</span><span class="token punctuation">:</span>
-    <span class="token key atrule">path</span><span class="token punctuation">:</span> /health  <span class="token comment"># actuator 안 쓰는 경우</span></code></pre></div>
+    <span class="token key atrule">path</span><span class="token punctuation">:</span> /health</code></pre></div>
 <p><strong>3단계 — 마이그레이션 (4주):</strong></p>
 <ul>
 <li>Dry-run으로 <em>기존 manifest</em>와 <em>base chart 결과</em> diff</li>
 <li>1개 서비스씩 카나리 전환 (10% → 50% → 100%)</li>
-<li>첫 5개 서비스는 매뉴얼 검증, 이후 자동화 스크립트</li>
 </ul>
 <p><strong>예상 못 한 함정:</strong></p>
 <ul>
-<li>일부 레거시 서비스가 <em>비표준 annotation</em>(예: <code class="language-text">linkerd.io/inject</code>) 사용</li>
-<li>처음엔 <em>외면</em>하려 했으나 추적 불가 → base chart에 <code class="language-text">extraAnnotations</code> 인터페이스 추가</li>
-<li>정밀도 vs 유연성의 절충</li>
+<li>일부 레거시가 <em>비표준 annotation</em> 사용 → base chart에 <code class="language-text">extraAnnotations</code> 인터페이스 추가</li>
 </ul>
 <p><strong>결과:</strong></p>
 <ul>
@@ -265,14 +301,9 @@ mTLS ON (zero-copy 우회):
 <li>보안 패치 적용: 1주 → 1시간 (base chart 버전만 올림)</li>
 <li>차트 코드 라인: 12,000줄 → 3,500줄 (71% 감소)</li>
 </ul>
-<p><strong>추가 — 하위 호환성 정책:</strong></p>
-<ul>
-<li>SemVer 엄격: MAJOR 변경 시 1개 분기 deprecation 기간</li>
-<li><code class="language-text">values.schema.json</code>로 입력 검증, CI에서 차단</li>
-</ul>
 <p><strong>교훈:</strong></p>
 <ul>
-<li>통합 전 <em>기존 차트 정밀 분석</em>이 절반 (어디까지 공통화 가능한지)</li>
+<li>통합 전 <em>기존 차트 정밀 분석</em>이 절반</li>
 <li><em>모든 케이스를 포용</em>하려 하면 base chart가 복잡해짐 — 80% 케이스만 표준화</li>
 <li>Helm 차트 통합은 <em>플랫폼 팀의 가장 큰 레버리지</em></li>
 </ul>
@@ -285,9 +316,22 @@ mTLS ON (zero-copy 우회):
 <li>80% 룰 → 85% 가능했던 이유: helper template과 includes로 미세 변형 흡수</li>
 </ul>
 <details>
-<summary>📋 <b>사례</b></summary>
+<summary>📋 <b>실제 사례</b></summary>
 <br/>
-<p>23개 차트 텍스트 diff 자동화 스크립트로 <em>공통 블록 80%</em> 식별. 나머지 5%는 helper template로 흡수. <strong>교훈: 공통화 비율은 <em>측정 후 결정</em>, 감으로 추정 금지.</strong></p>
+<p><strong>상황:</strong> “차트를 통합하자”는 합의는 됐는데, <em>어디까지 공통화 가능한지를 감으로</em> 추정하려다 의견이 갈림 (“절반쯤?”, “거의 다?”).</p>
+<p><strong>조치 — 측정으로 공통화 비율 도출:</strong></p>
+<ul>
+<li>23개 차트를 <em>텍스트 diff 자동화 스크립트</em>로 비교 → <em>완전히 동일한 블록</em>을 추출</li>
+<li>결과: deployment·service·HPA·NetworkPolicy 등 <em>80%가 동일</em></li>
+<li>나머지 미세 변형(probe 경로, 환경변수 키)은 <em>helper template + includes</em>로 흡수 → 최종 85% 공통화 가능 판정</li>
+<li>변동 15%만 <em>Values 인터페이스</em>로 노출</li>
+</ul>
+<p><strong>결과:</strong></p>
+<ul>
+<li>“감”이 아니라 <em>측정 근거</em>로 base chart 설계 범위 확정</li>
+<li>85% 공통화 + 15% Values로 통합 성공</li>
+</ul>
+<p><strong>교훈:</strong> 공통화 비율은 <em>감이 아니라 측정</em>으로 도출한다. <strong>차트 텍스트 diff로 동일 블록을 정량 추출</strong>하면 “어디까지 공통화 가능한지”가 객관적으로 나온다. 미세 변형은 helper template으로 흡수해 공통화율을 높인다.</p>
 </details>
 <h3 id="-꼬리질문-2-표준-차트-버전-업-시-하위-호환성은" style="position:relative;"><a href="#-%EA%BC%AC%EB%A6%AC%EC%A7%88%EB%AC%B8-2-%ED%91%9C%EC%A4%80-%EC%B0%A8%ED%8A%B8-%EB%B2%84%EC%A0%84-%EC%97%85-%EC%8B%9C-%ED%95%98%EC%9C%84-%ED%98%B8%ED%99%98%EC%84%B1%EC%9D%80" aria-label=" 꼬리질문 2 표준 차트 버전 업 시 하위 호환성은 permalink" class="anchor before"><svg aria-hidden="true" focusable="false" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>🔄 꼬리질문 2: 표준 차트 버전 업 시 하위 호환성은?</h3>
 <p><strong>기대 답변:</strong></p>
@@ -298,9 +342,28 @@ mTLS ON (zero-copy 우회):
 <li>CI 단계에서 <code class="language-text">helm template</code> 결과를 이전 버전과 diff</li>
 </ul>
 <details>
-<summary>📋 <b>사례</b></summary>
+<summary>📋 <b>실제 사례</b></summary>
 <br/>
-<p>base chart MAJOR 변경 시 <em>이전 버전 alias 1분기 유지</em> + CI에서 <code class="language-text">helm template</code> diff 자동 비교. 사고 0건. <strong>교훈: 표준 차트는 <em>애플리케이션 의존성</em>과 동일한 호환성 정책 필요.</strong></p>
+<p><strong>상황:</strong> base chart의 values 구조를 개선하려고 <em>키 이름을 변경</em>(MINOR 버전 업으로)했더니, 그 base를 의존하던 <em>23개 서비스 중 8개가 다음 배포에서 깨짐</em>. “공통 차트 하나 바꿨는데 8개 서비스 장애”.</p>
+<p><strong>진단:</strong></p>
+<ul>
+<li>base chart는 <em>23개 서비스의 공통 의존성</em> → 변경 영향이 거대</li>
+<li>values 키 변경은 <em>하위 호환을 깨는 MAJOR 변경</em>인데 MINOR로 올림 → 의존 서비스들이 무방비</li>
+<li>검증 없이 배포되어 깨짐</li>
+</ul>
+<p><strong>조치 — 애플리케이션 의존성처럼 관리:</strong></p>
+<ul>
+<li>base chart에 <strong>SemVer 엄격 적용</strong> — 하위 호환 깨면 <em>반드시 MAJOR</em></li>
+<li>MAJOR 변경 시 <em>기존 키 alias를 1분기 유지</em>(deprecation 기간) → 점진 마이그레이션</li>
+<li><code class="language-text">values.schema.json</code>로 입력 검증</li>
+<li><strong>CI에서 <code class="language-text">helm template</code> 결과를 이전 버전과 diff</strong> → 의도치 않은 변경 자동 탐지</li>
+</ul>
+<p><strong>결과:</strong></p>
+<ul>
+<li>이후 base chart 변경으로 인한 의존 서비스 장애 0건</li>
+<li>점진 마이그레이션으로 안전하게 버전 업</li>
+</ul>
+<p><strong>교훈:</strong> 공통 base chart는 <em>수십 서비스의 의존성</em>이므로 <strong>애플리케이션 라이브러리와 동일한 호환성 정책(SemVer + deprecation + CI diff)</strong> 이 필요하다. 하위 호환을 깨는 변경을 MINOR로 올리면 <em>의존 서비스가 무더기로 깨진다</em>.</p>
 </details>
 <h3 id="-꼬리질문-3-왜-kustomize가-아니라-helm-base-chart인가요" style="position:relative;"><a href="#-%EA%BC%AC%EB%A6%AC%EC%A7%88%EB%AC%B8-3-%EC%99%9C-kustomize%EA%B0%80-%EC%95%84%EB%8B%88%EB%9D%BC-helm-base-chart%EC%9D%B8%EA%B0%80%EC%9A%94" aria-label=" 꼬리질문 3 왜 kustomize가 아니라 helm base chart인가요 permalink" class="anchor before"><svg aria-hidden="true" focusable="false" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>🔄 꼬리질문 3: 왜 Kustomize가 아니라 Helm base chart인가요?</h3>
 <p><strong>기대 답변:</strong></p>
@@ -311,9 +374,28 @@ mTLS ON (zero-copy 우회):
 </ul>
 <p>둘은 혼합 가능 (Helm + Kustomize Post-render).</p>
 <details>
-<summary>📋 <b>사례</b></summary>
+<summary>📋 <b>실제 사례</b></summary>
 <br/>
-<p>base chart는 Helm (releases·rollback·history 추적), 환경별 오버라이드는 Kustomize post-render — 둘의 장점만 결합. <strong>교훈: 도구는 <em>대립이 아니라 조합</em>.</strong></p>
+<p><strong>상황:</strong> 표준화 도구로 Helm이냐 Kustomize냐 팀 내 논쟁. “Kustomize가 더 단순하다”는 의견과 “Helm이 릴리스 관리에 낫다”는 의견 충돌.</p>
+<p><strong>판단 — 요구사항으로 결정:</strong></p>
+<ul>
+<li>핵심 요구: <em>릴리스 버전 추적 + 원클릭 rollback + history</em></li>
+<li><strong>Helm</strong>: <code class="language-text">helm rollback</code>, release history, 차트 버전 관리 → 요구 충족</li>
+<li><strong>Kustomize</strong>: 환경별 오버레이는 강력하나 <em>릴리스 단위 추적·rollback이 약함</em></li>
+<li>사내 GitOps가 <em>ArgoCD Application(Helm 친화)</em> → Helm이 정합</li>
+</ul>
+<p><strong>조치 — 둘의 장점 결합:</strong></p>
+<ul>
+<li><em>공통 구조·릴리스 관리</em>는 <strong>Helm base chart</strong></li>
+<li><em>환경별(dev/stg/prod) 미세 오버라이드</em>는 <strong>Kustomize post-render</strong>로 Helm 출력을 덮어씀</li>
+<li>“대립”이 아니라 <em>역할 분담</em>으로 둘 다 활용</li>
+</ul>
+<p><strong>결과:</strong></p>
+<ul>
+<li>릴리스 추적·rollback(Helm) + 환경 오버레이(Kustomize) 양쪽 이점 확보</li>
+<li>도구 논쟁 종결 (ADR로 기록)</li>
+</ul>
+<p><strong>교훈:</strong> Helm vs Kustomize는 <em>대립이 아니라 강점이 다른 도구</em>다. <strong>Helm = 패키징·릴리스 추적·rollback, Kustomize = 환경별 오버레이</strong>. 릴리스 관리가 중요하고 ArgoCD(Helm 친화) 환경이면 Helm 우선이고, <em>Helm + Kustomize post-render</em>로 둘을 조합할 수 있다.</p>
 </details>
 <hr>
 <h2 id="3-argocd와-다중-환경-drift" style="position:relative;"><a href="#3-argocd%EC%99%80-%EB%8B%A4%EC%A4%91-%ED%99%98%EA%B2%BD-drift" aria-label="3 argocd와 다중 환경 drift permalink" class="anchor before"><svg aria-hidden="true" focusable="false" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>3. ArgoCD와 다중 환경 Drift</h2>
@@ -340,55 +422,28 @@ mTLS ON (zero-copy 우회):
 <div class="gatsby-highlight" data-language="bash"><pre class="language-bash"><code class="language-bash">argocd app <span class="token function">diff</span> my-service</code></pre></div>
 <ul>
 <li>Drift 감지 시 Slack 알림 (Self-Heal 실행 전)</li>
-<li>운영팀이 “이게 의도된 거였나” 확인할 시간 확보</li>
 </ul>
 <p><strong>2단계 — App-of-Apps 패턴:</strong></p>
-<div class="gatsby-highlight" data-language="yaml"><pre class="language-yaml"><code class="language-yaml"><span class="token comment"># bootstrap/values.yaml</span>
-<span class="token key atrule">applications</span><span class="token punctuation">:</span>
-  <span class="token punctuation">-</span> <span class="token key atrule">name</span><span class="token punctuation">:</span> payment
-    <span class="token key atrule">repoURL</span><span class="token punctuation">:</span> <span class="token punctuation">...</span>
-    <span class="token key atrule">syncPolicy</span><span class="token punctuation">:</span>
-      <span class="token key atrule">automated</span><span class="token punctuation">:</span>
-        <span class="token key atrule">prune</span><span class="token punctuation">:</span> <span class="token boolean important">true</span>
-        <span class="token key atrule">selfHeal</span><span class="token punctuation">:</span> <span class="token boolean important">true</span>
-      <span class="token key atrule">syncOptions</span><span class="token punctuation">:</span>
-        <span class="token punctuation">-</span> ApplyOutOfSyncOnly=true
-  <span class="token punctuation">-</span> <span class="token key atrule">name</span><span class="token punctuation">:</span> notification
-    <span class="token punctuation">...</span></code></pre></div>
 <ul>
 <li>부모 Application 1개가 50개 자식 Application 관리</li>
 <li>새 서비스 추가 시 Git 한 줄</li>
 </ul>
-<p><strong>3단계 — Kustomize 환경별 오버레이:</strong></p>
-<div class="gatsby-highlight" data-language="text"><pre class="language-text"><code class="language-text">base/
-  deployment.yaml (replicas: 2)
-overlays/
-  dev/
-  stg/
-  prod/ (replicas: 5)
-  canary/ (replicas: 1, weight: 10)</code></pre></div>
+<p><strong>3단계 — Kustomize 환경별 오버레이</strong></p>
 <p><strong>4단계 — 긴급 우회 프로세스:</strong></p>
 <ul>
 <li><code class="language-text">kubectl</code> 직접 차단 (RBAC)</li>
 <li>긴급 시 <code class="language-text">/emergency-override</code> Slack 명령 → 봇이 자동 PR + 자동 머지 + ArgoCD sync</li>
-<li>30초 안에 적용 가능, 추적도 됨</li>
+<li>30초 안에 적용, 추적도 됨</li>
 </ul>
 <p><strong>5단계 — Self-Heal 안전망:</strong></p>
 <ul>
-<li>긴급 PR 머지되기 전엔 <em>해당 Application만 Self-Heal 일시 중단</em></li>
-<li>Sync window로 야간엔 Self-Heal off (운영 작업 보호)</li>
+<li>긴급 PR 머지 전엔 <em>해당 Application만 Self-Heal 일시 중단</em></li>
+<li>Sync window로 야간엔 Self-Heal off</li>
 </ul>
 <p><strong>결과:</strong></p>
 <ul>
 <li>Drift 사고 → 0건 (3개월)</li>
 <li>긴급 대응 시간: 5분 → 30초</li>
-<li>운영팀이 “ArgoCD 때문에 어쩔 줄 모르겠다”는 불평 사라짐</li>
-</ul>
-<p><strong>Secret 관리 동반:</strong></p>
-<ul>
-<li>SealedSecret으로 암호화된 secret을 Git에</li>
-<li>External Secrets Operator로 AWS Secrets Manager 자동 동기화</li>
-<li>plain secret이 Git에 들어가지 않게 pre-commit hook으로 차단</li>
 </ul>
 <p><strong>교훈:</strong></p>
 <ul>
@@ -405,9 +460,26 @@ overlays/
 <li>사후에 정식 Git 흐름으로 정합성 회복</li>
 </ul>
 <details>
-<summary>📋 <b>사례</b></summary>
+<summary>📋 <b>실제 사례</b></summary>
 <br/>
-<p>Slack <code class="language-text">/rollback v1.2.3</code> 명령 → 봇이 Git revert PR 자동 생성·머지·ArgoCD sync. 30초 안에 롤백, Git 이력도 보존. <strong>교훈: 긴급 우회는 <em>Git 흐름 안에서</em> 자동화.</strong></p>
+<p><strong>상황:</strong> GitOps 도입 후, 운영자들이 <em>“긴급한데 PR 만들고 리뷰 받고 머지 기다리는 게 너무 느리다”</em> 며 <em>몰래 <code class="language-text">kubectl</code>로 직접 수정</em>하기 시작 → Drift 발생 + Self-Heal과 충돌.</p>
+<p><strong>진단:</strong></p>
+<ul>
+<li>GitOps가 <em>긴급 대응을 느리게</em> 만들어 운영자가 우회 → Git이 진실의 원천이 아니게 됨</li>
+<li>“정석 프로세스”가 <em>긴급 상황에 비현실적</em>이면 사람들이 안 따름</li>
+</ul>
+<p><strong>조치 — 긴급 우회를 Git 흐름 안에서 자동화:</strong></p>
+<ul>
+<li>Slack <code class="language-text">/rollback v1.2.3</code> 명령 → 봇이 <em>Git revert PR 자동 생성 → 자동 머지 → ArgoCD sync</em></li>
+<li>전체 30초, 그러나 <em>Git 이력은 보존</em> (추적 가능)</li>
+<li>긴급 상황에도 <em>Git이 진실의 원천</em> 유지</li>
+</ul>
+<p><strong>결과:</strong></p>
+<ul>
+<li>긴급 대응 5분 → 30초 (운영자가 우회할 이유 사라짐)</li>
+<li><code class="language-text">kubectl</code> 직접 수정 Drift 0건</li>
+</ul>
+<p><strong>교훈:</strong> GitOps의 가장 큰 함정은 <em>긴급 대응을 느리게 만들어 사람들이 우회하는 것</em>이다. <strong>긴급 롤백을 Git 흐름 안에서 자동화</strong>(봇이 revert PR 자동 머지 + sync)하면, <em>빠르면서도 추적 가능</em>해 운영자가 우회할 이유가 없어진다.</p>
 </details>
 <h3 id="-꼬리질문-2-self-heal이-위험할-수-있나요" style="position:relative;"><a href="#-%EA%BC%AC%EB%A6%AC%EC%A7%88%EB%AC%B8-2-self-heal%EC%9D%B4-%EC%9C%84%ED%97%98%ED%95%A0-%EC%88%98-%EC%9E%88%EB%82%98%EC%9A%94" aria-label=" 꼬리질문 2 self heal이 위험할 수 있나요 permalink" class="anchor before"><svg aria-hidden="true" focusable="false" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>🔄 꼬리질문 2: Self-Heal이 위험할 수 있나요?</h3>
 <p><strong>기대 답변:</strong>
@@ -418,9 +490,26 @@ overlays/
 <li>알람: Drift 발생 시 알림(Self-Heal 전에 검토)</li>
 </ul>
 <details>
-<summary>📋 <b>사례</b></summary>
+<summary>📋 <b>실제 사례</b></summary>
 <br/>
-<p>야간 운영자가 replicas 20으로 올린 <em>수동 변경</em>을 Self-Heal이 5로 복구 → 다시 다운. 야간 시간대 Sync window로 Self-Heal off. <strong>교훈: Self-Heal은 <em>시간대·상황별</em> 정책 필요.</strong></p>
+<p><strong>상황:</strong> 야간 트래픽 급증 대응으로 운영자가 <em>replicas를 5→20으로 수동 확장</em>. 그런데 ArgoCD Self-Heal이 <em>Git의 desired state(5)로 자동 복구</em> → 20→5로 되돌림 → <em>부하 못 견디고 2차 다운</em>.</p>
+<p><strong>진단:</strong></p>
+<ul>
+<li>Self-Heal은 <em>Git에 없는 변경을 “drift”로 보고 자동 되돌림</em></li>
+<li>운영자의 <em>의도된 긴급 확장</em>을 Self-Heal이 “비정상”으로 판단해 무력화</li>
+</ul>
+<p><strong>조치 — Self-Heal에 안전장치:</strong></p>
+<ul>
+<li><strong>Drift 감지 시 Self-Heal 전에 Slack 알림</strong> → “이게 의도된 변경인가” 확인 시간</li>
+<li>긴급 변경 시 <em>해당 Application만 Self-Heal 일시 중단</em> + <em>즉시 Git에 반영</em>(PR)</li>
+<li><em>야간 Sync window</em>로 운영 작업 시간대엔 Self-Heal off</li>
+</ul>
+<p><strong>결과:</strong></p>
+<ul>
+<li>의도된 긴급 변경이 되돌려지는 사고 0건</li>
+<li>Self-Heal 이점(drift 자동 복구)은 평상시 유지</li>
+</ul>
+<p><strong>교훈:</strong> Self-Heal은 <em>의도된 긴급 변경까지 되돌려</em> 2차 장애를 만들 수 있다. <strong>(1) Drift 시 Self-Heal 전 알람, (2) 긴급 변경 즉시 Git 반영, (3) 운영 시간대 Sync window</strong>로 운용한다. Self-Heal은 <em>알람 → 검토 → 적용</em> 3단으로 길들여야 한다.</p>
 </details>
 <h3 id="-꼬리질문-3-secret-관리는-어떻게-하나요" style="position:relative;"><a href="#-%EA%BC%AC%EB%A6%AC%EC%A7%88%EB%AC%B8-3-secret-%EA%B4%80%EB%A6%AC%EB%8A%94-%EC%96%B4%EB%96%BB%EA%B2%8C-%ED%95%98%EB%82%98%EC%9A%94" aria-label=" 꼬리질문 3 secret 관리는 어떻게 하나요 permalink" class="anchor before"><svg aria-hidden="true" focusable="false" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>🔄 꼬리질문 3: Secret 관리는 어떻게 하나요?</h3>
 <p><strong>기대 답변:</strong></p>
@@ -430,9 +519,26 @@ overlays/
 <li>절대 plain secret을 Git에 두지 않음 — pre-commit hook으로 검증</li>
 </ul>
 <details>
-<summary>📋 <b>사례</b></summary>
+<summary>📋 <b>실제 사례</b></summary>
 <br/>
-<p>External Secrets Operator + AWS Secrets Manager — 회전 시 자동 동기화, Git엔 reference만. pre-commit hook으로 plain secret 자동 차단. <strong>교훈: secret은 <em>Git 밖</em>에서 관리하고 <em>Git엔 reference만</em>.</strong></p>
+<p><strong>상황:</strong> GitOps 전환 초기에 한 개발자가 <em>DB 비밀번호를 평문으로 manifest에 넣어</em> Git에 커밋. 코드 리뷰에서 놓쳐 <em>공개 저장소 히스토리에 secret이 영구 박힘</em> → 비밀번호 전체 로테이션 + git history purge 대응.</p>
+<p><strong>진단:</strong></p>
+<ul>
+<li>GitOps는 <em>모든 것을 Git에</em> 두는데, secret도 무심코 평문으로 들어감</li>
+<li>Git history는 <em>지워도 fork·clone에 남아</em> 완전 제거가 어려움</li>
+</ul>
+<p><strong>조치 — Secret을 Git 밖으로:</strong></p>
+<ul>
+<li><strong>External Secrets Operator</strong> + AWS Secrets Manager → manifest엔 <em>secret reference만</em>, 실제 값은 외부 저장소에서 주입</li>
+<li>회전 시 자동 동기화 (코드 변경 0)</li>
+<li><strong>pre-commit hook(gitleaks/trufflehog)</strong> 으로 <em>평문 secret 패턴 자동 차단</em> (커밋 자체를 막음)</li>
+</ul>
+<p><strong>결과:</strong></p>
+<ul>
+<li>이후 평문 secret 커밋 0건 (hook이 차단)</li>
+<li>secret 회전이 자동화 (Git 안 건드림)</li>
+</ul>
+<p><strong>교훈:</strong> GitOps에서 <em>secret을 평문으로 Git에 두면 history에 영구 박힌다</em>. <strong>External Secrets Operator(값은 외부, Git엔 reference만) + pre-commit hook(평문 차단)</strong> 이 정석. SealedSecret(암호화해서 Git에)도 옵션. 핵심은 <em>평문 secret이 Git에 절대 안 들어가게</em> 다층 방어.</p>
 </details>
 <hr>
 <h2 id="4-distroless" style="position:relative;"><a href="#4-distroless" aria-label="4 distroless permalink" class="anchor before"><svg aria-hidden="true" focusable="false" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>4. Distroless</h2>
@@ -491,45 +597,24 @@ overlays/
 <td>25분</td>
 <td>9분</td>
 </tr>
-<tr>
-<td>레지스트리 비용</td>
-<td>$$$$</td>
-<td>$$</td>
-</tr>
 </tbody>
 </table>
 <p><strong>Ephemeral Container로 디버깅:</strong></p>
-<div class="gatsby-highlight" data-language="bash"><pre class="language-bash"><code class="language-bash"><span class="token comment"># shell이 없으니 ephemeral debug 컨테이너 붙임</span>
-kubectl debug <span class="token parameter variable">-it</span> pod/my-service-xxx <span class="token punctuation">\</span>
-  <span class="token parameter variable">--image</span><span class="token operator">=</span>busybox <span class="token punctuation">\</span>
-  <span class="token parameter variable">--target</span><span class="token operator">=</span>app <span class="token punctuation">\</span>
-  --share-processes</code></pre></div>
+<div class="gatsby-highlight" data-language="bash"><pre class="language-bash"><code class="language-bash">kubectl debug <span class="token parameter variable">-it</span> pod/my-service-xxx <span class="token punctuation">\</span>
+  <span class="token parameter variable">--image</span><span class="token operator">=</span>busybox <span class="token parameter variable">--target</span><span class="token operator">=</span>app --share-processes</code></pre></div>
 <ul>
-<li>같은 PID namespace에 합류 → <code class="language-text">ps</code>, <code class="language-text">netstat</code> 등 실행 가능</li>
+<li>같은 PID namespace에 합류 → <code class="language-text">ps</code>, <code class="language-text">netstat</code> 등 실행</li>
 <li>평소엔 distroless 유지, 필요할 때만 임시 진단</li>
-</ul>
-<p><strong>보안 통제 강화:</strong></p>
-<ul>
-<li><code class="language-text">pods/ephemeralcontainers</code> RBAC 권한 = 운영자만</li>
-<li>Audit log에 누가·언제·어떤 이미지로 ephemeral 했는지 기록</li>
-<li>사내 허용 디버그 이미지 목록만 사용 가능 (OPA Gatekeeper)</li>
 </ul>
 <p><strong>예상 못 한 호환성 문제:</strong></p>
 <ul>
-<li>일부 native 라이브러리가 glibc 가정 → distroless <code class="language-text">static</code> 이미지로는 안 됨</li>
-<li>해결: distroless <code class="language-text">cc-debian12</code>(glibc 포함) 사용</li>
+<li>일부 native 라이브러리가 glibc 가정 → distroless <code class="language-text">cc-debian12</code>(glibc 포함) 사용</li>
 <li>한 서비스는 결국 alpine 유지 (musl libc 호환성)</li>
-</ul>
-<p><strong>CI 강화:</strong></p>
-<ul>
-<li>Trivy로 빌드마다 스캔, CRITICAL 검출 시 PR 차단</li>
-<li>SBOM 자동 생성, 운영팀이 <em>어떤 라이브러리가 어디에 있는지</em> 즉시 추적</li>
 </ul>
 <p><strong>결과:</strong></p>
 <ul>
 <li>6개월 후: CVE 0건 유지, 이미지 평균 95MB</li>
-<li>배포 파이프라인 속도 2.8배 빨라짐</li>
-<li>컨테이너 보안 점수 (CIS) 등급 상향</li>
+<li>배포 파이프라인 속도 2.8배</li>
 </ul>
 <p><strong>교훈:</strong></p>
 <ul>
@@ -546,9 +631,26 @@ kubectl debug <span class="token parameter variable">-it</span> pod/my-service-x
 <li>디버그 이미지는 사내 허용 목록만 사용</li>
 </ul>
 <details>
-<summary>📋 <b>사례</b></summary>
+<summary>📋 <b>실제 사례</b></summary>
 <br/>
-<p>OPA Gatekeeper로 <em>허용된 디버그 이미지 화이트리스트</em> 강제. audit log를 SIEM으로 전송. 임의 이미지 사용 시도 자동 차단. <strong>교훈: 디버깅 권한은 <em>추적 가능성</em>과 묶여야 안전.</strong></p>
+<p><strong>상황:</strong> Distroless 도입으로 shell이 없어지자, 개발자들이 디버깅을 위해 <em>아무 이미지나(임의의 외부 busybox·netshoot)</em> ephemeral container로 붙이기 시작. 보안팀이 <em>“검증 안 된 이미지가 prod 파드에 붙는다”</em> 고 우려.</p>
+<p><strong>진단:</strong></p>
+<ul>
+<li><code class="language-text">kubectl debug</code>로 <em>임의 이미지</em>를 prod 파드에 주입 가능 → 검증 안 된 이미지가 <em>prod 네임스페이스·PID에 접근</em></li>
+<li>누가 언제 어떤 이미지로 붙였는지 <em>추적도 안 됨</em></li>
+</ul>
+<p><strong>조치 — 디버깅 권한을 추적 가능하게:</strong></p>
+<ul>
+<li><strong>RBAC</strong>: <code class="language-text">pods/ephemeralcontainers</code> 권한을 <em>운영자 역할에만</em> 부여</li>
+<li><strong>OPA Gatekeeper</strong>: ephemeral container 이미지를 <em>사내 허용 목록(검증된 디버그 이미지)</em> 으로 제한</li>
+<li><strong>Audit log → SIEM</strong>: 누가·언제·어떤 이미지로 붙였는지 전송</li>
+</ul>
+<p><strong>결과:</strong></p>
+<ul>
+<li>검증 안 된 이미지 주입 차단</li>
+<li>모든 디버깅 행위가 <em>추적 가능</em>해져 보안 감사 통과</li>
+</ul>
+<p><strong>교훈:</strong> Distroless 디버깅(ephemeral container)은 <em>편의</em>와 <em>보안</em>의 트레이드오프다. <strong>RBAC(권한) + OPA(허용 이미지 제한) + Audit log(추적)</strong> 로 <em>디버깅 권한을 추적 가능하게</em> 묶어야 한다. “shell 없으니 아무 이미지나”는 새로운 보안 구멍.</p>
 </details>
 <h3 id="-꼬리질문-2-정적-분석으로-cve를-어떻게-관리하나요" style="position:relative;"><a href="#-%EA%BC%AC%EB%A6%AC%EC%A7%88%EB%AC%B8-2-%EC%A0%95%EC%A0%81-%EB%B6%84%EC%84%9D%EC%9C%BC%EB%A1%9C-cve%EB%A5%BC-%EC%96%B4%EB%96%BB%EA%B2%8C-%EA%B4%80%EB%A6%AC%ED%95%98%EB%82%98%EC%9A%94" aria-label=" 꼬리질문 2 정적 분석으로 cve를 어떻게 관리하나요 permalink" class="anchor before"><svg aria-hidden="true" focusable="false" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>🔄 꼬리질문 2: 정적 분석으로 CVE를 어떻게 관리하나요?</h3>
 <p><strong>기대 답변:</strong></p>
@@ -558,9 +660,26 @@ kubectl debug <span class="token parameter variable">-it</span> pod/my-service-x
 <li>베이스 이미지 갱신 PR을 봇이 주기적으로 올림</li>
 </ul>
 <details>
-<summary>📋 <b>사례</b></summary>
+<summary>📋 <b>실제 사례</b></summary>
 <br/>
-<p>Renovate 봇이 <em>베이스 이미지 새 버전 PR을 매주</em> 자동 생성. Trivy 통과해야 머지. CVE 노출 시간 90일 → 7일. <strong>교훈: 패치 자동화는 <em>기본 의식주</em>.</strong></p>
+<p><strong>상황:</strong> Distroless로 CVE를 줄였지만, <em>베이스 이미지·라이브러리는 시간이 지나면 새 CVE가 발견</em>됨. 처음엔 <em>분기마다 수동으로</em> 이미지를 갱신했는데, 그 사이 <em>심각한 CVE가 90일간 방치</em>되는 위험.</p>
+<p><strong>진단:</strong></p>
+<ul>
+<li>“한 번 distroless로 줄였다”고 끝이 아님 → CVE는 <em>계속 새로 발견</em></li>
+<li>수동 분기 갱신은 <em>노출 윈도우(최대 90일)</em> 가 너무 김</li>
+</ul>
+<p><strong>조치 — CVE 관리 자동화:</strong></p>
+<ul>
+<li><strong>Trivy를 CI에 통합</strong> → 빌드마다 스캔, <em>CRITICAL 검출 시 머지 차단</em></li>
+<li><strong>Renovate 봇</strong>이 <em>베이스 이미지 새 버전 PR을 매주 자동 생성</em> → Trivy 통과해야 머지</li>
+<li><strong>SBOM 자동 생성</strong> → “어떤 라이브러리가 어디 있는지” 즉시 추적 (신규 CVE 공시 시 영향 파악)</li>
+</ul>
+<p><strong>결과:</strong></p>
+<ul>
+<li>CVE 노출 윈도우: 90일 → 7일</li>
+<li>새 CVE 공시 시 <em>SBOM으로 영향 서비스 즉시 식별</em></li>
+</ul>
+<p><strong>교훈:</strong> Distroless는 <em>CVE를 한 번 줄이는 것</em>이고, <strong>CVE 관리는 지속적 자동화</strong>가 필요하다. <strong>Trivy CI 통합(CRITICAL 차단) + Renovate(주간 자동 갱신 PR) + SBOM(영향 추적)</strong> 이 <em>노출 윈도우를 최소화</em>한다. “한 번 줄였으니 끝”이 아니다.</p>
 </details>
 <h3 id="-꼬리질문-3-distroless로-못-가는-케이스는" style="position:relative;"><a href="#-%EA%BC%AC%EB%A6%AC%EC%A7%88%EB%AC%B8-3-distroless%EB%A1%9C-%EB%AA%BB-%EA%B0%80%EB%8A%94-%EC%BC%80%EC%9D%B4%EC%8A%A4%EB%8A%94" aria-label=" 꼬리질문 3 distroless로 못 가는 케이스는 permalink" class="anchor before"><svg aria-hidden="true" focusable="false" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>🔄 꼬리질문 3: Distroless로 못 가는 케이스는?</h3>
 <p><strong>기대 답변:</strong></p>
@@ -571,9 +690,26 @@ kubectl debug <span class="token parameter variable">-it</span> pod/my-service-x
 </ul>
 <p>→ 빌드 스테이지는 fat 이미지, 런타임 스테이지만 distroless가 일반적.</p>
 <details>
-<summary>📋 <b>사례</b></summary>
+<summary>📋 <b>실제 사례</b></summary>
 <br/>
-<p>레거시 결제 모듈이 <em>bash 기반 entrypoint</em> + 라이브러리 musl 비호환 → alpine 유지. 다른 50개는 distroless. <strong>교훈: <em>전부 distroless</em>가 정답 아님, 서비스별 트레이드오프.</strong></p>
+<p><strong>상황:</strong> “전 서비스 100% distroless”를 목표로 밀어붙였는데, 한 레거시 결제 모듈이 <em>distroless 전환 후 부팅 실패</em>. 무리하게 맞추려다 시간만 낭비.</p>
+<p><strong>진단:</strong></p>
+<ul>
+<li>그 모듈은 <em>bash 기반 entrypoint 스크립트</em>(환경 변수 조립·사전 점검)에 의존 → distroless엔 shell이 없어 실행 불가</li>
+<li>또 일부 native 라이브러리가 <em>glibc 가정</em> → distroless <code class="language-text">static</code> 이미지(musl)와 비호환</li>
+</ul>
+<p><strong>조치 — 현실적 절충:</strong></p>
+<ul>
+<li>그 레거시 모듈은 <em>alpine 유지</em> (또는 distroless <code class="language-text">cc-debian12</code> glibc 포함 버전 시도)</li>
+<li>나머지 50개는 distroless</li>
+<li>“100% distroless”가 아니라 <em>“가능한 곳만”</em> 으로 목표 수정</li>
+</ul>
+<p><strong>결과:</strong></p>
+<ul>
+<li>50개 distroless로 보안·경량 이점 확보</li>
+<li>레거시 1개는 alpine으로 안정 운영 (무리한 전환 회피)</li>
+</ul>
+<p><strong>교훈:</strong> <em>“100% distroless”는 목표가 아니다</em>. <strong>shell 기반 init script·glibc 의존 native 라이브러리·런타임 빌드 도구</strong>가 필요하면 distroless로 못 간다. 빌드 스테이지는 fat, 런타임만 distroless가 일반적이고, <em>안 되는 레거시는 alpine으로 두는 현실적 절충</em>이 옳다.</p>
 </details>
 <hr>
 <h2 id="5-pr-preview-환경-자동화" style="position:relative;"><a href="#5-pr-preview-%ED%99%98%EA%B2%BD-%EC%9E%90%EB%8F%99%ED%99%94" aria-label="5 pr preview 환경 자동화 permalink" class="anchor before"><svg aria-hidden="true" focusable="false" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>5. PR Preview 환경 자동화</h2>
@@ -593,84 +729,47 @@ kubectl debug <span class="token parameter variable">-it</span> pod/my-service-x
 <p><strong>기존 흐름의 함정:</strong></p>
 <ul>
 <li>PR 생성 → namespace 생성 ✅</li>
-<li>PR 리뷰 → 임시 환경 확인 ✅</li>
-<li>PR 머지 또는 close → namespace 정리 ❌ (안 됨)</li>
-<li>작성자가 PR을 close 안 하고 <em>그냥 두는</em> 케이스가 30%</li>
+<li>PR 머지/close → namespace 정리 ❌ (작성자가 close 안 하면 영영 남음, 30% 케이스)</li>
 </ul>
 <p><strong>문제 진단:</strong></p>
 <ul>
-<li>노드 80%에 unused namespace 리소스 점유</li>
-<li>신규 PR이 <em>Pending</em> 상태로 대기 (자원 부족)</li>
+<li>노드 80%에 unused namespace 점유</li>
+<li>신규 PR이 <em>Pending</em> 대기 (자원 부족)</li>
 <li>월 클라우드 비용 12% 초과</li>
 </ul>
 <p><strong>개선 — 3단 정리 정책:</strong></p>
 <p><strong>1) PR 라이프사이클 기반 정리:</strong></p>
-<div class="gatsby-highlight" data-language="yaml"><pre class="language-yaml"><code class="language-yaml"><span class="token comment"># GitHub Action — PR close 시</span>
-<span class="token punctuation">-</span> <span class="token key atrule">name</span><span class="token punctuation">:</span> Cleanup preview env
+<div class="gatsby-highlight" data-language="yaml"><pre class="language-yaml"><code class="language-yaml"><span class="token punctuation">-</span> <span class="token key atrule">name</span><span class="token punctuation">:</span> Cleanup preview env
   <span class="token key atrule">if</span><span class="token punctuation">:</span> github.event.action == 'closed'
-  <span class="token key atrule">run</span><span class="token punctuation">:</span> <span class="token punctuation">|</span><span class="token scalar string">
-    kubectl delete namespace pr-${{ github.event.number }}</span></code></pre></div>
+  <span class="token key atrule">run</span><span class="token punctuation">:</span> kubectl delete namespace pr<span class="token punctuation">-</span>$<span class="token punctuation">{</span><span class="token punctuation">{</span> github.event.number <span class="token punctuation">}</span><span class="token punctuation">}</span></code></pre></div>
 <p><strong>2) TTL 라벨 + CronJob (안전망):</strong></p>
-<div class="gatsby-highlight" data-language="yaml"><pre class="language-yaml"><code class="language-yaml"><span class="token comment"># namespace 생성 시 라벨</span>
-<span class="token key atrule">metadata</span><span class="token punctuation">:</span>
-  <span class="token key atrule">labels</span><span class="token punctuation">:</span>
-    <span class="token key atrule">preview-env</span><span class="token punctuation">:</span> <span class="token string">"true"</span>
-    <span class="token key atrule">created-by</span><span class="token punctuation">:</span> <span class="token string">"pr-bot"</span>
-  <span class="token key atrule">annotations</span><span class="token punctuation">:</span>
-    <span class="token key atrule">expires-at</span><span class="token punctuation">:</span> <span class="token string">"2026-06-15T00:00:00Z"</span>  <span class="token comment"># 7일 후</span>
-
+<div class="gatsby-highlight" data-language="yaml"><pre class="language-yaml"><code class="language-yaml"><span class="token key atrule">metadata</span><span class="token punctuation">:</span>
+  <span class="token key atrule">labels</span><span class="token punctuation">:</span> <span class="token punctuation">{</span> <span class="token key atrule">preview-env</span><span class="token punctuation">:</span> <span class="token string">"true"</span> <span class="token punctuation">}</span>
+  <span class="token key atrule">annotations</span><span class="token punctuation">:</span> <span class="token punctuation">{</span> <span class="token key atrule">expires-at</span><span class="token punctuation">:</span> <span class="token string">"2026-06-15T00:00:00Z"</span> <span class="token punctuation">}</span>
 <span class="token punctuation">---</span>
 <span class="token comment"># CronJob — 매시간 만료된 namespace 삭제</span>
-<span class="token key atrule">apiVersion</span><span class="token punctuation">:</span> batch/v1
-<span class="token key atrule">kind</span><span class="token punctuation">:</span> CronJob
-<span class="token key atrule">metadata</span><span class="token punctuation">:</span>
-  <span class="token key atrule">name</span><span class="token punctuation">:</span> preview<span class="token punctuation">-</span>env<span class="token punctuation">-</span>gc
-<span class="token key atrule">spec</span><span class="token punctuation">:</span>
-  <span class="token key atrule">schedule</span><span class="token punctuation">:</span> <span class="token string">"0 * * * *"</span>
-  <span class="token key atrule">jobTemplate</span><span class="token punctuation">:</span>
-    <span class="token key atrule">spec</span><span class="token punctuation">:</span>
-      <span class="token key atrule">template</span><span class="token punctuation">:</span>
-        <span class="token key atrule">spec</span><span class="token punctuation">:</span>
-          <span class="token key atrule">containers</span><span class="token punctuation">:</span>
-          <span class="token punctuation">-</span> <span class="token key atrule">name</span><span class="token punctuation">:</span> gc
-            <span class="token key atrule">image</span><span class="token punctuation">:</span> bitnami/kubectl
-            <span class="token key atrule">command</span><span class="token punctuation">:</span>
-              <span class="token punctuation">-</span> /bin/sh
-              <span class="token punctuation">-</span> <span class="token punctuation">-</span>c
-              <span class="token punctuation">-</span> <span class="token punctuation">|</span><span class="token scalar string">
-                kubectl get ns -l preview-env=true -o json | \
-                jq -r '.items[] | select(.metadata.annotations."expires-at" &lt; (now | todateiso8601)) | .metadata.name' | \
-                xargs -r kubectl delete ns</span></code></pre></div>
+<span class="token key atrule">schedule</span><span class="token punctuation">:</span> <span class="token string">"0 * * * *"</span>
+<span class="token comment"># kubectl get ns -l preview-env=true → expires-at 지난 것 삭제</span></code></pre></div>
 <p><strong>3) PR 활동 기반 갱신:</strong></p>
 <ul>
-<li>PR에 새 커밋 → expires-at 7일 후로 연장</li>
-<li>7일간 무활동 → 자동 정리</li>
-<li>정리 24시간 전 PR에 코멘트 자동 알림</li>
+<li>새 커밋 → expires-at 7일 연장</li>
+<li>7일 무활동 → 자동 정리 (24시간 전 PR 코멘트 알림)</li>
 </ul>
 <p><strong>DB·외부 의존성:</strong></p>
 <ul>
-<li>일반 PR: 스테이징 DB 공유 (스키마 변경 없는 PR)</li>
-<li>스키마 변경 PR: 별도 RDS 인스턴스 자동 프로비저닝 (Terraform)</li>
-<li>외부 결제·메일은 sandbox 자동 전환 (env 변수)</li>
-</ul>
-<p><strong>트래픽 라우팅:</strong></p>
-<ul>
-<li>와일드카드 DNS: <code class="language-text">*.preview.example.com</code></li>
-<li>Ingress controller가 호스트 헤더로 namespace 매핑</li>
-<li>사내 SSO + IP 화이트리스트로 외부 접근 차단</li>
+<li>일반 PR: 스테이징 DB 공유 / 스키마 변경 PR: 별도 RDS 자동 프로비저닝</li>
+<li>외부 결제·메일은 sandbox 자동 전환</li>
 </ul>
 <p><strong>결과:</strong></p>
 <ul>
-<li>클러스터 unused namespace: 800 → 평균 35</li>
-<li>신규 PR Pending 시간: 평균 12분 → 30초</li>
-<li>월 비용: 12% 초과 → -8% (오히려 절감)</li>
-<li>운영 부담 0 (자동화)</li>
+<li>unused namespace: 800 → 평균 35</li>
+<li>신규 PR Pending: 평균 12분 → 30초</li>
+<li>월 비용: 12% 초과 → -8%</li>
 </ul>
 <p><strong>교훈:</strong></p>
 <ul>
 <li><em>생성만 자동화하면 좀비가 쌓임</em> → <strong>정리까지 자동화</strong>가 필수</li>
 <li>다중 안전망 (PR 이벤트 + TTL + CronJob)이 안정적</li>
-<li>사용자에게 정리 24시간 전 알림이 <em>학습 효과</em> 큼</li>
 </ul>
 </details>
 <h3 id="-꼬리질문-1-db-스키마-변경-pr은-어떻게-처리하나요" style="position:relative;"><a href="#-%EA%BC%AC%EB%A6%AC%EC%A7%88%EB%AC%B8-1-db-%EC%8A%A4%ED%82%A4%EB%A7%88-%EB%B3%80%EA%B2%BD-pr%EC%9D%80-%EC%96%B4%EB%96%BB%EA%B2%8C-%EC%B2%98%EB%A6%AC%ED%95%98%EB%82%98%EC%9A%94" aria-label=" 꼬리질문 1 db 스키마 변경 pr은 어떻게 처리하나요 permalink" class="anchor before"><svg aria-hidden="true" focusable="false" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>🔄 꼬리질문 1: DB 스키마 변경 PR은 어떻게 처리하나요?</h3>
@@ -681,9 +780,26 @@ kubectl debug <span class="token parameter variable">-it</span> pod/my-service-x
 <li>마이그레이션 실패는 PR check 실패로 노출</li>
 </ul>
 <details>
-<summary>📋 <b>사례</b></summary>
+<summary>📋 <b>실제 사례</b></summary>
 <br/>
-<p>PR마다 <code class="language-text">CREATE DATABASE pr_${PR_NUM}</code> + flyway 자동 마이그레이션. 마이그레이션 실패 시 PR check fail. 스키마 회귀 0건. <strong>교훈: 스키마 변경은 <em>PR 격리 DB</em>에서 검증.</strong></p>
+<p><strong>상황:</strong> 처음엔 PR Preview들이 <em>스테이징 DB를 공유</em>. 그런데 <em>스키마 변경 PR</em>이 스테이징 DB에 마이그레이션을 적용하자, <em>다른 PR Preview들이 전부 깨지는</em> 사고 (공유 DB가 한 PR 변경에 오염).</p>
+<p><strong>진단:</strong></p>
+<ul>
+<li>스키마 변경 PR이 <em>공유 DB 스키마를 바꿈</em> → 그 변경과 호환 안 되는 다른 PR들이 깨짐</li>
+<li>공유 자원에 <em>파괴적 변경</em>을 가하는 케이스를 격리 안 함</li>
+</ul>
+<p><strong>조치 — 스키마 변경 PR만 DB 격리:</strong></p>
+<ul>
+<li>일반 PR(스키마 변경 없음): 스테이징 DB 공유 (비용 절감)</li>
+<li><em>스키마 변경 PR</em>: <code class="language-text">CREATE DATABASE pr_${PR_NUM}</code> 으로 <em>전용 DB 자동 생성</em> + <code class="language-text">flyway migrate</code> 자동 적용</li>
+<li>마이그레이션 실패 시 <em>PR check fail</em>로 노출 (머지 전 차단)</li>
+</ul>
+<p><strong>결과:</strong></p>
+<ul>
+<li>스키마 변경 PR이 다른 PR을 깨는 사고 0건</li>
+<li>일반 PR은 여전히 공유 DB로 비용 효율</li>
+</ul>
+<p><strong>교훈:</strong> PR Preview의 <em>공유 DB는 스키마 변경 PR에 오염</em>된다. <strong>스키마 변경이 있는 PR만 전용 DB로 격리</strong>(<code class="language-text">CREATE DATABASE pr_N</code> + 자동 마이그레이션)하고, 일반 PR은 공유로 비용을 아낀다. 마이그레이션 실패는 <em>PR check로 사전 차단</em>한다.</p>
 </details>
 <h3 id="-꼬리질문-2-트래픽은-어떻게-라우팅하나요" style="position:relative;"><a href="#-%EA%BC%AC%EB%A6%AC%EC%A7%88%EB%AC%B8-2-%ED%8A%B8%EB%9E%98%ED%94%BD%EC%9D%80-%EC%96%B4%EB%96%BB%EA%B2%8C-%EB%9D%BC%EC%9A%B0%ED%8C%85%ED%95%98%EB%82%98%EC%9A%94" aria-label=" 꼬리질문 2 트래픽은 어떻게 라우팅하나요 permalink" class="anchor before"><svg aria-hidden="true" focusable="false" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>🔄 꼬리질문 2: 트래픽은 어떻게 라우팅하나요?</h3>
 <p><strong>기대 답변:</strong></p>
@@ -693,9 +809,27 @@ kubectl debug <span class="token parameter variable">-it</span> pod/my-service-x
 <li>인증은 사내 SSO + IP 화이트리스트</li>
 </ul>
 <details>
-<summary>📋 <b>사례</b></summary>
+<summary>📋 <b>실제 사례</b></summary>
 <br/>
-<p><code class="language-text">*.preview.example.com</code> 와일드카드 DNS + nginx Ingress가 호스트 헤더로 namespace 라우팅. 사내 SSO + IP 화이트리스트로 외부 차단. <strong>교훈: 와일드카드 DNS는 <em>PR Preview의 인프라 필수품</em>.</strong></p>
+<p><strong>상황:</strong> PR마다 환경은 떴는데, 리뷰어가 <em>어떻게 접속하는지</em>가 문제. PR별로 <em>수동으로 포트포워딩</em>하거나 IP를 찾아야 해서 <em>리뷰어가 귀찮아 안 들어가 봄</em> → Preview env가 무용지물.</p>
+<p><strong>진단:</strong></p>
+<ul>
+<li>접속 방법이 <em>번거로우면(포트포워딩·IP 찾기)</em> 리뷰어가 안 씀 → 환경만 뜨고 가치 0</li>
+<li>외부 노출은 <em>보안 위험</em>도 있음</li>
+</ul>
+<p><strong>조치 — 와일드카드 DNS + Ingress:</strong></p>
+<ul>
+<li><code class="language-text">*.preview.example.com</code> <em>와일드카드 DNS</em> 설정</li>
+<li>nginx Ingress가 <em>호스트 헤더(<code class="language-text">pr-123.preview.example.com</code>)로 해당 namespace에 라우팅</em></li>
+<li>리뷰어는 <em>PR 코멘트에 자동으로 달리는 링크</em> 클릭만 하면 접속</li>
+<li>보안: <em>사내 SSO + IP 화이트리스트</em>로 외부 차단</li>
+</ul>
+<p><strong>결과:</strong></p>
+<ul>
+<li>리뷰어가 <em>클릭 한 번</em>으로 접속 → Preview env 활용도 급증</li>
+<li>외부 노출 없이 안전</li>
+</ul>
+<p><strong>교훈:</strong> PR Preview는 <em>접속이 번거로우면 아무도 안 쓴다</em>. <strong>와일드카드 DNS + Ingress 호스트 헤더 라우팅</strong>으로 <em>PR 코멘트의 링크 클릭만으로 접속</em>되게 해야 가치가 산다. 보안은 <em>SSO + IP 화이트리스트</em>로 외부를 막는다.</p>
 </details>
 <h3 id="-꼬리질문-3-외부-의존성결제메일은" style="position:relative;"><a href="#-%EA%BC%AC%EB%A6%AC%EC%A7%88%EB%AC%B8-3-%EC%99%B8%EB%B6%80-%EC%9D%98%EC%A1%B4%EC%84%B1%EA%B2%B0%EC%A0%9C%EB%A9%94%EC%9D%BC%EC%9D%80" aria-label=" 꼬리질문 3 외부 의존성결제메일은 permalink" class="anchor before"><svg aria-hidden="true" focusable="false" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>🔄 꼬리질문 3: 외부 의존성(결제·메일)은?</h3>
 <p><strong>기대 답변:</strong></p>
@@ -705,9 +839,27 @@ kubectl debug <span class="token parameter variable">-it</span> pod/my-service-x
 <li>실제 결제는 절대 호출 안 되도록 정책 + 코드 가드</li>
 </ul>
 <details>
-<summary>📋 <b>사례</b></summary>
+<summary>📋 <b>실제 사례</b></summary>
 <br/>
-<p>env 변수 <code class="language-text">ENV=preview</code> 시 PG sandbox 자동 사용. <em>실제 결제 URL이 코드에 하드코딩</em>된 사고 1회 — pre-commit hook + OPA로 검증 추가. <strong>교훈: PR 환경에선 <em>외부 호출 가드</em>가 다층.</strong></p>
+<p><strong>상황:</strong> PR Preview 환경에서 결제 테스트를 하다가, <em>환경변수 설정 실수로 실제 PG사 운영 엔드포인트</em>가 호출되어 <em>진짜 결제가 발생</em>할 뻔한 아찔한 사고 (다행히 PG sandbox 키라 실패).</p>
+<p><strong>진단:</strong></p>
+<ul>
+<li>Preview 환경이 <em>실제 외부 엔드포인트</em>를 가리킬 수 있는 구조 → 결제·메일이 진짜로 나갈 위험</li>
+<li>“설정 실수 한 번”이 <em>실제 결제·고객 메일 발송</em>으로 이어질 수 있음</li>
+</ul>
+<p><strong>조치 — 다층 가드:</strong></p>
+<ul>
+<li>env <code class="language-text">ENV=preview</code>면 <em>PG·메일·SMS를 sandbox/mock으로 자동 전환</em> (코드 레벨)</li>
+<li>Webhook은 <em>사내 stub 서버</em>로 받음 (외부 콜백 차단)</li>
+<li><strong>OPA/pre-commit hook</strong>으로 <em>실제 결제 URL이 preview manifest에 하드코딩되는 것 자체를 차단</em></li>
+<li>“실제 결제 절대 불가”를 <em>코드 + 정책 + 인프라</em> 다층으로</li>
+</ul>
+<p><strong>결과:</strong></p>
+<ul>
+<li>실제 결제·메일 발송 사고 0건</li>
+<li>설정 실수가 있어도 <em>여러 가드 중 하나가 막음</em></li>
+</ul>
+<p><strong>교훈:</strong> PR Preview에서 <em>외부 의존성(결제·메일)이 실제로 나가면 돌이킬 수 없다</em>. <strong>env 기반 sandbox 자동 전환 + Webhook stub + 실제 URL 하드코딩 차단(OPA/hook)</strong> 의 <em>다층 가드</em>가 필요하다. “설정 실수 한 번”이 실제 결제가 되지 않도록 단일 방어에 의존하지 않는다.</p>
 </details>
 <hr>
 <h2 id="마무리-8편-핵심-정리" style="position:relative;"><a href="#%EB%A7%88%EB%AC%B4%EB%A6%AC-8%ED%8E%B8-%ED%95%B5%EC%8B%AC-%EC%A0%95%EB%A6%AC" aria-label="마무리 8편 핵심 정리 permalink" class="anchor before"><svg aria-hidden="true" focusable="false" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>마무리: 8편 핵심 정리</h2>
