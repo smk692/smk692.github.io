@@ -395,37 +395,106 @@
 
         @media print {
             .no-print { display: none !important; }
-            @page { size: A4; margin: 8mm; }
-            /* PDF 전용 최대 압축 (웹 화면은 영향 없음) */
-            html { font-size: 7.6pt; }
-            body { background: white; padding: 0; }
+            @page { size: A4; margin: 10mm 8mm; }
+
+            /* 폰트/줄간격: 읽기 편한 크기로 */
+            html { font-size: 8.5pt; }
+            body { background: white; padding: 0; line-height: 1.5; }
             .container { box-shadow: none; padding: 0; max-width: 100%; }
-            /* 줄간격/여백 전면 축소 */
-            p, li { line-height: 1.32 !important; }
-            section { page-break-before: auto; break-before: auto; margin-bottom: 9px !important; }
-            h1 { font-size: 1.5rem !important; margin-bottom: 2px !important; }
-            h2 { font-size: 1.05rem !important; margin: 8px 0 5px !important; padding-bottom: 4px !important; }
-            h3 { margin: 5px 0 3px !important; }
-            h4 { margin: 3px 0 !important; }
-            p { margin-bottom: 3px !important; }
-            ul, ol { margin: 3px 0 !important; padding-left: 16px !important; }
-            li { margin-bottom: 1.5px !important; }
-            /* 카드 패딩/여백 최소화 */
-            .project-card,
+
+            p, li { line-height: 1.5 !important; }
+
+            /* 섹션/제목 여백: 섹션 전체는 쪼개짐 허용 (통째로 밀려 빈 공간 방지) */
+            section {
+                page-break-before: auto;
+                break-before: auto;
+                page-break-inside: auto;
+                break-inside: auto;
+                margin-bottom: 14px !important;
+            }
+            h1 { font-size: 1.5rem !important; margin-bottom: 3px !important; }
+            h2 { font-size: 1.05rem !important; margin: 10px 0 7px !important; padding-bottom: 5px !important; }
+            h3 { margin: 6px 0 4px !important; }
+            h4 { margin: 6px 0 4px !important; }
+            p { margin-bottom: 4px !important; }
+            ul, ol { margin: 4px 0 !important; padding-left: 16px !important; }
+            li { margin-bottom: 2.5px !important; }
+
+            /* 배경 일괄 투명화: 인쇄에서 박스 도드라짐 방지 */
+            ul,
+            .summary,
+            .career-summary,
+            .career-summary-item,
+            .ai-strategy {
+                background: transparent !important;
+                box-shadow: none !important;
+            }
+
+            /* 경력 요약 그리드: 인쇄에서 1열로, 쪼개짐 허용 */
+            .career-summary {
+                page-break-inside: auto;
+                break-inside: auto;
+                padding: 6px 8px !important;
+                margin-bottom: 10px !important;
+            }
+            .career-summary-grid {
+                grid-template-columns: 1fr !important;
+                gap: 6px !important;
+            }
+            .career-summary-item {
+                page-break-inside: avoid;
+                break-inside: avoid;
+            }
+
+            /* 프로젝트 카드: 쪼개짐 허용 + 박스 제거, 좌측 선만 */
+            .project-card {
+                page-break-inside: auto;
+                break-inside: auto;
+                margin-bottom: 8px !important;
+                padding: 6px 10px 6px 10px !important;
+                background: transparent !important;
+                border: none !important;
+                border-left: 3px solid #93c5fd !important;
+                border-radius: 0 !important;
+                box-shadow: none !important;
+            }
+            .project-card ul {
+                background: transparent !important;
+            }
+            /* 카드 제목(h4)은 다음 내용과 분리 방지 */
+            .project-card h4 {
+                page-break-after: avoid;
+                break-after: avoid;
+            }
+
+            /* 경력 항목 */
             .experience-item,
             .career-summary-item,
             .education-item {
+                margin-bottom: 8px !important;
+                padding: 9px 12px !important;
+            }
+
+            /* ts-issue: 쪼개짐 허용 */
+            .ts-issue {
+                page-break-inside: auto;
+                break-inside: auto;
+                margin-bottom: 8px !important;
+            }
+
+            /* 경력 summary/grid 패딩 */
+            .summary, .career-summary-grid > div { padding: 9px 12px !important; }
+
+            /* 헤더/제목은 다음 내용과 분리 방지 */
+            h2, h3, h4, .experience-header { page-break-after: avoid; break-after: avoid; }
+            .experience-header {
                 page-break-inside: avoid;
                 break-inside: avoid;
-                margin-bottom: 6px !important;
-                padding: 8px 11px !important;
+                padding: 8px 12px !important;
             }
-            .summary, .career-summary-grid > div { padding: 8px 11px !important; }
-            h2, h3, h4, .experience-header { page-break-after: avoid; break-after: avoid; }
-            .experience-header { padding: 7px 11px !important; }
-            /* PDF에서는 Mermaid 다이어그램 숨김 (headless 렌더 겹침 회피) — 웹 화면엔 그대로 보임. 트러블슈팅은 화살표 글머리 텍스트로 충분 */
+
+            /* PDF에서는 Mermaid 다이어그램 숨김 */
             .ts-diagram, .diagram, pre.mermaid { display: none !important; }
-            .ts-issue { page-break-inside: avoid; break-inside: avoid; margin-bottom: 7px !important; }
             .ts-cmp { font-size: 0.92em !important; }
         }
 
