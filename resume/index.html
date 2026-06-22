@@ -395,38 +395,38 @@
 
         @media print {
             .no-print { display: none !important; }
-            body {
-                background: white;
-                padding: 0;
-            }
-            .container {
-                box-shadow: none;
-                padding: 40px;
-                max-width: 100%;
-            }
-            /* 카테고리(섹션)별로 새 페이지에서 시작 */
-            section {
-                page-break-before: always;
-                break-before: page;
-            }
-            section:first-of-type {
-                page-break-before: avoid;
-                break-before: avoid;
-            }
-            /* 카드/항목이 페이지 경계에서 잘리지 않도록 */
+            @page { size: A4; margin: 8mm; }
+            /* PDF 전용 최대 압축 (웹 화면은 영향 없음) */
+            html { font-size: 7.6pt; }
+            body { background: white; padding: 0; }
+            .container { box-shadow: none; padding: 0; max-width: 100%; }
+            /* 줄간격/여백 전면 축소 */
+            p, li { line-height: 1.32 !important; }
+            section { page-break-before: auto; break-before: auto; margin-bottom: 9px !important; }
+            h1 { font-size: 1.5rem !important; margin-bottom: 2px !important; }
+            h2 { font-size: 1.05rem !important; margin: 8px 0 5px !important; padding-bottom: 4px !important; }
+            h3 { margin: 5px 0 3px !important; }
+            h4 { margin: 3px 0 !important; }
+            p { margin-bottom: 3px !important; }
+            ul, ol { margin: 3px 0 !important; padding-left: 16px !important; }
+            li { margin-bottom: 1.5px !important; }
+            /* 카드 패딩/여백 최소화 */
             .project-card,
             .experience-item,
             .career-summary-item,
             .education-item {
                 page-break-inside: avoid;
                 break-inside: avoid;
+                margin-bottom: 6px !important;
+                padding: 8px 11px !important;
             }
-            /* 제목이 페이지 끝에 홀로 남지 않도록 */
-            h2, h3, h4,
-            .experience-header {
-                page-break-after: avoid;
-                break-after: avoid;
-            }
+            .summary, .career-summary-grid > div { padding: 8px 11px !important; }
+            h2, h3, h4, .experience-header { page-break-after: avoid; break-after: avoid; }
+            .experience-header { padding: 7px 11px !important; }
+            /* PDF에서는 Mermaid 다이어그램 숨김 (headless 렌더 겹침 회피) — 웹 화면엔 그대로 보임. 트러블슈팅은 화살표 글머리 텍스트로 충분 */
+            .ts-diagram, .diagram, pre.mermaid { display: none !important; }
+            .ts-issue { page-break-inside: avoid; break-inside: avoid; margin-bottom: 7px !important; }
+            .ts-cmp { font-size: 0.92em !important; }
         }
 
         @media (max-width: 768px) {
@@ -624,7 +624,7 @@
                 <a href="https://smk692.github.io/about/">Blog</a>
             </div>
             <div class="no-print" style="text-align:center; margin-top:16px;">
-                <a href="resume_career.pdf" download="손민기_경력기술서.pdf" style="display:inline-block; padding:9px 22px; background:#2563eb; color:#ffffff; border-radius:6px; font-size:0.9rem; text-decoration:none; font-weight:600;">경력기술서 PDF 다운로드 (2장)</a>
+                <a href="resume.pdf" download="손민기_이력서.pdf" style="display:inline-block; padding:9px 22px; background:#2563eb; color:#ffffff; border-radius:6px; font-size:0.9rem; text-decoration:none; font-weight:600;">이력서 PDF 다운로드</a>
             </div>
         </header>
 
