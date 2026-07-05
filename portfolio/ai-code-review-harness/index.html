@@ -155,14 +155,14 @@
 </table>
 <p>작업 전에는 선택지와 리스크를 정리하고, 구현 이후에는 PR과 리뷰 대응으로 넘어갑니다.</p>
 <div class="gatsby-highlight" data-language="mermaid"><pre class="language-mermaid"><code class="language-mermaid"><span class="token keyword">flowchart</span> TB
-    Dev<span class="token text string">[개발자]</span> <span class="token arrow operator">--></span> Design
+    Dev<span class="token text string">["개발자"]</span> <span class="token arrow operator">--></span> Design
 
-    <span class="token keyword">subgraph</span> Design<span class="token text string">[작업 설계]</span>
+    <span class="token keyword">subgraph</span> Design<span class="token text string">["작업 설계"]</span>
         <span class="token keyword">direction</span> LR
-        Brain<span class="token text string">[브레인스토밍]</span>
-        Arch<span class="token text string">[아키텍처]</span>
-        Spec<span class="token text string">[스펙 작성]</span>
-        Harness<span class="token text string">[작업 설계 하네스]</span>
+        Brain<span class="token text string">["브레인스토밍"]</span>
+        Arch<span class="token text string">["아키텍처"]</span>
+        Spec<span class="token text string">["스펙 작성"]</span>
+        Harness<span class="token text string">["작업 설계&lt;br/>하네스"]</span>
         Brain <span class="token arrow operator">--></span> Harness
         Arch <span class="token arrow operator">--></span> Harness
         Spec <span class="token arrow operator">--></span> Harness
@@ -170,12 +170,12 @@
 
     Design <span class="token arrow operator">--></span> Build
 
-    <span class="token keyword">subgraph</span> Build<span class="token text string">[구현 이후 흐름]</span>
-        <span class="token keyword">direction</span> TB
-        Impl<span class="token text string">[구현]</span>
-        PR<span class="token text string">[GitHub PR]</span>
-        Review<span class="token text string">[리뷰 대응]</span>
-        Watch<span class="token text string">[10분 watch]</span>
+    <span class="token keyword">subgraph</span> Build<span class="token text string">["구현 이후 흐름"]</span>
+        <span class="token keyword">direction</span> LR
+        Impl<span class="token text string">["구현"]</span>
+        PR<span class="token text string">["GitHub PR"]</span>
+        Review<span class="token text string">["리뷰 대응"]</span>
+        Watch<span class="token text string">["10분 watch"]</span>
         Impl <span class="token arrow operator">--></span> PR
         PR <span class="token arrow operator">--></span> Review
         Review <span class="token arrow operator">--></span> Watch
@@ -214,6 +214,7 @@
         Dev<span class="token arrow operator">->></span>GitHub<span class="token operator">:</span> 추가 반영
     <span class="token keyword">else</span> approve 확인
         Watch<span class="token arrow operator">-->></span>Dev<span class="token operator">:</span> watch 해제
+        Dev<span class="token arrow operator">->></span>GitHub<span class="token operator">:</span> merge
     <span class="token keyword">end</span></code></pre></div>
 <p>정리하면 아래와 같습니다.</p>
 <ol>
@@ -224,6 +225,7 @@
 <li>10분 단위 watch</li>
 <li>approve 확인</li>
 <li>approve 되면 watch 해제</li>
+<li>개발자 merge</li>
 </ol>
 <p>제가 줄이고 싶었던 건 리뷰 자체보다 <strong>반복 확인</strong>이었습니다.</p>
 <p>실제 흐름은 아래처럼 남습니다.</p>
@@ -347,44 +349,46 @@
 <h2 id="전체-구조" style="position:relative;"><a href="#%EC%A0%84%EC%B2%B4-%EA%B5%AC%EC%A1%B0" aria-label="전체 구조 permalink" class="anchor before"><svg aria-hidden="true" focusable="false" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>전체 구조</h2>
 <p>전체 구조는 아래처럼 정리할 수 있습니다.</p>
 <div class="gatsby-highlight" data-language="mermaid"><pre class="language-mermaid"><code class="language-mermaid"><span class="token keyword">flowchart</span> TB
-    Dev<span class="token text string">[개발자]</span> <span class="token arrow operator">--></span> Plan
+    Dev<span class="token text string">["개발자"]</span> <span class="token arrow operator">--></span> Plan
     Plan <span class="token arrow operator">--></span> Build
     Build <span class="token arrow operator">--></span> Review
 
-    <span class="token keyword">subgraph</span> Plan<span class="token text string">[작업 전 병목: 설계 정리]</span>
+    <span class="token keyword">subgraph</span> Plan<span class="token text string">["작업 전 병목: 설계 정리"]</span>
         <span class="token keyword">direction</span> LR
-        Brain<span class="token text string">[브레인스토밍]</span>
-        Arch<span class="token text string">[아키텍처]</span>
-        Spec<span class="token text string">[스펙 작성]</span>
-        Harness<span class="token text string">[작업 설계 하네스]</span>
+        Brain<span class="token text string">["브레인스토밍"]</span>
+        Arch<span class="token text string">["아키텍처"]</span>
+        Spec<span class="token text string">["스펙 작성"]</span>
+        Harness<span class="token text string">["작업 설계&lt;br/>하네스"]</span>
         Brain <span class="token arrow operator">--></span> Harness
         Arch <span class="token arrow operator">--></span> Harness
         Spec <span class="token arrow operator">--></span> Harness
     <span class="token keyword">end</span>
 
-    <span class="token keyword">subgraph</span> Build<span class="token text string">[구현 이후 흐름]</span>
-        <span class="token keyword">direction</span> TB
-        Impl<span class="token text string">[구현]</span>
-        PullRequest<span class="token text string">[GitHub PR]</span>
-        Slack<span class="token text string">[Slack 리뷰 요청]</span>
-        Bot<span class="token text string">[물어보개]</span>
+    <span class="token keyword">subgraph</span> Build<span class="token text string">["구현 이후 흐름"]</span>
+        <span class="token keyword">direction</span> LR
+        Impl<span class="token text string">["구현"]</span>
+        PullRequest<span class="token text string">["GitHub PR"]</span>
+        Slack<span class="token text string">["Slack 리뷰 요청"]</span>
+        Bot<span class="token text string">["물어보개"]</span>
         Impl <span class="token arrow operator">--></span> PullRequest
         PullRequest <span class="token arrow operator">--></span> Slack
         Slack <span class="token arrow operator">--></span> Bot
     <span class="token keyword">end</span>
 
-    <span class="token keyword">subgraph</span> Review<span class="token text string">[리뷰 병목: 반복 확인]</span>
+    <span class="token keyword">subgraph</span> Review<span class="token text string">["리뷰 병목: 반복 확인"]</span>
         <span class="token keyword">direction</span> TB
-        Comment<span class="token text string">[리뷰 코멘트]</span>
-        Fix<span class="token text string">[코멘트 반영]</span>
-        Watch<span class="token text string">[10분 watch]</span>
-        Approve<span class="token text string">[approve]</span>
-        Done<span class="token text string">[watch 해제]</span>
+        Comment<span class="token text string">["리뷰 코멘트"]</span>
+        Fix<span class="token text string">["코멘트 반영"]</span>
+        Watch<span class="token text string">["10분 watch"]</span>
+        Approve<span class="token text string">["approve"]</span>
+        Done<span class="token text string">["watch 해제"]</span>
+        Merge<span class="token text string">["개발자 merge"]</span>
         Comment <span class="token arrow operator">--></span> Fix
         Fix <span class="token arrow operator">--></span> Watch
         Watch <span class="token arrow operator">--></span><span class="token label property">|추가 코멘트|</span> Comment
         Watch <span class="token arrow operator">--></span><span class="token label property">|approve|</span> Approve
         Approve <span class="token arrow operator">--></span> Done
+        Done <span class="token arrow operator">--></span> Merge
     <span class="token keyword">end</span></code></pre></div>
 <p>앞에서는 작업 방향을 잡고, 뒤에서는 리뷰 상태를 계속 확인합니다.</p>
 <p>AI를 붙인 위치도 이 두 지점이었습니다.</p>
